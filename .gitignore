@@ -1,0 +1,6 @@
+server/instance/
+server/**/__pycache__
+server/__pycache__
+server/venv
+
+client/node_modules
