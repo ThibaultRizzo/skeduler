@@ -1,0 +1,12 @@
+{
+    "typescript.tsdk": "./client/node_modules/typescript/lib",
+    "python.formatting.provider": "black",
+    "beautify.onSave": true,
+    "editor.formatOnSave": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "files.exclude": {
+      "**/.git": false
+    },
+  }

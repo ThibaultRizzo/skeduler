@@ -1,0 +1,146 @@
+enum DayName {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum ShiftSkillLevel {
+  NO_SKILL
+  LEARNING
+  MASTER
+}
+
+type Day {
+  id: String!
+  name: DayName!
+  order: Int!
+  active: Boolean!
+}
+
+type Employee {
+  id: String!
+  name: String!
+  contract: Int!
+  workingDays: [Day!]
+  skills: [EmployeeSkill!]!
+}
+
+type EmployeeSkill {
+  shift: Shift!
+  employee: Employee!
+  level: ShiftSkillLevel!
+}
+
+type Shift {
+  id: String!
+  title: String!
+  duration: Int!
+}
+
+type Result {
+  success: Boolean!
+  errors: [String]
+}
+
+# type ShiftResult {
+#   # dfg
+# }
+
+type ShiftsResult {
+  result: [Shift!]
+  success: Boolean!
+  errors: [String]
+}
+
+type EmployeesResult {
+  result: [Employee!]
+  success: Boolean!
+  errors: [String]
+}
+
+type DaysResult {
+  result: [Day!]
+  success: Boolean!
+  errors: [String]
+}
+
+type Query {
+  shifts: ShiftsResult!
+  shift(id: String!): ShiftPayload!
+  days: DaysResult!
+  employees: EmployeesResult!
+}
+
+type Mutation {
+  createShift(input: CreateShiftInput!): ShiftPayload
+  updateShift(input: UpdateShiftInput!): ShiftPayload
+  deleteShift(id: String!): Result!
+
+  createEmployee(input: CreateEmployeeInput!): EmployeePayload
+  updateEmployee(input: UpdateEmployeeInput!): EmployeePayload
+  deleteEmployee(id: String!): Result!
+
+  toggleDayActivation(
+    input: ToggleDayActivationInput!
+  ): ToggleDayActivationPayload
+
+  createOrganization: Boolean!
+}
+
+input CreateShiftInput {
+  title: String!
+  duration: Int!
+}
+
+input UpdateShiftInput {
+  id: String!
+  title: String!
+  duration: Int!
+}
+
+type ShiftPayload {
+  result: Shift
+  success: Boolean!
+  errors: [String]
+}
+
+input ShiftSkillInput {
+  shift: String!
+  level: ShiftSkillLevel!
+}
+
+input CreateEmployeeInput {
+  name: String!
+  contract: Int!
+  workingDays: [DayName!]!
+  skills: [ShiftSkillInput!]!
+}
+
+input UpdateEmployeeInput {
+  id: String!
+  name: String!
+  contract: Int!
+  workingDays: [DayName!]!
+  skills: [ShiftSkillInput!]!
+}
+
+type EmployeePayload {
+  result: Employee
+  success: Boolean!
+  errors: [String]
+}
+
+input ToggleDayActivationInput {
+  id: String!
+  active: Boolean!
+}
+
+type ToggleDayActivationPayload {
+  result: Day
+  success: Boolean!
+  errors: [String]
+}

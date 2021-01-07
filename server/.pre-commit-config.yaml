@@ -1,0 +1,15 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+    -   id: trailing-whitespace
+-   repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+    -   id: black
+-   repo: https://github.com/jazzband/pip-tools
+    rev: 5.0.0
+    hooks:
+      - id: pip-compile
+
+## Run 'pre-commit install' to update .git pre-commit file
