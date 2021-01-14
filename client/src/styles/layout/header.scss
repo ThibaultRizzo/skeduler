@@ -1,0 +1,7 @@
+@import "../shared/flex";
+@import "../shared/_colors";
+
+header {
+  @extend %flex-center;
+  background-color: $primary;
+}

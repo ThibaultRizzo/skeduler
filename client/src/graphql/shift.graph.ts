@@ -32,6 +32,19 @@ mutation createShift($input: CreateShiftInput!) {
   }
 `;
 
+
+export const UPDATE_SHIFT = gql`
+mutation updateShift($input: UpdateShiftInput!) {
+	updateShift(input:$input) {
+    result {
+      id
+      title
+      duration
+    }
+  }
+}
+`;
+
 export const DELETE_SHIFT = gql`
 mutation deleteShift($id: String!) {
     deleteShift(id: $id) {

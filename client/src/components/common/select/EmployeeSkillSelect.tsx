@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { getShifts } from "../../../api/shift.api";
+import { useEffect, useState } from "react";
 import { useAsyncState } from "../../../hooks/useAsyncState";
 import { Shift } from "../../../model";
 import { ShiftSkillInput } from "../../../types";
 
 import { getEnumKey } from "../../../utils/enum";
+import { shiftSubject } from "../../../rxjs/record.subject";
 import ShiftSelect from "./ShiftSelect";
 
 export enum ShiftSkillLevel {
@@ -16,20 +16,27 @@ type EmployeeSkillSelectProps = {
   id: string;
   multiple: boolean;
   onChange: (value: ShiftSkillInput[]) => void;
+  value?: ShiftSkillInput[];
 };
 
 export default function EmployeeSkillSelect({
   id,
   multiple,
+  value,
   onChange,
 }: EmployeeSkillSelectProps) {
-  const [shifts] = useAsyncState<Shift[] | null>(null, getShifts);
+  const [shifts] = useAsyncState<Shift[] | null>(
+    null,
+    shiftSubject.lazyFetchAll
+  );
 
   const [inputLevel, setInputLevel] = useState<ShiftSkillLevel>(
     ShiftSkillLevel.Master
   );
   const [inputShift, setInputShift] = useState<Shift | null>(null);
-  const [selectedSkills, setSelectedSkills] = useState<ShiftSkillInput[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<ShiftSkillInput[]>(
+    value || []
+  );
 
   const addSkill = () => {
     if (inputLevel && inputShift) {
@@ -39,6 +46,13 @@ export default function EmployeeSkillSelect({
       ]);
     }
   };
+
+  useEffect(() => {
+    if (selectedSkills) {
+      onChange(selectedSkills);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSkills]);
   return (
     <fieldset disabled={shifts === null}>
       <legend>Add skills</legend>
@@ -88,7 +102,8 @@ export default function EmployeeSkillSelect({
             >
               -
             </button>
-            {s.shift} - {s.level}
+            {shifts?.find((shift) => shift.id === s.shift)?.title || ""} -{" "}
+            {s.level}
           </li>
         ))}
       </ul>

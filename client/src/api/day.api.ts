@@ -1,5 +1,5 @@
-import { SET_DAY_ACTIVATION } from './../components/graphql/day.graph';
-import { GET_DAYS } from '../components/graphql/day.graph';
+import { SET_DAY_ACTIVATION } from '../graphql/day.graph';
+import { GET_DAYS } from '../graphql/day.graph';
 import httpWrapper from '../http';
 import { Day } from '../types';
 

@@ -12,6 +12,6 @@ class Days(enum.Enum):
 
 
 class ShiftSkillLevel(enum.Enum):
-    NO_SKILL = 1
-    LEARNING = 2
-    MASTER = 3
+    NO_SKILL = 0
+    LEARNING = 1
+    MASTER = 2

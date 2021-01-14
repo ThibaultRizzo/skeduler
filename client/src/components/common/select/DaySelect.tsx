@@ -1,16 +1,17 @@
-import { getDays } from "../../../api/day.api";
-import { Day } from "../../../types";
+import { Day, DayName } from "../../../types";
+import { daySubject } from "../../../rxjs/record.subject";
 import FormSelect from "../FormSelect";
 
-type DaySelectProps = {
+export type DaySelectProps = {
   id: string;
   multiple: boolean;
+  value?: DayName[];
   onChange: (value: Day[]) => void;
 };
 
-export default function DaySelect({ id, multiple, onChange }: DaySelectProps) {
+function DaySelect({ id, multiple, value, onChange }: DaySelectProps) {
   const getActiveDays = async () => {
-    const days = await getDays();
+    const days = await daySubject.lazyFetchAll();
     return await days.filter((d) => d.active);
   };
 
@@ -20,10 +21,13 @@ export default function DaySelect({ id, multiple, onChange }: DaySelectProps) {
       multiple={multiple}
       name="day-select"
       label="Day select"
+      value={value}
       onChange={onChange}
       getData={getActiveDays}
-      getKey={(d) => d.id}
+      getKey={(d) => d.name}
       getLabel={(d) => d.name}
     />
   );
 }
+
+export default DaySelect;

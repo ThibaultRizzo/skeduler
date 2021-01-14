@@ -3,6 +3,8 @@ from ariadne import MutationType, convert_kwargs_to_snake_case
 from api import db
 from .enums import Days
 from .errors import NoRecordError
+from .solver.solver import solve_shift_scheduling
+from .solver.errors import SolverException
 
 mutation = MutationType()
 
@@ -49,7 +51,8 @@ def resolve_update_shift(_, info, input):
         shift.duration = input["duration"]
 
         db.session.commit()
-        payload = {"success": True, "shift": shift.to_dict()}
+        print(shift.to_dict())
+        payload = {"success": True, "result": shift.to_dict()}
     except NoRecordError:
         payload = {
             "success": False,
@@ -235,3 +238,24 @@ def generate_days():
     for day in Days:
         db.session.add(Day(name=day.name, active=True, order=day.value))
     db.session.commit()
+
+
+### ********
+### Schedule
+### ********
+@mutation.field("generateSchedule")
+@convert_kwargs_to_snake_case
+def resolve_generate_schedule(_, info, input):
+    try:
+        employees = Employee.query.all()
+        shifts = Shift.query.all()
+        opts = None
+        solve_shift_scheduling(employees, shifts)
+        payload = {"success": True}
+    except SolverException as err:
+        print(err)
+        payload = {
+            "success": False,
+            "errors": ["Solver encountered an error: " + err.message],
+        }
+    return payload

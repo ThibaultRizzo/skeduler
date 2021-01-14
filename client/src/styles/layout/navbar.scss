@@ -1,0 +1,21 @@
+@import "../shared/flex";
+@import "../shared/_colors";
+// @use 'sass:color';
+
+#navbar {
+  @extend %flex-center-top;
+  background-color: $secondary;
+  ul.nav-link-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  li.nav-link a {
+    text-decoration: none;
+    color: $dark;
+    &:hover {
+      transition: 0.2s color;
+      color: lighten($color: $dark, $amount: 60%);
+    }
+  }
+}

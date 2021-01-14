@@ -88,6 +88,8 @@ type Mutation {
     input: ToggleDayActivationInput!
   ): ToggleDayActivationPayload
 
+  generateSchedule(input: GenerateScheduleInput!): SchedulePayload
+
   createOrganization: Boolean!
 }
 
@@ -141,6 +143,15 @@ input ToggleDayActivationInput {
 
 type ToggleDayActivationPayload {
   result: Day
+  success: Boolean!
+  errors: [String]
+}
+
+input GenerateScheduleInput {
+  opts: Boolean!
+}
+
+type SchedulePayload {
   success: Boolean!
   errors: [String]
 }

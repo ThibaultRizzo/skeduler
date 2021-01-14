@@ -6,6 +6,9 @@ from ortools.sat.python import cp_model
 
 from google.protobuf import text_format
 
+from .errors import SolverException
+from ..enums import ShiftSkillLevel
+
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument(
     "--output_proto", default="", help="Output file to write the cp_model" "proto to."
@@ -161,16 +164,39 @@ def add_soft_sum_constraint(
     return cost_variables, cost_coefficients
 
 
-def solve_shift_scheduling(params, output_proto):
-    """Solves the shift scheduling problem."""
-    # Data
-    num_employees = 5
-    num_weeks = 1
-    shifts = ["R", "Manager", "Bar", "Restaurant"]
+def validate_input(employees, shifts):
+    if employees is None:
+        raise SolverException("No employee list was passed to the solver")
+    elif len(employees) == 0:
+        raise SolverException("At least one employee needs to be passed to the solver")
+    elif shifts is None:
+        raise SolverException("No shift list was passed to the solver")
+    elif len(shifts) == 0:
+        raise SolverException("At least one shift needs to be passed to the solver")
 
-    shift_to_hour = [0, 8, 7, 6]
-    tolerated_delta_contract_hours = 15
-    employee_to_hour = [40, 30, 35, 26, 16]
+
+DEFAULT_OPTIONS = {"num_weeks": 1, "tolerated_delta_contract_hours": 15}
+REST_SYMBOL = "R"
+
+
+def solve_shift_scheduling(employees, base_shifts, opts=DEFAULT_OPTIONS):
+    """Solves the shift scheduling problem."""
+    validate_input(employees, base_shifts)
+
+    # Extract option values
+    num_weeks = opts["num_weeks"]
+    tolerated_delta_contract_hours = opts["tolerated_delta_contract_hours"]
+
+    # # Prepare secondary variables
+    num_employees = len(employees)
+    num_days = num_weeks * 7
+
+    # # Insert 'rest' shift
+    shifts = [REST_SYMBOL] + list(map(lambda s: s.title, base_shifts))
+    num_shifts = len(shifts)
+    shift_to_hour = [0] + list(map(lambda s: s.duration, base_shifts))
+    # # Prepend rest representation
+    employee_to_hour = list(map(lambda e: e.contract, employees))
 
     # Fixed assignment: (employee, shift, day).
     # This fixes the first 2 days of the schedule.
@@ -233,19 +259,35 @@ def solve_shift_scheduling(params, output_proto):
 
     # Employee mastery level for each shift (Manager, Bar, Restaurant)
     # 0 = No ability   1 = Training for this position    2 = Ability
-    employee_shift_mastery = [
-        (2, 0, 0),
-        (0, 0, 2),
-        (0, 2, 0),
-        (0, 2, 2),
-        (2, 0, 0),
-    ]
+
+    employee_shift_mastery = list(
+        map(
+            lambda e: tuple(
+                map(
+                    lambda s: next(
+                        (
+                            ShiftSkillLevel[skill.level].value
+                            for skill in e.skills
+                            if skill.shift.id is s.id
+                        ),
+                        0,
+                    ),
+                    base_shifts,
+                )
+            ),
+            employees,
+        )
+    )
+    print(" Mastery:", employee_shift_mastery)
+    print(" Employee to hour:", employee_to_hour)
+    print(" Shift to hour:", shift_to_hour)
+    print(" Shifts:", shifts)
+    print(" Delta:", tolerated_delta_contract_hours)
+    print(" Num employee:", num_employees)
+    print(" Num weeks:", num_weeks)
 
     # Penalty for exceeding the cover constraint per shift type.
     excess_cover_penalties = (10, 5, 1)
-
-    num_days = num_weeks * 7
-    num_shifts = len(shifts)
 
     model = cp_model.CpModel()
 
@@ -416,8 +458,8 @@ def solve_shift_scheduling(params, output_proto):
     # Solve the model.
     solver = cp_model.CpSolver()
     solver.parameters.num_search_workers = 8
-    if params:
-        text_format.Merge(params, solver.parameters)
+    # if params:
+    #     text_format.Merge(params, solver.parameters)
     solution_printer = cp_model.ObjectiveSolutionPrinter()
     status = solver.SolveWithSolutionCallback(model, solution_printer)
 

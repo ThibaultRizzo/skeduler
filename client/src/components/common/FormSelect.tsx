@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAsyncState } from "../../hooks/useAsyncState";
+import { areArraysEqual } from "../../utils/utils";
 
 type FormSelectProps<T> = Partial<
   Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "onChange">
@@ -7,45 +8,53 @@ type FormSelectProps<T> = Partial<
   id: string;
   label: string;
   name: string;
+  value?: string[];
   multiple: boolean;
   onChange: (value: T[]) => void;
   getData: () => Promise<T[]>;
   getKey: (data: T) => string;
   getLabel: (data: T) => string;
-  getValue?: (data: T) => unknown;
 };
 
-export default function FormSelect<T extends unknown>({
+export default function FormSelect<T>({
   id,
   label,
   name,
+  value,
   multiple = false,
   onChange,
   getKey,
   getLabel,
-  getValue = (d) => d,
   getData,
   ...selectProps
 }: FormSelectProps<T>) {
-  const [selected, setSelected] = useState<string[] | undefined>(undefined);
+  const [selected, setSelected] = useState<string[] | undefined>(value);
   const [data] = useAsyncState<T[] | null>(null, getData);
 
   const getSelectedOptions = (
     options: HTMLCollectionOf<HTMLOptionElement>
-  ): T[] => {
-    let result = new Array<T | undefined>(options.length);
+  ): string[] => {
+    let result = new Array<string>(options.length);
     for (let i = 0; i < options.length; i++) {
-      result[i] =
-        data?.find((d) => getKey(d) === options[i].value) || undefined;
+      result[i] = options[i].value;
     }
-    return result.filter((r) => r !== undefined) as T[];
+    return result;
   };
 
   useEffect(() => {
-    if (selected && data && data.length > 0) {
+    // If data is loaded and selected is not defined
+    const getReturnValues = (): T[] =>
+      (selected || [])
+        .map((o) => data?.find((d) => getKey(d) === o))
+        .filter((d) => d) as T[];
+
+    if (!selected && data && data.length > 0) {
       setSelected([getKey(data[0])]);
+    } else if (selected && data && !areArraysEqual(value || [], selected)) {
+      onChange(getReturnValues());
     }
-  }, [selected, data, onChange, getKey, setSelected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, data, setSelected]);
 
   return (
     <div>
@@ -55,13 +64,12 @@ export default function FormSelect<T extends unknown>({
         name={name}
         disabled={data === null}
         multiple={multiple}
-        onChange={({ target }) => {
-          onChange(getSelectedOptions(target.selectedOptions));
-        }}
+        onChange={({ target }) =>
+          setSelected(getSelectedOptions(target.selectedOptions))
+        }
         value={selected}
         {...selectProps}
       >
-        {/* <option value={undefined}>Lol</option> */}
         {data !== null &&
           data.map((d) => (
             <option key={getKey(d)} id={getKey(d)} value={getKey(d)}>

@@ -1,5 +1,5 @@
-import { getShifts } from "../../../api/shift.api";
 import { Shift } from "../../../types";
+import { shiftSubject } from "../../../rxjs/record.subject";
 import FormSelect from "../FormSelect";
 
 type ShiftSelectProps = {
@@ -20,7 +20,7 @@ export default function ShiftSelect({
       name="shift-select"
       label="Shift select"
       onChange={onChange}
-      getData={getShifts}
+      getData={shiftSubject.lazyFetchAll}
       getKey={(d) => d.id}
       getLabel={(d) => d.title}
     />

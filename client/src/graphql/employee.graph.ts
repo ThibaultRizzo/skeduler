@@ -11,6 +11,7 @@ query getEmployees {
 
   id
   name
+  contract
   skills {
     level
     shift {
@@ -39,6 +40,29 @@ query getEmployees {
 export const CREATE_EMPLOYEE = gql`
 mutation createEmployee($input: CreateEmployeeInput!) {
 	createEmployee(input:$input) {
+    result {
+      id
+      name
+      contract
+      skills {
+				level
+        shift {
+          title
+        }
+      }
+      workingDays {
+        id
+        name
+        active
+      }
+    }
+  }
+}
+`;
+
+export const UPDATE_EMPLOYEE = gql`
+mutation updateEmployee($input: UpdateEmployeeInput!) {
+	updateEmployee(input:$input) {
     result {
       id
       name

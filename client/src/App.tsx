@@ -1,16 +1,13 @@
 import React from "react";
-import "./App.css";
-import EmployeeSection from "./components/EmployeeSection";
-import ShiftSection from "./components/ShiftSection";
-import WorkingDaysSection from "./components/WorkingDaysSection";
+import { BrowserRouter } from "react-router-dom";
+import Main from "./layout/Main";
+import "./styles/styles.scss";
 
 function App() {
   return (
-    <div className="App">
-      <ShiftSection />
-      <EmployeeSection />
-      <WorkingDaysSection />
-    </div>
+    <BrowserRouter>
+      <Main />
+    </BrowserRouter>
   );
 }
 

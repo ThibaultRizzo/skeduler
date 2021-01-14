@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  # app:
+    # container_name: admin-app
+    # build: .
+    # ports:
+    #   - '3310:3310'
+    # links:
+    #   - redis
+    #   - mongo
+    # network_mode: bridge
+  mongo_test:
+    image: mongo
+    container_name: mongo_test
+    restart: always
+    command: --profile=1 --slowms=1
+    volumes:
+      - mongo-data:/data/db
+    network_mode: host
+
+  # redis:
+  #   image: redis:latest
+  #   container_name: redis
+  #   restart: always
+  #   network_mode: bridge
+
+volumes:
+  mongo-data:
