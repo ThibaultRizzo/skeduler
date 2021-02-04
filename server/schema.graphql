@@ -22,6 +22,26 @@ enum ShiftSkillLevel {
   MASTER
 }
 
+enum EventType {
+  PAID_LEAVE
+  UNPAID_LEAVE
+  HOLIDAY
+  ILLNESS
+}
+
+enum EventStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+enum EventNature {
+  MANDATORY
+  IMPORTANT
+  WANTED
+  PREFERED
+}
+
 ############
 #  Scalar   #
 ############
@@ -62,12 +82,25 @@ type Employee {
   contract: Int!
   workingDays: [Day!]
   skills: [EmployeeSkill!]!
+  events: [EmployeeEvent!]!
 }
 
 type EmployeeSkill {
   shift: Shift!
   employee: Employee!
   level: ShiftSkillLevel!
+}
+
+type EmployeeEvent {
+  id: String!
+  employee: Employee!
+  shift: Shift
+  startDate: Datetime!
+  duration: Int!
+  type: EventType!
+  status: EventStatus!
+  nature: EventNature!
+  isDesired: Boolean!
 }
 
 type Shift {
@@ -115,6 +148,7 @@ type Mutation {
   createEmployee(input: CreateEmployeeInput!): EmployeePayload
   updateEmployee(input: UpdateEmployeeInput!): EmployeePayload
   deleteEmployee(id: String!): Result!
+  addEvent(input: AddEventInput!): Result
 
   toggleDayActivation(
     input: ToggleDayActivationInput!
@@ -166,6 +200,16 @@ input UpdateEmployeeInput {
   skills: [ShiftSkillInput!]!
 }
 
+input AddEventInput {
+  employee: String!
+  shift: String
+  startDate: Datetime!
+  duration: Int!
+  type: EventType!
+  status: EventStatus!
+  nature: EventNature!
+  isDesired: Boolean!
+}
 ##############
 #  Payload   #
 ##############

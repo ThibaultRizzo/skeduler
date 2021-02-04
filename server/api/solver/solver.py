@@ -3,11 +3,10 @@ from __future__ import print_function
 import argparse
 
 from ortools.sat.python import cp_model
-
 from google.protobuf import text_format
 
 from .errors import SolverException
-from ..enums import ShiftSkillLevel
+from ..enums import ShiftSkillLevel, DayEnum
 from ..models import SolverPeriod, Schedule
 
 PARSER = argparse.ArgumentParser()
@@ -58,20 +57,18 @@ def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS)
     employee_to_hour = list(map(lambda e: e.contract, employees))
 
     # Fixed assignment: (employee, shift, day).
-    fixed_assignments = []  # get_fixed_assignments(employees)
-
+    fixed_assignments = get_fixed_assignments(employees, base_shifts, period)
     # Request: (employee, shift, day, weight)
     # A negative weight indicates that the employee desire this assignment.
-    requests = [
-        # Employee 3 wants the first Saturday off.
-        # (1, 0, 0, -2),
-        # (1, 0, 1, -2),
-        # (0, 1, 1, 2),
-        # Employee 5 wants a night shift on the second Thursday.
-        # (5, 3, 10, -2),
-        # Employee 2 does not want a night shift on the first Friday.
-        # (1, 3, 4, -4),
-    ]
+    requests = get_requests(employees, base_shifts, period)
+    # Employee 3 wants the first Saturday off.
+    # (1, 0, 0, -2),
+    # (1, 0, 1, -2),
+    # (0, 1, 1, 2),
+    # Employee 5 wants a night shift on the second Thursday.
+    # (5, 3, 10, -2),
+    # Employee 2 does not want a night shift on the first Friday.
+    # (1, 3, 4, -4),
 
     # Shift constraints on continuous sequence :
     #     (shift, hard_min, soft_min, min_penalty,
@@ -103,39 +100,25 @@ def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS)
         # (1, 3, 0),
     ]
 
-    # daily demands for work shifts (Manager, Bar, Restaurant) for each day
-    # of the week starting on Monday.
-    weekly_cover_demands = [
-        (1, 1, 1),  # Monday
-        (1, 1, 1),  # Tuesday
-        (1, 1, 1),  # Wednesday
-        (1, 1, 1),  # Thursday
-        (1, 1, 1),  # Friday
-        (1, 1, 1),  # Saturday
-        (1, 1, 1),  # Sunday
-    ]
+    weekly_cover_demands = get_weekly_cover_demands(base_shifts)
+    # [
+    #     (1, 1, 1),  # Monday
+    #     (1, 1, 1),  # Tuesday
+    #     (1, 1, 1),  # Wednesday
+    #     (1, 1, 1),  # Thursday
+    #     (1, 1, 1),  # Friday
+    #     (1, 1, 1),  # Saturday
+    #     (1, 1, 1),  # Sunday
+    # ]
 
     # Employee mastery level for each shift (Manager, Bar, Restaurant)
     # 0 = No ability   1 = Training for this position    2 = Ability
 
-    employee_shift_mastery = list(
-        map(
-            lambda e: tuple(
-                map(
-                    lambda s: next(
-                        (
-                            ShiftSkillLevel[skill.level].value
-                            for skill in e.skills
-                            if skill.shift.id is s.id
-                        ),
-                        0,
-                    ),
-                    base_shifts,
-                )
-            ),
-            employees,
-        )
-    )
+    employee_shift_mastery = get_employee_shift_mastery(employees, base_shifts)
+
+    # Penalty for exceeding the cover constraint per shift type.
+    excess_cover_penalties = get_excess_cover_penalties(base_shifts)  # (10, 5, 1)
+
     # print(" Mastery:", employee_shift_mastery)
     # print(" Employee to hour:", employee_to_hour)
     # print(" Shift to hour:", shift_to_hour)
@@ -143,9 +126,6 @@ def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS)
     # print(" Delta:", tolerated_delta_contract_hours)
     # print(" Num employee:", num_employees)
     # print(" Num weeks:", nb_weeks)
-
-    # Penalty for exceeding the cover constraint per shift type.
-    excess_cover_penalties = (10, 5, 1)
 
     model = cp_model.CpModel()
 
@@ -244,7 +224,7 @@ def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS)
             for d in range(nb_days):
                 works = [work[e, s, d + w * nb_days] for e in range(num_employees)]
                 # Ignore Off shift.
-                min_demand = weekly_cover_demands[d][s - 1]
+                min_demand = weekly_cover_demands[s - 1][d]
                 worked = model.NewIntVar(min_demand, num_employees, "")
                 model.Add(worked == sum(works))
                 over_penalty = excess_cover_penalties[s - 1]
@@ -367,18 +347,92 @@ def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS)
 
     print()
     print(solver.ResponseStats())
-    encoded_schedule = "".join([str(solver.Value(v)) for [k, v] in work.items()])
 
-    return Schedule.to_schedule(encoded_schedule, employees, base_shifts, days)
+    if status == cp_model.INFEASIBLE:
+        return None
+    else:
+        encoded_schedule = "".join([str(solver.Value(i[1])) for i in work.items()])
+        return Schedule.to_schedule(encoded_schedule, employees, base_shifts, days)
 
 
 # Fixed assignment: (employee, shift, day).
-def get_fixed_assignments(employee_list, shift_list):
+def get_fixed_assignments(employee_list, shift_list, period):
     fixed_assignments = []
+    shift_dict = dict((shift_list[s].id, s) for s in range(len(shift_list)))
+
     for employee in range(len(employee_list)):
-        for leave in employee.leaves:
-            # 0 is the REST shift position
-            fixed_assignments.append((employee, 0, leave.reason))
+        # Add all inactive days as rest days for everyone
+        # 0 is the REST shift position
+        for day in period.days:
+            if day.active is False:
+                fixed_assignments.append((employee, 0, day))
+
+        for event in employee_list[employee].get_mandatory_events(period):
+            for event_date in event.get_event_dates():
+                day_index = period.dates_to_day_index_dict.get(event_date.date())
+                if day_index is not None:
+                    # Date is covered by schedule generation
+                    # TODO: Handle collision with off days ?
+                    shift_index = shift_dict.get(event.shift_id, 0)
+                    fixed_assignments.append((employee, shift_index, day_index))
+
+    # for employee in range(len(employee_list)):
+
+    #     for leave in employee_list[employee].get_leaves(period):
+    #         for leave_date in leave.get_leave_dates():
+    #             index = period.dates_to_day_index_dict.get(leave_date.date())
+    #             if index is not None:
+    #                 # Date is covered by schedule generation
+    #                 # TODO: Handle collision with off days ?
+    #                 fixed_assignments.append((employee, 0, index))
+    return fixed_assignments
+
+
+# Request: (employee, shift, day, weight)
+def get_requests(employee_list, shift_list, period):
+    requests = []
+    shift_dict = dict((shift_list[s].id, s) for s in range(len(shift_list)))
+
+    for employee in range(len(employee_list)):
+        for event in employee_list[employee].get_requests(period):
+            for event_date in event.get_event_dates():
+                day_index = period.dates_to_day_index_dict.get(event_date.date())
+                if day_index is not None:
+                    # Date is covered by schedule generation
+                    shift_index = shift_dict.get(event.shift_id, 0)
+                    requests.append(
+                        (employee, shift_index, day_index, event.get_weight())
+                    )
+    return requests
+
+
+# daily demands for work shifts for each shift
+# of the week starting on Monday. [(1,1,1,1,1,1,1)...]
+def get_weekly_cover_demands(shift_list):
+    return [s.get_cover_constraints() for s in shift_list]
+
+
+def get_employee_shift_mastery(employees, shifts):
+    return map(
+        lambda e: tuple(
+            map(
+                lambda s: next(
+                    (
+                        ShiftSkillLevel[skill.level].value
+                        for skill in e.skills
+                        if skill.shift.id is s.id
+                    ),
+                    0,
+                ),
+                shifts,
+            )
+        ),
+        employees,
+    )
+
+
+def get_excess_cover_penalties(shift_list):
+    return (s.get_cover_penalty() for s in shift_list)
 
 
 def negated_bounded_span(works, start, length):

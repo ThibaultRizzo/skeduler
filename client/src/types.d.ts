@@ -91,6 +91,7 @@ export type Employee = {
   contract: Scalars['Int'];
   workingDays?: Maybe<Array<Day>>;
   skills: Array<EmployeeSkill>;
+  events: Array<EmployeeEvent>;
 };
 
 export type EmployeeSkill = {
@@ -104,6 +105,40 @@ export enum ShiftSkillLevel {
   NoSkill = 'NO_SKILL',
   Learning = 'LEARNING',
   Master = 'MASTER'
+}
+
+export type EmployeeEvent = {
+  __typename?: 'EmployeeEvent';
+  id: Scalars['String'];
+  employee: Employee;
+  shift?: Maybe<Shift>;
+  startDate: Scalars['Datetime'];
+  duration: Scalars['Int'];
+  type: EventType;
+  status: EventStatus;
+  nature: EventNature;
+  isDesired: Scalars['Boolean'];
+};
+
+
+export enum EventType {
+  PaidLeave = 'PAID_LEAVE',
+  UnpaidLeave = 'UNPAID_LEAVE',
+  Holiday = 'HOLIDAY',
+  Illness = 'ILLNESS'
+}
+
+export enum EventStatus {
+  Pending = 'PENDING',
+  Confirmed = 'CONFIRMED',
+  Declined = 'DECLINED'
+}
+
+export enum EventNature {
+  Mandatory = 'MANDATORY',
+  Important = 'IMPORTANT',
+  Wanted = 'WANTED',
+  Prefered = 'PREFERED'
 }
 
 export type SchedulePayload = {
@@ -136,7 +171,6 @@ export type ScheduleMeta = {
   createdAt: Scalars['Datetime'];
 };
 
-
 export type Mutation = {
   __typename?: 'Mutation';
   createShift?: Maybe<ShiftPayload>;
@@ -145,6 +179,7 @@ export type Mutation = {
   createEmployee?: Maybe<EmployeePayload>;
   updateEmployee?: Maybe<EmployeePayload>;
   deleteEmployee: Result;
+  addEvent?: Maybe<Result>;
   toggleDayActivation?: Maybe<ToggleDayActivationPayload>;
   generateSchedule?: Maybe<SchedulePayload>;
   createOrganization: Scalars['Boolean'];
@@ -178,6 +213,11 @@ export type MutationUpdateEmployeeArgs = {
 
 export type MutationDeleteEmployeeArgs = {
   id: Scalars['String'];
+};
+
+
+export type MutationAddEventArgs = {
+  input: AddEventInput;
 };
 
 
@@ -232,6 +272,17 @@ export type UpdateEmployeeInput = {
   contract: Scalars['Int'];
   workingDays: Array<DayName>;
   skills: Array<ShiftSkillInput>;
+};
+
+export type AddEventInput = {
+  employee: Scalars['String'];
+  shift?: Maybe<Scalars['String']>;
+  startDate: Scalars['Datetime'];
+  duration: Scalars['Int'];
+  type: EventType;
+  status: EventStatus;
+  nature: EventNature;
+  isDesired: Scalars['Boolean'];
 };
 
 export type ToggleDayActivationInput = {

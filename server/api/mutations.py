@@ -3,13 +3,14 @@ from .models import (
     Day,
     Employee,
     EmployeeSkill,
+    EmployeeEvent,
     Schedule,
     ScheduleEmployee,
     ScheduleShift,
 )
 from ariadne import MutationType, convert_kwargs_to_snake_case
 from api import db
-from .enums import DayEnum
+from .enums import DayEnum, EventStatus
 from .errors import NoRecordError
 from .solver.solver import solve_shift_scheduling
 from .solver.errors import SolverException
@@ -52,7 +53,6 @@ def resolve_update_shift(_, info, input):
     try:
         id = input["id"]
         shift = Shift.query.get(id)
-        print(Shift.query.get(id))
         # TODO: Raise error when id is not matching any record
         # if shift is None:
         #     raise NoRecordError()
@@ -60,7 +60,6 @@ def resolve_update_shift(_, info, input):
         shift.duration = input["duration"]
 
         db.session.commit()
-        print(shift.to_dict())
         payload = {"success": True, "result": shift.to_dict()}
     except NoRecordError:
         payload = {
@@ -211,6 +210,48 @@ def resolve_delete_employee(_, info, id):
     return payload
 
 
+@convert_kwargs_to_snake_case
+@mutation.field("addEvent")
+def resolve_add_event(_, info, input):
+    try:
+        employee_id = input.get("employee")
+        shift_id = input.get("shift", None)
+
+        employee = Employee.query.get(employee_id)
+
+        if employee is None:
+            raise Exception("Could not find employee with ID: " + employee_id)
+
+        if shift_id is not None:
+            shift = Shift.query.get(shift_id)
+            if shift is None:
+                raise Exception("Could not find shift with ID: " + shift_id)
+
+        employee_event = EmployeeEvent(
+            employee=employee,
+            shift_id=shift_id,
+            start_date=input.get("startDate"),
+            duration=input.get("duration"),
+            type=input.get("type"),
+            nature=input.get("nature"),
+            is_desired=input.get("isDesired"),
+            ## TODO: To be changed when leave acceptance flow is detailed
+            status=EventStatus.CONFIRMED,  # input.get("status")
+        )
+        db.session.add(employee_event)
+        db.session.commit()
+        payload = {
+            "success": True,
+        }
+    except Exception as e:
+        payload = {
+            "success": False,
+            "errors": [str(e)],
+        }
+
+    return payload
+
+
 @mutation.field("createOrganization")
 @convert_kwargs_to_snake_case
 def resolve_create_organization(_, info):
@@ -230,7 +271,6 @@ def resolve_toggle_day_activation(_, info, input):
         id = input["id"]
         active = input["active"]
         day = Day.query.get(id)
-        print(day)
         day.active = active
         db.session.commit()
         payload = {"success": True, "result": day.to_dict()}
@@ -260,14 +300,20 @@ def resolve_generate_schedule(*_, input):
     try:
         employees = Employee.query.all()
         shifts = Shift.query.all()
-        days = dict((d.name, d) for d in Day.query.all())
+        days = Day.query.all()
         opts = None
         period = SolverPeriod(start_date, nb_weeks, days)
         schedule = solve_shift_scheduling(employees, shifts, period)
 
-        db.session.add(schedule)
-        db.session.commit()
-        payload = {"success": True, "result": schedule.get_schedule_per_day()}
+        if schedule is None:
+            payload = {
+                "success": False,
+                "errors": ["Could not find a feasible solution"],
+            }
+        else:
+            db.session.add(schedule)
+            db.session.commit()
+            payload = {"success": True, "result": schedule.get_schedule_per_day()}
     except SolverException as err:
         print(err)
         payload = {
