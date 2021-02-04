@@ -1,10 +1,19 @@
-from .models import Shift, Day, Employee, EmployeeSkill
+from .models import (
+    Shift,
+    Day,
+    Employee,
+    EmployeeSkill,
+    Schedule,
+    ScheduleEmployee,
+    ScheduleShift,
+)
 from ariadne import MutationType, convert_kwargs_to_snake_case
 from api import db
-from .enums import Days
+from .enums import DayEnum
 from .errors import NoRecordError
 from .solver.solver import solve_shift_scheduling
 from .solver.errors import SolverException
+from .models.dto import SolverPeriod
 
 mutation = MutationType()
 
@@ -235,8 +244,8 @@ def resolve_toggle_day_activation(_, info, input):
 
 
 def generate_days():
-    for day in Days:
-        db.session.add(Day(name=day.name, active=True, order=day.value))
+    for day in DayEnum:
+        db.session.add(Day(name=day, active=True))
     db.session.commit()
 
 
@@ -245,13 +254,20 @@ def generate_days():
 ### ********
 @mutation.field("generateSchedule")
 @convert_kwargs_to_snake_case
-def resolve_generate_schedule(_, info, input):
+def resolve_generate_schedule(*_, input):
+    start_date = input.get("start_date")
+    nb_weeks = input.get("nb_weeks")
     try:
         employees = Employee.query.all()
         shifts = Shift.query.all()
+        days = dict((d.name, d) for d in Day.query.all())
         opts = None
-        solve_shift_scheduling(employees, shifts)
-        payload = {"success": True}
+        period = SolverPeriod(start_date, nb_weeks, days)
+        schedule = solve_shift_scheduling(employees, shifts, period)
+
+        db.session.add(schedule)
+        db.session.commit()
+        payload = {"success": True, "result": schedule.get_schedule_per_day()}
     except SolverException as err:
         print(err)
         payload = {

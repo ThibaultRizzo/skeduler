@@ -28,14 +28,27 @@ def error_handler(fn):
     return decorated
 
 
-@error_handler
-def mutation(_field):
+def mutation_test(_field):
     print(_field)
     # wrapped = ariadne_mutation.field("createShift")
 
     def decorator(fn):
         def decorated(*args, **kwargs):
             payload = fn(*args, **kwargs)
+
+        return decorated
+
+    # print(ariadne_mutation.field("createShift"))
+    return decorator
+
+
+def mutation(_field):
+    print(_field)
+
+    def decorator():
+        def decorated(*args, **kwargs):
+            print("try")
+            payload = fn()
 
         return decorated
 

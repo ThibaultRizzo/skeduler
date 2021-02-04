@@ -1,4 +1,4 @@
-import { DraftEmployee, WithId } from './../model';
+import { DraftEmployee, WithId } from '../model';
 import { CREATE_EMPLOYEE, DELETE_EMPLOYEE, GET_EMPLOYEES, UPDATE_EMPLOYEE } from '../graphql/employee.graph';
 import httpWrapper from '../http';
 import { Employee } from "../types";

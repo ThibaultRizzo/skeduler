@@ -9,6 +9,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  Datetime: any;
 };
 
 export type Query = {
@@ -17,6 +18,7 @@ export type Query = {
   shift: ShiftPayload;
   days: DaysResult;
   employees: EmployeesResult;
+  schedule: SchedulePayload;
 };
 
 
@@ -55,9 +57,14 @@ export type DaysResult = {
 export type Day = {
   __typename?: 'Day';
   id: Scalars['String'];
-  name: DayName;
-  order: Scalars['Int'];
+  name: DayEnum;
   active: Scalars['Boolean'];
+};
+
+export type DayEnum = {
+  __typename?: 'DayEnum';
+  name: DayName;
+  value: Scalars['Int'];
 };
 
 export enum DayName {
@@ -99,6 +106,37 @@ export enum ShiftSkillLevel {
   Master = 'MASTER'
 }
 
+export type SchedulePayload = {
+  __typename?: 'SchedulePayload';
+  result?: Maybe<CompleteSchedule>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type CompleteSchedule = {
+  __typename?: 'CompleteSchedule';
+  schedule: Array<ScheduleDay>;
+  meta: ScheduleMeta;
+};
+
+export type ScheduleDay = {
+  __typename?: 'ScheduleDay';
+  day: Scalars['String'];
+  shifts: Array<ScheduleShift>;
+};
+
+export type ScheduleShift = {
+  __typename?: 'ScheduleShift';
+  shift: Scalars['String'];
+  employee: Scalars['String'];
+};
+
+export type ScheduleMeta = {
+  __typename?: 'ScheduleMeta';
+  createdAt: Scalars['Datetime'];
+};
+
+
 export type Mutation = {
   __typename?: 'Mutation';
   createShift?: Maybe<ShiftPayload>;
@@ -108,6 +146,7 @@ export type Mutation = {
   updateEmployee?: Maybe<EmployeePayload>;
   deleteEmployee: Result;
   toggleDayActivation?: Maybe<ToggleDayActivationPayload>;
+  generateSchedule?: Maybe<SchedulePayload>;
   createOrganization: Scalars['Boolean'];
 };
 
@@ -144,6 +183,11 @@ export type MutationDeleteEmployeeArgs = {
 
 export type MutationToggleDayActivationArgs = {
   input: ToggleDayActivationInput;
+};
+
+
+export type MutationGenerateScheduleArgs = {
+  input: GenerateScheduleInput;
 };
 
 export type CreateShiftInput = {
@@ -200,4 +244,10 @@ export type ToggleDayActivationPayload = {
   result?: Maybe<Day>;
   success: Scalars['Boolean'];
   errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type GenerateScheduleInput = {
+  startDate: Scalars['Datetime'];
+  nbWeeks: Scalars['Int'];
+  opts?: Maybe<Scalars['Boolean']>;
 };

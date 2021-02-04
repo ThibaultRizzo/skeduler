@@ -1,6 +1,7 @@
 import os
 from api import create_app, db
-from api import models, queries, mutations
+from api import queries, mutations
+import api.models
 
 from ariadne import (
     gql,
@@ -13,13 +14,16 @@ from ariadne import (
 from ariadne.constants import PLAYGROUND_HTML
 from flask import request, jsonify, redirect
 from api.queries import resolve_shifts
+from api.resolver import datetime_scalar
 
 config_name = os.getenv("FLASK_CONFIG")
 app = create_app(config_name)
 
 type_defs = gql(load_schema_from_path("schema.graphql"))
 
-schema = make_executable_schema(type_defs, queries.query, mutations.mutation)
+schema = make_executable_schema(
+    type_defs, datetime_scalar, queries.query, mutations.mutation
+)
 
 
 @app.route("/", methods=["GET"])

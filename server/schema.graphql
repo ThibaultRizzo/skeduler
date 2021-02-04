@@ -1,3 +1,11 @@
+#############
+#   Enum    #
+#############
+type DayEnum {
+  name: DayName!
+  value: Int!
+}
+
 enum DayName {
   MONDAY
   TUESDAY
@@ -14,10 +22,37 @@ enum ShiftSkillLevel {
   MASTER
 }
 
+############
+#  Scalar   #
+############
+
+scalar Datetime
+
+############
+#  Types   #
+############
+
+type ScheduleShift {
+  shift: String!
+  employee: String!
+}
+type ScheduleDay {
+  day: String!
+  shifts: [ScheduleShift!]!
+}
+
+type ScheduleMeta {
+  createdAt: Datetime!
+}
+
+type CompleteSchedule {
+  schedule: [ScheduleDay!]!
+  meta: ScheduleMeta!
+}
+
 type Day {
   id: String!
-  name: DayName!
-  order: Int!
+  name: DayEnum!
   active: Boolean!
 }
 
@@ -46,10 +81,6 @@ type Result {
   errors: [String]
 }
 
-# type ShiftResult {
-#   # dfg
-# }
-
 type ShiftsResult {
   result: [Shift!]
   success: Boolean!
@@ -73,6 +104,7 @@ type Query {
   shift(id: String!): ShiftPayload!
   days: DaysResult!
   employees: EmployeesResult!
+  schedule: SchedulePayload!
 }
 
 type Mutation {
@@ -92,6 +124,10 @@ type Mutation {
 
   createOrganization: Boolean!
 }
+
+############
+#  Input   #
+############
 
 input CreateShiftInput {
   title: String!
@@ -130,6 +166,10 @@ input UpdateEmployeeInput {
   skills: [ShiftSkillInput!]!
 }
 
+##############
+#  Payload   #
+##############
+
 type EmployeePayload {
   result: Employee
   success: Boolean!
@@ -148,10 +188,13 @@ type ToggleDayActivationPayload {
 }
 
 input GenerateScheduleInput {
-  opts: Boolean!
+  startDate: Datetime!
+  nbWeeks: Int!
+  opts: Boolean
 }
 
 type SchedulePayload {
+  result: CompleteSchedule
   success: Boolean!
   errors: [String]
 }

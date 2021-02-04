@@ -1,0 +1,20 @@
+.schedule-grid {
+  display: flex;
+  .schedule-day {
+    margin: 0 0.5em;
+  }
+  .schedule-day-header {
+    font-weight: bold;
+  }
+  .schedule-day-shift {
+    border: 1px solid black;
+    margin-bottom: 0.5em;
+    padding: 2px;
+    text-align: center;
+
+    hr {
+      margin: 3px auto;
+      width: 50%;
+    }
+  }
+}

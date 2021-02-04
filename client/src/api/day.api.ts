@@ -5,7 +5,7 @@ import { Day } from '../types';
 
 export const getDays = async (): Promise<Day[]> => {
     const res = await httpWrapper.query(GET_DAYS);
-    return res.data.data.days.result?.sort((a, b) => (a.order - b.order)) || [];
+    return res.data.data.days.result?.sort((a, b) => (a.name.value - b.name.value)) || [];
 }
 
 export const setDayActivation = async ({ id, active }: Day): Promise<Day | null> => {

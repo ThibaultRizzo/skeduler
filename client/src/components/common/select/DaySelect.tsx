@@ -24,8 +24,8 @@ function DaySelect({ id, multiple, value, onChange }: DaySelectProps) {
       value={value}
       onChange={onChange}
       getData={getActiveDays}
-      getKey={(d) => d.name}
-      getLabel={(d) => d.name}
+      getKey={(d) => d.name.name}
+      getLabel={(d) => d.name.name}
     />
   );
 }

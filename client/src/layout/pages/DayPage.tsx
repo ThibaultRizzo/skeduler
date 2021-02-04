@@ -6,7 +6,6 @@ import { Day } from "../../types";
 
 function DayPage() {
   const cellDictionary = new CellDictionary<Day>([
-    { key: "order" },
     { key: "name" },
     { key: "active" },
   ]);

@@ -1,5 +1,5 @@
 import { getDays } from '../api/day.api';
-import { createEmployee, deleteEmployee, getEmployees, updateEmployee } from '../api/employee.api.';
+import { createEmployee, deleteEmployee, getEmployees, updateEmployee } from '../api/employee.api';
 import { createShift, deleteShift, getShifts, updateShift } from '../api/shift.api';
 import { DraftEmployee, DraftShift } from '../model';
 import { Day, Employee, Shift } from '../types';

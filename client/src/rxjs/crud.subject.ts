@@ -18,7 +18,7 @@ export type CRUDSubjectProps<T extends BaseCRUDRecord, D> = {
 } & ReadSubjectProps<T>
 
 export type SimpleSubjectProp<T extends BaseCRUDRecord> = {
-    subscribe: (setState: React.Dispatch<React.SetStateAction<T[] | null>>) => void,
+    subscribe: (setState: (d: T[] | null) => void) => void,
     unsubscribe: () => void
 }
 export type CRUDSubject<T extends BaseCRUDRecord, D> = ReadSubject<T> & CRUDSubjectProps<T, D>
@@ -34,7 +34,6 @@ export function buildReadonlyRecordSubject<T extends BaseCRUDRecord, O = {}>({ f
         if (subject)
             if (recordList) {
                 subject.next(recordList);
-                snackbarSubject.openSnackbar({ title: 'Something went wrong', level: LogLevel.SUCCESS })
             } else {
                 snackbarSubject.openSnackbar({ title: 'Something went wrong', level: LogLevel.ERROR })
             }
@@ -44,7 +43,7 @@ export function buildReadonlyRecordSubject<T extends BaseCRUDRecord, O = {}>({ f
     // Fetch first
     fetchSubject();
     return {
-        subscribe: (setState: React.Dispatch<React.SetStateAction<T[] | null>>) => subject.subscribe(setState),
+        subscribe: (setState: (arr: T[] | null) => void) => subject.subscribe(setState),
         unsubscribe: () => subject.unsubscribe(),
         lazyFetchAll: async () => {
             const currentValue = subject.value;
@@ -64,7 +63,6 @@ export function buildRecordSubject<T extends BaseCRUDRecord, D>({ createOne, upd
         if (subject)
             if (recordList) {
                 subject.next(recordList);
-                snackbarSubject.openSnackbar({ title: 'Something went wrong', level: LogLevel.SUCCESS })
             } else {
                 snackbarSubject.openSnackbar({ title: 'Something went wrong', level: LogLevel.ERROR })
             }
@@ -73,7 +71,7 @@ export function buildRecordSubject<T extends BaseCRUDRecord, D>({ createOne, upd
     // Fetch first
     fetchSubject();
     return {
-        subscribe: (setState: React.Dispatch<React.SetStateAction<T[] | null>>) => subject.subscribe(setState),
+        subscribe: (setState: (arr: T[] | null) => void) => subject.subscribe(setState),
         unsubscribe: () => subject.unsubscribe(),
         createOne: async (draftRecord) => {
             const newRecord = await createOne(draftRecord);

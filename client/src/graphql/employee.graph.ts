@@ -8,7 +8,6 @@ export const GET_EMPLOYEES = gql`
 query getEmployees {
  employees {
      result {
-
   id
   name
   contract
@@ -24,8 +23,10 @@ query getEmployees {
   workingDays {
     id
     active
-    name
-
+    name {
+        name
+        value
+    }
   }
 }
      }
@@ -52,7 +53,10 @@ mutation createEmployee($input: CreateEmployeeInput!) {
       }
       workingDays {
         id
-        name
+        name {
+          name
+          value
+        }
         active
       }
     }

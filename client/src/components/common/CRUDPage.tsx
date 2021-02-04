@@ -10,10 +10,9 @@ import { BasicFormProps } from "./CRUDForm";
 export type CellDefinition<T> = {
   key: keyof T;
   header?: string;
-  formatValue?: (v: unknown) => string | number;
+  formatValue?: (v: any) => string | number;
   className?: string;
 };
-
 export class CellDictionary<T extends BaseCRUDRecord> {
   cellDefinitions: { [k: string]: CellDefinition<T> };
   headers: string[];

@@ -1,12 +1,8 @@
+from sqlalchemy import Table, Column, String, ForeignKey, Integer, Date, Enum
 from main import db
-from sqlalchemy import Table, Column, String, Integer, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
-
-
-def ID():
-    return Column("id", String(36), default=lambda: str(uuid.uuid4()), primary_key=True)
-
+from .helper import ID
+import datetime
+from ..enums import LeaveReason, LeaveStatus
 
 employee_day_table = Table(
     "employee_day",
@@ -26,10 +22,16 @@ class Employee(db.Model):
     )
 
     skills = db.relationship("EmployeeSkill", cascade="all, delete, delete-orphan")
+    leaves = db.relationship(
+        "EmployeeLeave", backref="employee", cascade="all, delete, delete-orphan"
+    )
 
     # Shifts placement fully mastered by employee
     # Shifts placement not yet mastered by employee
     # training_shifts = db.relationship("Shift")
+
+    def get_fixed_assignments(self, start_date, end_date):
+        return
 
     def to_dict(self):
         return {
@@ -63,36 +65,19 @@ class EmployeeSkill(db.Model):
         )
 
 
-class Shift(db.Model):
-
+class EmployeeLeave(db.Model):
     id = ID()
-    title = Column(String(16), unique=True)
-    duration = Column(Integer)
-    # employee_id = Column(String(36), ForeignKey("employee.id"))
-    skills = db.relationship("EmployeeSkill", cascade="all, delete, delete-orphan")
+    employee_id = Column(
+        String(36), ForeignKey("employee.id", ondelete="CASCADE"), nullable=False
+    )
+    start_day = Column(Date, nullable=False)
+    end_day = Column(Date, nullable=False)
 
-    # child = relationship("Child", uselist=False, back_populates="parent")
+    reason = Column(Enum(LeaveReason), nullable=False)
+    status = Column(Enum(LeaveStatus), nullable=False)
 
-    def to_dict(self):
-        return {"id": self.id, "title": self.title, "duration": self.duration}
+    def get_leave_days(self):
+        return
 
-    def __repr__(self):
-        return "<Shift: {}>".format(self.title)
-
-
-class Day(db.Model):
-    id = ID()
-    name = Column(String(16), unique=True)
-    order = Column(Integer, unique=True)
-    active = Column(Boolean)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "active": self.active,
-            "order": self.order,
-        }
-
-    def __repr__(self):
-        return "<Day: {}>".format(self.id, self.name)
+    def to_tuple(self) -> tuple:
+        return self.employee_id

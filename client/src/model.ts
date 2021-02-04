@@ -25,7 +25,7 @@ export function employeetoDraft({ contract, name, skills, workingDays }: Employe
     return {
         contract, name,
         skills: skills.map(({ shift, level }) => ({ level, shift: shift.id })) || [],
-        workingDays: workingDays?.map(d => d.name) || []
+        workingDays: workingDays?.map(d => d.name.name) || []
     }
 }
 

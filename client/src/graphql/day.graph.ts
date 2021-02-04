@@ -9,8 +9,10 @@ query getDays {
   days {
     result {
       id
-      order
-      name
+      name {
+        name
+        value
+      }
       active
     }
     success
@@ -29,8 +31,10 @@ mutation setDayActivation($input: ToggleDayActivationInput!) {
     result {
       id
       active
-      order
-      name
+      name {
+        name
+        value
+      }
     }
     success
     errors
