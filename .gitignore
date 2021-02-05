@@ -5,8 +5,12 @@ server/venv
 server/build
 server/dist
 server/*.egg-info
+
+
 client/node_modules
 client/.eslintcache
+client/build
+client/yarn-error.log
 
 .ssh
 server/test.py

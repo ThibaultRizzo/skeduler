@@ -6,7 +6,7 @@ COPY package.json /usr/src/app
 RUN npm install -- silent
 
 COPY . /usr/src/app
-RUN npm run build
+RUN npm run build-prod
 
 FROM nginx:alpine
 COPY --from=build /usr/src/app/build /usr/share/nginx/html

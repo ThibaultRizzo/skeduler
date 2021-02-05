@@ -1,6 +1,6 @@
-FROM python:3.6.10
+FROM python:3.7.2
 
-RUN mkdir -p /usr/src/app
+ADD . /usr/src/app
 WORKDIR /usr/src/app
 
 COPY requirements.txt /usr/src/app
