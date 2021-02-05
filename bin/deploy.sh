@@ -4,7 +4,7 @@
 eval `ssh-agent -s`
 ssh-add ./.ssh/thibault-skeduler-test.pem
 
-ssh ubuntu@35.180.139.108
+ssh ubuntu@15.237.145.109
 
 
 #  << EOF

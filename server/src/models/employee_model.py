@@ -1,9 +1,9 @@
 from sqlalchemy import Table, Column, String, ForeignKey, Integer, Date, Enum, Boolean
-from main import db
-from .helper import ID
 import datetime
-from ..enums import EventNature, EventStatus, EventType
+from ..database import db
+from .helper import ID
 from .dto import Period
+from ..enums import EventNature, EventStatus, EventType
 
 EVENT_WEIGHT_DICT = {
     EventNature.MANDATORY: 0,

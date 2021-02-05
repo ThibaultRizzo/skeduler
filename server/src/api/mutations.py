@@ -1,4 +1,5 @@
-from .models import (
+from ..database import db
+from ..models import (
     Shift,
     Day,
     Employee,
@@ -7,14 +8,13 @@ from .models import (
     Schedule,
     ScheduleEmployee,
     ScheduleShift,
+    SolverPeriod,
 )
 from ariadne import MutationType, convert_kwargs_to_snake_case
-from api import db
-from .enums import DayEnum, EventStatus
+from ..enums import DayEnum, EventStatus
 from .errors import NoRecordError
-from .solver.solver import solve_shift_scheduling
-from .solver.errors import SolverException
-from .models.dto import SolverPeriod
+from ..solver.solver import solve_shift_scheduling
+from ..solver.errors import SolverException
 
 mutation = MutationType()
 

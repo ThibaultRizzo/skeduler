@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, ForeignKey
 from .helper import ID, created_at
 from textwrap import wrap
-from main import db
+from ..database import db
 
 
 class Schedule(db.Model):

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, Enum
-from main import db
+from ..database import db
 from .helper import ID
 from ..enums import ShiftImportance
 

@@ -10,3 +10,4 @@ client/.eslintcache
 
 .ssh
 server/test.py
+*/.env

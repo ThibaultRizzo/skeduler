@@ -128,7 +128,7 @@ type EmployeesResult {
 
 type DaysResult {
   result: [Day!]
-  success: Boolean!
+  success: Boolean
   errors: [String]
 }
 

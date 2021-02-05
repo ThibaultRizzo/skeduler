@@ -1,8 +1,7 @@
-from .models import Shift, Day, Employee, Schedule
+from ..models import Shift, Day, Employee, Schedule
 from ariadne import QueryType, convert_kwargs_to_snake_case
-from .decorators import mutation
-from .resolver import datetime_scalar
 from sqlalchemy import text
+from ..database import db
 
 query = QueryType()
 
@@ -23,7 +22,6 @@ def resolve_shifts(obj, info):
 def resolve_days(obj, info):
     try:
         days = [day.to_dict() for day in Day.query.order_by(Day.name.asc()).all()]
-        print(days[0])
         payload = {"result": days, "success": True}
     except Exception as error:
         payload = {"errors": [str(error)]}
