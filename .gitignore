@@ -2,6 +2,11 @@ server/instance/
 server/**/__pycache__
 server/__pycache__
 server/venv
-
+server/build
+server/dist
+server/*.egg-info
 client/node_modules
 client/.eslintcache
+
+.ssh
+server/test.py
