@@ -11,6 +11,12 @@ client/node_modules
 client/.eslintcache
 client/build
 client/yarn-error.log
+client/.yarn/*
+client/!.yarn/releases
+client/!.yarn/plugins
+client/!.yarn/sdks
+client/!.yarn/versions
+client/.pnp.*
 
 .ssh
 server/test.py

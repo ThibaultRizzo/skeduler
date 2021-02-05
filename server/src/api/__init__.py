@@ -14,17 +14,17 @@ schema = make_executable_schema(
 
 def init_api(app):
     CORS(app)
-    api = Blueprint("graphql", __name__)
-    # @app.route("/", methods=["GET"])
-    # def index():
-    #     return redirect("/graphql")
 
-    @api.route("/", methods=["GET"])
+    @app.route("/", methods=["GET"])
+    def index():
+        return redirect("/graphql")
+
+    @app.route("/graphql", methods=["GET"])
     def graphql_playground():
         """Serve GraphiQL playground"""
         return PLAYGROUND_HTML, 200
 
-    @api.route("/", methods=["POST"])
+    @app.route("/graphql", methods=["POST"])
     def graphql_server():
         data = request.get_json()
         success, result = graphql_sync(
@@ -32,8 +32,6 @@ def init_api(app):
         )
         status_code = 200 if success else 400
         return jsonify(result), status_code
-
-    app.register_blueprint(api, url_prefix="/graphql")
 
     # logging.basicConfig(
     #     level=logging.DEBUG,
