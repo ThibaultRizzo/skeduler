@@ -16,4 +16,10 @@ sudo curl -L https://github.com/docker/compose/releases/download/1.28.2/docker-c
 sudo chmod +x /usr/local/bin/docker-compose
 
 # Prepare aliases
-alias dc='docker-compose
+alias dc='docker-compose'
+
+# Install nginx
+sudo apt install nginx
+
+# Add docker permission to ubuntu user
+sudo usermod -aG docker ubuntu
