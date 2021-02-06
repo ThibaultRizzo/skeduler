@@ -1644,7 +1644,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/cli@npm:^1.19.3":
+"@graphql-codegen/cli@npm:^1.20.1":
   version: 1.20.1
   resolution: "@graphql-codegen/cli@npm:1.20.1"
   dependencies:
@@ -5139,36 +5139,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"client@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "client@workspace:."
-  dependencies:
-    "@graphql-codegen/cli": ^1.19.3
-    "@graphql-codegen/typescript": ^1.18.1
-    "@testing-library/jest-dom": ^5.11.4
-    "@testing-library/react": ^11.1.0
-    "@testing-library/user-event": ^12.1.10
-    "@types/jest": ^26.0.15
-    "@types/react": ^16.9.53
-    "@types/react-dom": ^16.9.8
-    "@types/react-router-dom": ^5.1.7
-    axios: ^0.21.0
-    clsx: ^1.1.1
-    graphql: ^15.4.0
-    husky: ^4.3.5
-    lint-staged: ^10.5.3
-    prettier: ^2.2.1
-    react: ^17.0.1
-    react-dom: ^17.0.1
-    react-router-dom: ^5.2.0
-    react-scripts: 4.0.2
-    rxjs: ^6.6.3
-    sass: ^1.32.6
-    typescript: ^4.1.2
-    web-vitals: ^0.2.4
-  languageName: unknown
-  linkType: soft
-
 "cliui@npm:^5.0.0":
   version: 5.0.0
   resolution: "cliui@npm:5.0.0"
@@ -7885,6 +7855,36 @@ __metadata:
   checksum: 5f1a9bbff02d30cf5b4f12cfef20b47455876f8318b92d275ca39e3c5adf0636d3a0d8f4821a1c245339c47e79a551dce9ce5c7d9236c16347b934dc13d1d408
   languageName: node
   linkType: hard
+
+"frontend@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "frontend@workspace:."
+  dependencies:
+    "@graphql-codegen/cli": ^1.20.1
+    "@graphql-codegen/typescript": ^1.18.1
+    "@testing-library/jest-dom": ^5.11.4
+    "@testing-library/react": ^11.1.0
+    "@testing-library/user-event": ^12.1.10
+    "@types/jest": ^26.0.15
+    "@types/react": ^16.9.53
+    "@types/react-dom": ^16.9.8
+    "@types/react-router-dom": ^5.1.7
+    axios: ^0.21.0
+    clsx: ^1.1.1
+    graphql: ^15.4.0
+    husky: ^4.3.5
+    lint-staged: ^10.5.3
+    prettier: ^2.2.1
+    react: ^17.0.1
+    react-dom: ^17.0.1
+    react-router-dom: ^5.2.0
+    react-scripts: 4.0.2
+    rxjs: ^6.6.3
+    sass: ^1.32.6
+    typescript: ^4.1.2
+    web-vitals: ^0.2.4
+  languageName: unknown
+  linkType: soft
 
 "fs-capacitor@npm:^6.1.0":
   version: 6.2.0
