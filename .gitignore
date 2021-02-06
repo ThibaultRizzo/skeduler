@@ -1,23 +1,23 @@
-server/instance/
-server/**/__pycache__
-server/__pycache__
-server/venv
-server/build
-server/dist
-server/*.egg-info
+backend/instance/
+backend/**/__pycache__
+backend/__pycache__
+backend/venv
+backend/build
+backend/dist
+backend/*.egg-info
 
 
-client/node_modules
-client/.eslintcache
-client/build
-client/yarn-error.log
-client/.yarn/*
-client/!.yarn/releases
-client/!.yarn/plugins
-client/!.yarn/sdks
-client/!.yarn/versions
-client/.pnp.*
+frontend/node_modules
+frontend/.eslintcache
+frontend/build
+frontend/yarn-error.log
+frontend/.yarn/*
+frontend/!.yarn/releases
+frontend/!.yarn/plugins
+frontend/!.yarn/sdks
+frontend/!.yarn/versions
+frontend/.pnp.*
 
 .ssh
-server/test.py
+backend/test.py
 */.env

@@ -5,10 +5,10 @@ services:
     environment:
       - POSTGRES_USER=db_user
       - POSTGRES_PASSWORD=db_password
-  client:
-    container_name: client
+  frontend:
+    container_name: frontend
     build:
-      context: ./client
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
       - 80:80
@@ -16,14 +16,14 @@ services:
     volumes:
       - /home/ubuntu/ssl:/etc/nginx/certs
 
-  server:
+  backend:
     restart: always
-    container_name: server
-    build: ./server
+    container_name: backend
+    build: ./backend
     expose:
       - 5000
     volumes:
-      - ./server:/usr/src/app
+      - ./backend:/usr/src/app
     environment:
       - APP_ENV=${APP_ENV}
     depends_on:

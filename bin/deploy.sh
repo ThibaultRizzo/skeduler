@@ -8,4 +8,4 @@ ssh ubuntu@15.237.145.109 << EOF
     cd skeduler
     git checkout master
     git pull
-    APP_ENV=Production dc up -d
+    APP_ENV=Production dc build && dc up -d

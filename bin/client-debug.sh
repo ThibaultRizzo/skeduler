@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd client
+cd frontend
 yarn start
 cd -

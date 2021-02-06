@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd server
+cd backend
 
 source venv/Scripts/activate

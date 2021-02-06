@@ -1,5 +1,5 @@
 {
-    "typescript.tsdk": "./client/node_modules/typescript/lib",
+    "typescript.tsdk": "./frontend/node_modules/typescript/lib",
     "python.formatting.provider": "black",
     "beautify.onSave": true,
     "editor.formatOnSave": true,

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-cd server
+cd backend
 python3 setup.py bdist_wheel
 
 python3 -m venv venv
