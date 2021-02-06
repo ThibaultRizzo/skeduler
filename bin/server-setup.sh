@@ -30,3 +30,6 @@ alias dc='docker-compose'
 
 # Add docker permission to ubuntu user
 sudo usermod -aG docker ubuntu
+
+# Create symlink at docker-compose file level
+ln -s /etc/letsencrypt/live/skeduler.eu/ ./certs
