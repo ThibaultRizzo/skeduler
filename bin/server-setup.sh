@@ -26,7 +26,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 alias dc='docker-compose'
 
 # Install nginx
-sudo apt install nginx
+# sudo apt install nginx
 
 # Add docker permission to ubuntu user
 sudo usermod -aG docker ubuntu
