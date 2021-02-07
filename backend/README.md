@@ -17,3 +17,7 @@ To apply changes to the models
 ## Apply migration
 
 > flask db upgrade
+
+## Create database
+
+> flask create_db

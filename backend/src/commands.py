@@ -2,12 +2,24 @@
 import os
 from glob import glob
 from subprocess import call
+from .database import db
+from flask.cli import FlaskGroup
 
 import click
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.join(HERE, os.pardir)
 TEST_PATH = os.path.join(PROJECT_ROOT, "tests")
+
+
+def init_app(app):
+    cli = FlaskGroup(app)
+
+    @app.cli.command("create_db")
+    def create_db():
+        db.drop_all()
+        db.create_all()
+        db.session.commit()
 
 
 @click.command()

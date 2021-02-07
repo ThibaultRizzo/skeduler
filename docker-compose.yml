@@ -1,30 +1,46 @@
 version: "3"
 services:
-  # db:
-  #   image: "postgres:11.2"
-  #   environment:
-  #     - POSTGRES_USER=db_user
-  #     - POSTGRES_PASSWORD=db_password
-  frontend:
-    container_name: frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+  db:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_DB=skeduler_db
+      - POSTGRES_USER=db_user
+      - POSTGRES_PASSWORD=db_password
     ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./certs:/etc/nginx/certs
+      - 5432:5432
+  # frontend:
+  #   container_name: frontend
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   volumes:
+  #     - ./certs:/etc/nginx/certs
+
+  nginx:
+    build: ./frontend
+    ports:
+      - 1337:80
+    depends_on:
+      - backend
 
   backend:
     restart: always
     container_name: backend
+    command: gunicorn --bind 0.0.0.0:5000 wsgi:app
     build: ./backend
     expose:
       - 5000
-    volumes:
-      - ./backend:/usr/src/app
+    # ports:
+    #   - 5000:5000
+    # volumes:
+    #   - ./backend:/usr/src/app
     environment:
       - APP_ENV=${APP_ENV}
-    # depends_on:
-    #   - db
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

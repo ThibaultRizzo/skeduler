@@ -1,4 +1,10 @@
-from ariadne import gql, load_schema_from_path, make_executable_schema, graphql_sync
+from ariadne import (
+    gql,
+    load_schema_from_path,
+    make_executable_schema,
+    graphql_sync,
+)
+from ariadne.constants import PLAYGROUND_HTML
 from flask import request, jsonify, redirect, Blueprint
 from . import queries, mutations
 from .resolver import datetime_scalar
