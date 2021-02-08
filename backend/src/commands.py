@@ -5,6 +5,8 @@ from subprocess import call
 from .database import db
 from flask.cli import FlaskGroup
 
+from .api.mutations import create_organization
+
 import click
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -19,6 +21,11 @@ def init_app(app):
     def create_db():
         db.drop_all()
         db.create_all()
+        db.session.commit()
+
+    @app.cli.command("create_org")
+    def create_org():
+        create_organization()
         db.session.commit()
 
 

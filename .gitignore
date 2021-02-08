@@ -23,4 +23,5 @@ backend/test.py
 */.env
 
 certs
-.env*
+.env
+.env.prod

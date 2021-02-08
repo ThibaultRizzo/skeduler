@@ -8,4 +8,4 @@ ssh ubuntu@15.237.145.109 << EOF
     cd projects/skeduler
     git checkout master
     git pull
-    # APP_ENV=Production docker-compose up -d --build
+    docker-compose -f docker-compose.prod.yml up -d --build

@@ -255,6 +255,12 @@ def resolve_add_event(_, info, input):
 @mutation.field("createOrganization")
 @convert_kwargs_to_snake_case
 def resolve_create_organization(_, info):
+    create_organization()
+    db.session.commit()
+    return True
+
+
+def create_organization():
     generate_days()
     return True
 

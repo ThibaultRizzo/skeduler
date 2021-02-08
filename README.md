@@ -8,6 +8,30 @@ An application aiming at generating randomized schedules matching given constrai
 > git clone YOUR_REPO_URL
 ```
 
+## Move to project folder
+
+```sh
+> cd skeduler
+```
+
+## Add .env file and custom (if needed)
+
+```sh
+>  cp backend/.env.dev backend/.env
+```
+
+## Start db
+
+```sh
+> docker-compose -f docker-compose.dev.yml up -d --build
+```
+
+## Init db
+
+```sh
+> source bin/db-create.sh
+```
+
 ## Start server
 
 At the source of your project:
@@ -18,8 +42,20 @@ At the source of your project:
 
 ## Start client
 
-At the source of your project:
+At the source of your project and in another window:
 
 ```sh
 > source bin/client-debug.sh
+```
+
+## Launch app in browser
+
+Go to localhost:3000
+
+## Additional commands
+
+### Remove database and volume
+
+```sh
+> docker-compose -f docker-compose.dev.yml down -v
 ```

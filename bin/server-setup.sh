@@ -33,3 +33,14 @@ sudo usermod -aG docker ubuntu
 
 # Create symlink at docker-compose file level
 ln -s /etc/letsencrypt/live/skeduler.eu/ ./certs
+
+# Install code-agent
+sudo apt-get install ruby -y
+sudo apt-get install wget
+cd /home/ubuntu
+wget https://aws-codedeploy-eu-west-3.s3.eu-west-3.amazonaws.com/latest/install
+chmod +x ./install
+sudo ./install auto
+
+# Start codedeploy agent
+sudo service codedeploy-agent start
