@@ -8,23 +8,6 @@ services:
       - POSTGRES_PASSWORD=db_password
     ports:
       - 5432:5432
-  # frontend:
-  #   container_name: frontend
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 80:80
-  #     - 443:443
-  #   volumes:
-  #     - ./certs:/etc/nginx/certs
-
-  nginx:
-    build: ./frontend
-    ports:
-      - 1337:80
-    depends_on:
-      - backend
 
   backend:
     restart: always
@@ -42,5 +25,15 @@ services:
     depends_on:
       - db
 
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - backend
 volumes:
   postgres_data:
