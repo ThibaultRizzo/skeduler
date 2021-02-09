@@ -1,5 +1,5 @@
-@import "../shared/flex";
-@import "../shared/_colors";
+@use "../shared/flex" as *;
+@use "../shared/_colors" as *;
 
 header {
   @extend %flex-center;
