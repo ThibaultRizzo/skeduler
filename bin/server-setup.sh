@@ -1,7 +1,10 @@
 #!/bin/bash
 sudo apt update
 
+
 # Install node latest
+sudo apt install nodejs
+sudo apt install npm
 sudo npm cache clean -f
 sudo npm install -g npm@latest
 sudo npm install -g n
@@ -23,7 +26,7 @@ sudo curl -L https://github.com/docker/compose/releases/download/1.28.2/docker-c
 sudo chmod +x /usr/local/bin/docker-compose
 
 # Prepare aliases
-alias dc='docker-compose'
+# alias dc='docker-compose'
 
 # Install nginx
 # sudo apt install nginx
@@ -32,15 +35,15 @@ alias dc='docker-compose'
 sudo usermod -aG docker ubuntu
 
 # Create symlink at docker-compose file level
-ln -s /etc/letsencrypt/live/skeduler.eu/ ./certs
+# ln -s /etc/letsencrypt/live/skeduler.eu/ ./certs
 
 # Install code-agent
-sudo apt-get install ruby -y
-sudo apt-get install wget
-cd /home/ubuntu
-wget https://aws-codedeploy-eu-west-3.s3.eu-west-3.amazonaws.com/latest/install
-chmod +x ./install
-sudo ./install auto
+# sudo apt-get install ruby -y
+# sudo apt-get install wget
+# cd /home/ubuntu
+# wget https://aws-codedeploy-eu-west-3.s3.eu-west-3.amazonaws.com/latest/install
+# chmod +x ./install
+# sudo ./install auto
 
 # Start codedeploy agent
-sudo service codedeploy-agent start
+# sudo service codedeploy-agent start
