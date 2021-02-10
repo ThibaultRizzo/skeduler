@@ -1,5 +1,5 @@
 import { WithId } from '../model';
-import { BehaviorSubject } from "rxjs"
+import { BehaviorSubject, Subscription } from "rxjs"
 import snackbarSubject, { LogLevel } from "./snackbar.subject";
 import { ApiError, isApiError } from '../api/helper';
 
@@ -19,7 +19,7 @@ export type CRUDSubjectProps<T extends BaseCRUDRecord, D> = {
 } & ReadSubjectProps<T>
 
 export type SimpleSubjectProp<T extends BaseCRUDRecord> = {
-    subscribe: (setState: (d: T[] | null) => void) => void,
+    subscribe: (setState: (d: T[] | null) => void) => Subscription,
     unsubscribe: () => void
 }
 export type CRUDSubject<T extends BaseCRUDRecord, D> = ReadSubject<T> & CRUDSubjectProps<T, D>

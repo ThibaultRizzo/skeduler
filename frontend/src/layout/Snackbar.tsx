@@ -12,8 +12,11 @@ function Snackbar({ ...props }: SnackbarProps) {
   );
   const isSnackbarOpen = snackbarState.title !== "";
   useLayoutEffect(() => {
-    snackbarSubject.subscribe(setSnackbarState);
+    const sub = snackbarSubject.subscribe(setSnackbarState);
     snackbarSubject.init();
+    return function cleanup() {
+      sub.unsubscribe();
+    };
   }, []);
   return (
     <aside

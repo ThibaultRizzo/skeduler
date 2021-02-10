@@ -23,7 +23,6 @@ export const isApiError = (v: any): boolean => {
 }
 
 export const getResultOrError = <T>(payload: Payload<T> | null | undefined): T | ApiError => {
-    console.log({ payload })
     if (!payload || !payload.result) {
         return {
             error: 'Something went wrong',

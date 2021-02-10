@@ -1,5 +1,5 @@
-import { Day, DayName } from "../../../types";
 import { daySubject } from "../../../rxjs/record.subject";
+import { Day, DayName } from "../../../types";
 import FormSelect from "../FormSelect";
 
 export type DaySelectProps = {

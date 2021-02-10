@@ -1,8 +1,10 @@
 import { ErrorDictionary } from "../../../hooks/useValidation";
 import { Draft, shifttoDraft } from "../../../model";
 import { shiftSubject } from "../../../rxjs/record.subject";
-import { Shift, ShiftImportance } from "../../../types.d";
+import { Shift, ShiftImportance } from "../../../types";
+import { shiftImportanceFactory } from "../../../utils/enum";
 import CRUDForm, { FormField, FormFieldType } from "../CRUDForm";
+import EnumSelect from "../select/EnumSelect";
 
 type ShiftFormProps = {
   record: Shift | null;
@@ -45,6 +47,41 @@ function ShiftForm({ record }: ShiftFormProps) {
       id: "duration-input",
       name: "duration",
     },
+    {
+      type: FormFieldType.NUMBER,
+      id: "cover-monday-input",
+      name: "coverMonday",
+    },
+    {
+      type: FormFieldType.NUMBER,
+      id: "cover-tuesday-input",
+      name: "coverTuesday",
+    },
+    {
+      type: FormFieldType.NUMBER,
+      id: "cover-wednesday-input",
+      name: "coverWednesday",
+    },
+    {
+      type: FormFieldType.NUMBER,
+      id: "cover-thursday-input",
+      name: "coverThursday",
+    },
+    {
+      type: FormFieldType.NUMBER,
+      id: "cover-friday-input",
+      name: "coverFriday",
+    },
+    {
+      type: FormFieldType.NUMBER,
+      id: "cover-saturday-input",
+      name: "coverSaturday",
+    },
+    {
+      type: FormFieldType.NUMBER,
+      id: "cover-sunday-input",
+      name: "coverSunday",
+    },
   ];
 
   return (
@@ -56,7 +93,19 @@ function ShiftForm({ record }: ShiftFormProps) {
       initialState={draftShift || initialState}
       validateForm={validateForm}
       fields={fields}
-    />
+    >
+      {(shift, setShift) => (
+        <EnumSelect<ShiftImportance>
+          id="shift-importance-select"
+          label="Shift importance"
+          onChange={([shiftImportance]) => {
+            setShift({ ...shift, shiftImportance });
+          }}
+          value={shift.shiftImportance}
+          factory={shiftImportanceFactory}
+        />
+      )}
+    </CRUDForm>
   );
 }
 

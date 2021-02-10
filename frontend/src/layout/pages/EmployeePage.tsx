@@ -10,14 +10,15 @@ function EmployeePage() {
     { key: "contract" },
     {
       key: "workingDays",
-      formatValue: (days: Day[]) => days.map((d) => d.name).join(","),
+      formatValue: (days: Day[]) => days.map((d) => d.name.name).join(","),
     },
     {
       key: "skills",
-      formatValue: (skills: EmployeeSkill[]) =>
-        skills
+      formatValue: (skills: EmployeeSkill[]) => {
+        return skills
           .map((skill) => `${skill.shift.title}: (${skill.level})`)
-          .join(","),
+          .join(",");
+      },
     },
   ]);
   return (

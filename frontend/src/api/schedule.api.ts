@@ -5,7 +5,6 @@ import { CompleteSchedule, GenerateScheduleInput } from '../types';
 
 export const getSchedule = async (): Promise<CompleteSchedule | null> => {
     const res = await httpWrapper.query(GET_SCHEDULE);
-    console.log(res)
     return res.data.data.schedule.result || null;
 }
 
@@ -17,6 +16,5 @@ export const generateSchedule = async (): Promise<CompleteSchedule | null> => {
     const res = await httpWrapper.mutation(GENERATE_SCHEDULE, {
         input
     });
-    console.log(res.data.data.generateSchedule)
     return res.data.data.generateSchedule?.result || null
 }

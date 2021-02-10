@@ -47,7 +47,7 @@ class Shift(db.Model):
             "id": self.id,
             "title": self.title,
             "duration": self.duration,
-            "shiftImportance": self.shift_importance,
+            "shiftImportance": self.shift_importance.name,
             "coverMonday": self.cover_monday,
             "coverTuesday": self.cover_tuesday,
             "coverWednesday": self.cover_wednesay,

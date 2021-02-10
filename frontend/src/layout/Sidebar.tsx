@@ -10,8 +10,11 @@ function Sidebar({ ...props }: SidebarProps) {
   const [sidebarState, setSidebarState] = useState(sidebarStore.initialState);
   const isSidebarOpen = sidebarState.renderComponent !== null;
   useLayoutEffect(() => {
-    sidebarStore.subscribe(setSidebarState);
+    const sub = sidebarStore.subscribe(setSidebarState);
     sidebarStore.init();
+    return function cleanup() {
+      sub.unsubscribe();
+    };
   }, []);
 
   function closeSidebar() {

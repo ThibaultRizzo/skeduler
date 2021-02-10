@@ -23,21 +23,26 @@ function SchedulePage() {
   );
 
   useEffect(() => {
-    daySubject.subscribe((days) =>
+    const daySub = daySubject.subscribe((days) =>
       setDayDict(
         days?.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}) || {}
       )
     );
-    shiftSubject.subscribe((shifts) =>
+    const shiftSub = shiftSubject.subscribe((shifts) =>
       setShiftDict(
         shifts?.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}) || {}
       )
     );
-    employeeSubject.subscribe((employees) =>
+    const employeeSub = employeeSubject.subscribe((employees) =>
       setEmployeeDict(
         employees?.reduce((acc, val) => ({ ...acc, [val.id]: val }), {}) || {}
       )
     );
+    return function cleanup() {
+      daySub.unsubscribe();
+      shiftSub.unsubscribe();
+      employeeSub.unsubscribe();
+    };
   }, []);
 
   const isScheduleDisplayable =
@@ -48,7 +53,6 @@ function SchedulePage() {
   async function onScheduleGeneration() {
     setLoading(true);
     const schedule = await generateSchedule();
-    console.log(schedule);
     setSchedule(schedule);
     setLoading(false);
   }

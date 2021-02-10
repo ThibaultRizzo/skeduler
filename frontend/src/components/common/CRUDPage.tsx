@@ -6,11 +6,13 @@ import {
   ReadSubject,
 } from "../../rxjs/crud.subject";
 import { BasicFormProps } from "./CRUDForm";
+import { Subscription } from "rxjs";
 
 export type CellDefinition<T> = {
-  key: keyof T;
+  key: keyof T | string;
   header?: string;
   formatValue?: (v: any) => string | number;
+  isCombined?: boolean;
   className?: string;
 };
 export class CellDictionary<T extends BaseCRUDRecord> {
@@ -30,14 +32,14 @@ export class CellDictionary<T extends BaseCRUDRecord> {
   getValues(v: T): { cellDef: CellDefinition<T>; value: string | number }[] {
     return Object.entries(this.cellDefinitions).map(([k, cellDef]) => ({
       cellDef,
-      value: this.getValue(v, k as keyof T),
+      value: this.getValue(v, k as keyof T, Boolean(cellDef.isCombined)),
     }));
   }
 
-  getValue(v: T, k: keyof T): string | number {
-    const value = v[k];
+  getValue(v: T, k: keyof T, isCombined: boolean): string | number {
+    const value = isCombined ? v : v[k];
     const format = this.cellDefinitions[k as string].formatValue;
-    return format ? format(value) : ` ${value}`;
+    return format ? format(value) : `${value}`;
   }
 }
 
@@ -88,7 +90,10 @@ function CRUDTable<T extends BaseCRUDRecord, D>({
 
   useEffect(() => {
     // subject.fetchAll();
-    subject.subscribe(setLines);
+    const sub = subject.subscribe(setLines);
+    return function cleanup() {
+      sub.unsubscribe();
+    };
   }, [subject]);
   const headers = cellDictionary.headers;
   return (
@@ -107,6 +112,8 @@ function CRUDTable<T extends BaseCRUDRecord, D>({
           </tr>
         )}
         <tr>
+          {/* Space for checkbox */}
+          {onDelete && <th />}
           {headers.map((header, i) => (
             <th key={header + i}>{header}</th>
           ))}

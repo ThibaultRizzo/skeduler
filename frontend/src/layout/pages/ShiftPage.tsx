@@ -8,6 +8,13 @@ function ShiftPage() {
   const cellDictionary = new CellDictionary<Shift>([
     { key: "title" },
     { key: "duration" },
+    { key: "shiftImportance" },
+    {
+      key: "cover",
+      formatValue: (v: Shift) =>
+        `${v.coverMonday} ${v.coverTuesday} ${v.coverWednesday} ${v.coverThursday} ${v.coverFriday} ${v.coverSaturday} ${v.coverSunday}`,
+      isCombined: true,
+    },
   ]);
   return (
     <CRUDPage<Shift, Draft<Shift>>

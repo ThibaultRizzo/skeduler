@@ -43,6 +43,14 @@ def resolve_update_shift(_, info, input):
     #     raise NoRecordError()
     shift.title = input["title"]
     shift.duration = input["duration"]
+    shift.shift_importance = input["shiftImportance"]
+    shift.cover_monday = input["coverMonday"]
+    shift.cover_tuesday = input["coverTuesday"]
+    shift.cover_wednesday = input["coverWednesday"]
+    shift.cover_thursday = input["coverThursday"]
+    shift.cover_friday = input["coverFriday"]
+    shift.cover_saturday = input["coverSaturday"]
+    shift.cover_sunday = input["coverSunday"]
 
     db.session.commit()
     return shift.to_dict()

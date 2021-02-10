@@ -195,6 +195,14 @@ input UpdateShiftInput {
   id: String!
   title: String!
   duration: Int!
+  shiftImportance: ShiftImportance!
+  coverMonday: Int!
+  coverTuesday: Int!
+  coverWednesday: Int!
+  coverThursday: Int!
+  coverFriday: Int!
+  coverSaturday: Int!
+  coverSunday: Int!
 }
 
 type ShiftPayload {

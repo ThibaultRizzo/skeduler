@@ -15,7 +15,10 @@ export function useSubject<T extends BaseCRUDRecord>(initialState: T[] | null, s
     const [state, setState] = useState<T[] | null>(initialState);
 
     useEffect(() => {
-        subject.subscribe(setState);
+        const sub = subject.subscribe(setState);
+        return function cleanup() {
+            sub.unsubscribe();
+        }
     }, [subject]);
     return [state, setState];
 }
