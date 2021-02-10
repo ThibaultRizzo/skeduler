@@ -1,12 +1,13 @@
+import { ApiResponse, getResultOrError } from './helper';
 import { DraftEmployee, WithId } from '../model';
 import { CREATE_EMPLOYEE, DELETE_EMPLOYEE, GET_EMPLOYEES, UPDATE_EMPLOYEE } from '../graphql/employee.graph';
 import httpWrapper from '../http';
 import { Employee } from "../types";
 
 
-export const createEmployee = async (input: DraftEmployee): Promise<Employee | null> => {
+export const createEmployee = async (input: DraftEmployee): ApiResponse<Employee> => {
     const res = await httpWrapper.mutation(CREATE_EMPLOYEE, { input });
-    return res.data.data.createEmployee?.result || null;
+    return getResultOrError(res.data.data.createEmployee);
 }
 
 export const updateEmployee = async (input: WithId<DraftEmployee>): Promise<Employee | null> => {

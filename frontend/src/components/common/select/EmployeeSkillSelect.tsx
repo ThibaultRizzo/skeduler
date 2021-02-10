@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAsyncState } from "../../../hooks/useAsyncState";
-import { Shift } from "../../../model";
-import { ShiftSkillInput } from "../../../types";
+import { Shift, ShiftSkillInput } from "../../../types";
 
 import { getEnumKey } from "../../../utils/enum";
 import { shiftSubject } from "../../../rxjs/record.subject";

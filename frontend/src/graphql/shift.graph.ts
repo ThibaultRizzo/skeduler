@@ -12,6 +12,8 @@ query getShifts {
                         title
                         duration
                     }
+                    success
+            errors
                 }
                   }
 `;
@@ -28,6 +30,8 @@ mutation createShift($input: CreateShiftInput!) {
             title
             duration
             }
+            success
+            errors
     }
   }
 `;
@@ -41,6 +45,8 @@ mutation updateShift($input: UpdateShiftInput!) {
       title
       duration
     }
+    success
+            errors
   }
 }
 `;
@@ -48,8 +54,9 @@ mutation updateShift($input: UpdateShiftInput!) {
 export const DELETE_SHIFT = gql`
 mutation deleteShift($id: String!) {
     deleteShift(id: $id) {
+      result
         success
-        errors
+    errors
     }
   }
 `;

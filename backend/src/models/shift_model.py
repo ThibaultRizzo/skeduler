@@ -43,7 +43,19 @@ class Shift(db.Model):
         )
 
     def to_dict(self):
-        return {"id": self.id, "title": self.title, "duration": self.duration}
+        return {
+            "id": self.id,
+            "title": self.title,
+            "duration": self.duration,
+            "shiftImportance": self.shift_importance,
+            "coverMonday": self.cover_monday,
+            "coverTuesday": self.cover_tuesday,
+            "coverWednesday": self.cover_wednesay,
+            "coverThursday": self.cover_thursday,
+            "coverFriday": self.cover_friday,
+            "coverSaturday": self.cover_saturday,
+            "coverSunday": self.cover_sunday,
+        }
 
     def __repr__(self):
         return "<Shift: {}>".format(self.title)

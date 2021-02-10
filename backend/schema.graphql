@@ -42,6 +42,12 @@ enum EventNature {
   PREFERED
 }
 
+enum ShiftImportance {
+  MAJOR
+  AVERAGE
+  MINOR
+}
+
 ############
 #  Scalar   #
 ############
@@ -107,29 +113,38 @@ type Shift {
   id: String!
   title: String!
   duration: Int!
+  shiftImportance: ShiftImportance!
+  coverMonday: Int!
+  coverTuesday: Int!
+  coverWednesday: Int!
+  coverThursday: Int!
+  coverFriday: Int!
+  coverSaturday: Int!
+  coverSunday: Int!
 }
 
 type Result {
+  result: Boolean!
   success: Boolean!
-  errors: [String]
+  errors: [String!]
 }
 
 type ShiftsResult {
   result: [Shift!]
   success: Boolean!
-  errors: [String]
+  errors: [String!]
 }
 
 type EmployeesResult {
   result: [Employee!]
   success: Boolean!
-  errors: [String]
+  errors: [String!]
 }
 
 type DaysResult {
   result: [Day!]
   success: Boolean
-  errors: [String]
+  errors: [String!]
 }
 
 type Query {
@@ -166,6 +181,14 @@ type Mutation {
 input CreateShiftInput {
   title: String!
   duration: Int!
+  shiftImportance: ShiftImportance!
+  coverMonday: Int!
+  coverTuesday: Int!
+  coverWednesday: Int!
+  coverThursday: Int!
+  coverFriday: Int!
+  coverSaturday: Int!
+  coverSunday: Int!
 }
 
 input UpdateShiftInput {
@@ -177,7 +200,7 @@ input UpdateShiftInput {
 type ShiftPayload {
   result: Shift
   success: Boolean!
-  errors: [String]
+  errors: [String!]
 }
 
 input ShiftSkillInput {
@@ -217,7 +240,7 @@ input AddEventInput {
 type EmployeePayload {
   result: Employee
   success: Boolean!
-  errors: [String]
+  errors: [String!]
 }
 
 input ToggleDayActivationInput {
@@ -228,7 +251,7 @@ input ToggleDayActivationInput {
 type ToggleDayActivationPayload {
   result: Day
   success: Boolean!
-  errors: [String]
+  errors: [String!]
 }
 
 input GenerateScheduleInput {
@@ -240,5 +263,5 @@ input GenerateScheduleInput {
 type SchedulePayload {
   result: CompleteSchedule
   success: Boolean!
-  errors: [String]
+  errors: [String!]
 }

@@ -5,7 +5,7 @@ from subprocess import call
 from .database import db
 from flask.cli import FlaskGroup
 
-from .api.mutations import create_organization
+from .api.mutations.organization_mutation import create_organization
 
 import click
 

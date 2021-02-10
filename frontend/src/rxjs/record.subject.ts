@@ -1,7 +1,7 @@
 import { getDays } from '../api/day.api';
 import { createEmployee, deleteEmployee, getEmployees, updateEmployee } from '../api/employee.api';
 import { createShift, deleteShift, getShifts, updateShift } from '../api/shift.api';
-import { DraftEmployee, DraftShift } from '../model';
+import { Draft, DraftEmployee } from '../model';
 import { Day, Employee, Shift } from '../types';
 import { buildReadonlyRecordSubject, buildRecordSubject, ReadSubject } from "./crud.subject";
 import { BehaviorSubject } from 'rxjs';
@@ -13,7 +13,7 @@ export const employeeSubject = buildRecordSubject<Employee, DraftEmployee>({
     fetchAll: getEmployees,
 });
 
-export const shiftSubject = buildRecordSubject<Shift, DraftShift>({
+export const shiftSubject = buildRecordSubject<Shift, Draft<Shift>>({
     createOne: createShift,
     updateOne: updateShift,
     deleteOne: deleteShift,

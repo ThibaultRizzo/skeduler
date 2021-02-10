@@ -1,5 +1,7 @@
 import functools
 from ariadne import MutationType, convert_kwargs_to_snake_case
+from .api.mutations import mutation
+from .api.errors import InvalidDateError, NoRecordError
 
 # ariadne_mutation = MutationType()
 
@@ -10,7 +12,7 @@ def error_handler(fn):
     def decorated(*args, **kwargs):
         try:
             payload = fn(*args, **kwargs)
-        except NoRecordError:  # date format errors
+        except InvalidDateError:  # date format errors
             payload = {
                 "success": False,
                 "errors": [
@@ -28,32 +30,18 @@ def error_handler(fn):
     return decorated
 
 
-def mutation_test(_field):
-    print(_field)
-    # wrapped = ariadne_mutation.field("createShift")
+# def mutation(_field):
+#     print(_field)
 
-    def decorator(fn):
-        def decorated(*args, **kwargs):
-            payload = fn(*args, **kwargs)
+#     def decorator():
+#         def decorated(*args, **kwargs):
+#             print("try")
+#             payload = fn()
 
-        return decorated
+#         return decorated
 
-    # print(ariadne_mutation.field("createShift"))
-    return decorator
-
-
-def mutation(_field):
-    print(_field)
-
-    def decorator():
-        def decorated(*args, **kwargs):
-            print("try")
-            payload = fn()
-
-        return decorated
-
-    # print(ariadne_mutation.field("createShift"))
-    return decorator
+#     # print(ariadne_mutation.field("createShift"))
+#     return decorator
 
 
 # def mutation(func):

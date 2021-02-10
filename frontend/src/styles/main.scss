@@ -1,3 +1,5 @@
+@use "./shared/constants" as *;
+
 #layout {
   display: grid;
   height: 100vh;
@@ -24,6 +26,7 @@
   position: absolute;
   bottom: 10px;
   right: 10px;
+  z-index: $zSnackbar;
 }
 
 #header {

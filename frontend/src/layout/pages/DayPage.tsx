@@ -1,16 +1,19 @@
 import CRUDPage, { CellDictionary } from "../../components/common/CRUDPage";
 import DayForm from "../../components/common/day/DayForm";
-import { DraftShift } from "../../model";
+import { Draft } from "../../model";
 import { daySubject } from "../../rxjs/record.subject";
-import { Day } from "../../types";
+import { Day, DayEnum, Shift } from "../../types";
 
 function DayPage() {
   const cellDictionary = new CellDictionary<Day>([
-    { key: "name" },
+    {
+      key: "name",
+      formatValue: (days: DayEnum[]) => days.map((d) => d.name).join(","),
+    },
     { key: "active" },
   ]);
   return (
-    <CRUDPage<Day, DraftShift>
+    <CRUDPage<Day, Draft<Shift>>
       cellDictionary={cellDictionary}
       subject={daySubject}
       formComponent={DayForm}

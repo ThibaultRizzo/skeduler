@@ -59,3 +59,17 @@ Go to localhost:3000
 ```sh
 > docker-compose -f docker-compose.dev.yml down -v
 ```
+
+## Server setup
+
+### Add dependencies
+
+```sh
+> source bin/server-setup.sh
+```
+
+### Add env file and certificates
+
+```sh
+> source bin/server-deploy-env.sh
+```

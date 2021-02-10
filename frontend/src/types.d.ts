@@ -30,7 +30,7 @@ export type ShiftsResult = {
   __typename?: 'ShiftsResult';
   result?: Maybe<Array<Shift>>;
   success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type Shift = {
@@ -38,20 +38,34 @@ export type Shift = {
   id: Scalars['String'];
   title: Scalars['String'];
   duration: Scalars['Int'];
+  shiftImportance: ShiftImportance;
+  coverMonday: Scalars['Int'];
+  coverTuesday: Scalars['Int'];
+  coverWednesday: Scalars['Int'];
+  coverThursday: Scalars['Int'];
+  coverFriday: Scalars['Int'];
+  coverSaturday: Scalars['Int'];
+  coverSunday: Scalars['Int'];
 };
+
+export enum ShiftImportance {
+  Major = 'MAJOR',
+  Average = 'AVERAGE',
+  Minor = 'MINOR'
+}
 
 export type ShiftPayload = {
   __typename?: 'ShiftPayload';
   result?: Maybe<Shift>;
   success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type DaysResult = {
   __typename?: 'DaysResult';
   result?: Maybe<Array<Day>>;
-  success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  success?: Maybe<Scalars['Boolean']>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type Day = {
@@ -81,7 +95,7 @@ export type EmployeesResult = {
   __typename?: 'EmployeesResult';
   result?: Maybe<Array<Employee>>;
   success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type Employee = {
@@ -145,7 +159,7 @@ export type SchedulePayload = {
   __typename?: 'SchedulePayload';
   result?: Maybe<CompleteSchedule>;
   success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type CompleteSchedule = {
@@ -233,6 +247,14 @@ export type MutationGenerateScheduleArgs = {
 export type CreateShiftInput = {
   title: Scalars['String'];
   duration: Scalars['Int'];
+  shiftImportance: ShiftImportance;
+  coverMonday: Scalars['Int'];
+  coverTuesday: Scalars['Int'];
+  coverWednesday: Scalars['Int'];
+  coverThursday: Scalars['Int'];
+  coverFriday: Scalars['Int'];
+  coverSaturday: Scalars['Int'];
+  coverSunday: Scalars['Int'];
 };
 
 export type UpdateShiftInput = {
@@ -243,8 +265,9 @@ export type UpdateShiftInput = {
 
 export type Result = {
   __typename?: 'Result';
+  result: Scalars['Boolean'];
   success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type CreateEmployeeInput = {
@@ -263,7 +286,7 @@ export type EmployeePayload = {
   __typename?: 'EmployeePayload';
   result?: Maybe<Employee>;
   success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type UpdateEmployeeInput = {
@@ -294,7 +317,7 @@ export type ToggleDayActivationPayload = {
   __typename?: 'ToggleDayActivationPayload';
   result?: Maybe<Day>;
   success: Scalars['Boolean'];
-  errors?: Maybe<Array<Maybe<Scalars['String']>>>;
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type GenerateScheduleInput = {

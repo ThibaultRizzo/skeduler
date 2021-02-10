@@ -29,6 +29,8 @@ query getEmployees {
     }
   }
 }
+success
+            errors
      }
 }
 `;
@@ -60,6 +62,8 @@ mutation createEmployee($input: CreateEmployeeInput!) {
         active
       }
     }
+    success
+    errors
   }
 }
 `;
@@ -83,6 +87,8 @@ mutation updateEmployee($input: UpdateEmployeeInput!) {
         active
       }
     }
+    success
+    errors
   }
 }
 `;

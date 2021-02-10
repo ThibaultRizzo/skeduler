@@ -1,15 +1,5 @@
-import { CreateEmployeeInput } from './types.d';
-import { Employee } from "./types";
+import { CreateEmployeeInput, Shift, Employee } from "./types";
 
-
-export interface Shift {
-    id: string;
-    title: string;
-    duration: number;
-}
-
-
-export type DraftShift = Omit<Shift, 'id'>
 
 export type DraftEmployee = CreateEmployeeInput
 export type UpdatedEmployee = Omit<Employee, 'id' | 'workingDays' | 'skills'> & Pick<CreateEmployeeInput, 'workingDays' | 'skills'>;
@@ -30,9 +20,6 @@ export function employeetoDraft({ contract, name, skills, workingDays }: Employe
 }
 
 
-export function shifttoDraft({ title, duration }: Shift): DraftShift {
-    return {
-        duration,
-        title
-    }
+export function shifttoDraft({ id, ...rest }: Shift): Draft<Shift> {
+    return rest
 }

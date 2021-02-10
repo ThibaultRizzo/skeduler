@@ -1,6 +1,7 @@
 import { WithId } from '../model';
 import { BehaviorSubject } from "rxjs"
 import snackbarSubject, { LogLevel } from "./snackbar.subject";
+import { ApiError, isApiError } from '../api/helper';
 
 export type BaseCRUDRecord = {
     id: string
@@ -12,7 +13,7 @@ export type ReadSubjectProps<T extends BaseCRUDRecord, O = {}> = {
 }
 
 export type CRUDSubjectProps<T extends BaseCRUDRecord, D> = {
-    createOne: (draftRecord: D) => Promise<T | null>,
+    createOne: (draftRecord: D) => Promise<T | ApiError>,
     updateOne: (record: WithId<D>) => Promise<T | null>,
     deleteOne: (id: string) => Promise<boolean>,
 } & ReadSubjectProps<T>
@@ -75,11 +76,13 @@ export function buildRecordSubject<T extends BaseCRUDRecord, D>({ createOne, upd
         unsubscribe: () => subject.unsubscribe(),
         createOne: async (draftRecord) => {
             const newRecord = await createOne(draftRecord);
-            if (newRecord) {
-                subject.next([...(subject.value || []), newRecord]);
-                snackbarSubject.openSnackbar({ title: 'Record created', level: LogLevel.SUCCESS })
+            if (isApiError(newRecord)) {
+                const apiError = newRecord as ApiError;
+                snackbarSubject.openSnackbar({ title: apiError.error, level: LogLevel.ERROR })
             } else {
-                snackbarSubject.openSnackbar({ title: 'Something went wrong', level: LogLevel.ERROR })
+                const r = newRecord as T;
+                subject.next([...(subject.value || []), r]);
+                snackbarSubject.openSnackbar({ title: 'Record created', level: LogLevel.SUCCESS })
 
             }
             return newRecord;

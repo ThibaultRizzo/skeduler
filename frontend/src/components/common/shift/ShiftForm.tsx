@@ -1,17 +1,27 @@
 import { ErrorDictionary } from "../../../hooks/useValidation";
-import { DraftShift, shifttoDraft } from "../../../model";
+import { Draft, shifttoDraft } from "../../../model";
 import { shiftSubject } from "../../../rxjs/record.subject";
-import { Shift } from "../../../types";
+import { Shift, ShiftImportance } from "../../../types.d";
 import CRUDForm, { FormField, FormFieldType } from "../CRUDForm";
 
 type ShiftFormProps = {
   record: Shift | null;
 };
 
+const DEFAULT_SHIFT_COVER = 1;
+
 function ShiftForm({ record }: ShiftFormProps) {
-  const initialState: DraftShift = {
+  const initialState: Draft<Shift> = {
     title: "",
     duration: 0,
+    shiftImportance: ShiftImportance.Minor,
+    coverMonday: DEFAULT_SHIFT_COVER,
+    coverTuesday: DEFAULT_SHIFT_COVER,
+    coverWednesday: DEFAULT_SHIFT_COVER,
+    coverThursday: DEFAULT_SHIFT_COVER,
+    coverFriday: DEFAULT_SHIFT_COVER,
+    coverSaturday: DEFAULT_SHIFT_COVER,
+    coverSunday: DEFAULT_SHIFT_COVER,
   };
   const draftShift = record ? shifttoDraft(record) : null;
 
@@ -24,7 +34,7 @@ function ShiftForm({ record }: ShiftFormProps) {
     return errors;
   }
 
-  const fields: FormField<DraftShift>[] = [
+  const fields: FormField<Draft<Shift>>[] = [
     {
       type: FormFieldType.STRING,
       id: "title-input",
@@ -38,7 +48,7 @@ function ShiftForm({ record }: ShiftFormProps) {
   ];
 
   return (
-    <CRUDForm<DraftShift>
+    <CRUDForm<Draft<Shift>>
       createOne={shiftSubject.createOne}
       updateOne={(d) => shiftSubject.updateOne({ id: record!.id, ...d })}
       isCreation={!record}

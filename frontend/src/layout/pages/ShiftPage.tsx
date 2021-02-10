@@ -1,6 +1,6 @@
 import CRUDPage, { CellDictionary } from "../../components/common/CRUDPage";
 import ShiftForm from "../../components/common/shift/ShiftForm";
-import { DraftShift } from "../../model";
+import { Draft } from "../../model";
 import { shiftSubject } from "../../rxjs/record.subject";
 import { Shift } from "../../types";
 
@@ -10,7 +10,7 @@ function ShiftPage() {
     { key: "duration" },
   ]);
   return (
-    <CRUDPage<Shift, DraftShift>
+    <CRUDPage<Shift, Draft<Shift>>
       cellDictionary={cellDictionary}
       subject={shiftSubject}
       formComponent={ShiftForm}

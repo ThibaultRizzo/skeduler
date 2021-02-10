@@ -1,5 +1,6 @@
 @use "../shared/flex" as *;
 @use "../shared/_colors" as *;
+@use "../shared/constants" as *;
 // @use 'sass:color';
 
 #sidebar {
@@ -32,7 +33,7 @@
       transition: 0.4s;
       width: 100%;
       transform: translateX(0%);
-      z-index: 100;
+      z-index: $zSidebar;
     }
   }
 }
