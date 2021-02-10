@@ -6,8 +6,8 @@ from ...solver.solver import solve_shift_scheduling, SolverException
 
 @mutation("generateSchedule")
 def resolve_generate_schedule(*_, input):
-    start_date = input.get("start_date")
-    nb_weeks = input.get("nb_weeks")
+    start_date = input.get("startDate")
+    nb_weeks = input.get("nbWeeks")
 
     employees = Employee.query.all()
     shifts = Shift.query.all()
@@ -15,7 +15,6 @@ def resolve_generate_schedule(*_, input):
     opts = None
     period = SolverPeriod(start_date, nb_weeks, days)
     schedule = solve_shift_scheduling(employees, shifts, period)
-
     if schedule is None:
         raise SolverException("Could not find a feasible solution")
     else:

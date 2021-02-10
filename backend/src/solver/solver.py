@@ -344,15 +344,13 @@ def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS)
                     "  %s violated by %i, linear penalty=%i"
                     % (var.Name(), solver.Value(var), obj_int_coeffs[i])
                 )
-
-    print()
-    print(solver.ResponseStats())
-
-    if status == cp_model.INFEASIBLE:
-        return None
-    else:
+        print()
+        print(solver.ResponseStats())
         encoded_schedule = "".join([str(solver.Value(i[1])) for i in work.items()])
         return Schedule.to_schedule(encoded_schedule, employees, base_shifts, days)
+    else:
+        print(solver.ResponseStats())
+        return None
 
 
 # Fixed assignment: (employee, shift, day).
@@ -409,30 +407,32 @@ def get_requests(employee_list, shift_list, period):
 # daily demands for work shifts for each shift
 # of the week starting on Monday. [(1,1,1,1,1,1,1)...]
 def get_weekly_cover_demands(shift_list):
-    return [s.get_cover_constraints() for s in shift_list]
+    return list(s.get_cover_constraints() for s in shift_list)
 
 
 def get_employee_shift_mastery(employees, shifts):
-    return map(
-        lambda e: tuple(
-            map(
-                lambda s: next(
-                    (
-                        ShiftSkillLevel[skill.level].value
-                        for skill in e.skills
-                        if skill.shift.id is s.id
+    return list(
+        map(
+            lambda e: tuple(
+                map(
+                    lambda s: next(
+                        (
+                            ShiftSkillLevel[skill.level].value
+                            for skill in e.skills
+                            if skill.shift.id is s.id
+                        ),
+                        0,
                     ),
-                    0,
-                ),
-                shifts,
-            )
-        ),
-        employees,
+                    shifts,
+                )
+            ),
+            employees,
+        )
     )
 
 
 def get_excess_cover_penalties(shift_list):
-    return (s.get_cover_penalty() for s in shift_list)
+    return list(s.get_cover_penalty() for s in shift_list)
 
 
 def negated_bounded_span(works, start, length):

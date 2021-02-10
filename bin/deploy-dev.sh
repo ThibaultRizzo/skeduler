@@ -4,8 +4,12 @@
 eval `ssh-agent -s`
 ssh-add ./.ssh/thibault-skeduler-test.pem
 
-ssh ubuntu@15.237.145.109 << EOF
+./constants.sh
+
+print($IP_ADDRESS)
+
+ssh ubuntu@$IP_ADDRESS <<-EOF
     cd projects/skeduler
-    git checkout master
+    git checkout dev
     git pull
     docker-compose -f docker-compose.prod.yml up -d --build

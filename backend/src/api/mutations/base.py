@@ -1,5 +1,6 @@
 from ariadne import MutationType, convert_kwargs_to_snake_case
 from ..errors import InvalidDateError, NoRecordError
+from ...solver.errors import SolverException
 
 ariadne_mutation = MutationType()
 
