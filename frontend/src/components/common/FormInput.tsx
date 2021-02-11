@@ -5,7 +5,7 @@ type FormInputProps = Partial<
 > & {
   id: string;
   label: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | boolean) => void;
 };
 
 export default function FormInput({
@@ -22,7 +22,7 @@ export default function FormInput({
         {...inputProps}
         name={id}
         id={id}
-        onChange={({ target }) => onChange(target.value)}
+        onChange={({ target }) => onChange(inputProps.type && inputProps.type === 'checkbox' ? target.checked : target.value)}
       />
     </>
   );

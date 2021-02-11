@@ -1,7 +1,14 @@
 from ariadne import QueryType, convert_kwargs_to_snake_case
-from ..errors import NoRecordError
+from ..errors import NoRecordError, InvalidInputError
 
 ariadne_query = QueryType()
+
+
+def returnError(message):
+    return {
+        "success": False,
+        "errors": [message],
+    }
 
 
 def query(func_name):
@@ -12,16 +19,18 @@ def query(func_name):
                 result = func(*args, **kwargs)
                 payload = {"success": True, "result": result}
 
-            except NoRecordError:
+            except NoRecordError as e:
                 payload = {
                     "success": False,
-                    "errors": ["Given ID does not match any persisted entity"],
+                    "errors": ["NoRecordError", e],
                 }
+            except InvalidInputError as e:
+                payload = returnError(e)
             except BaseException as e:
                 print(str(e))
                 payload = {
                     "success": False,
-                    "errors": ["Something went wrong"],
+                    "errors": ["Something went wrong", e],
                 }
 
             return payload

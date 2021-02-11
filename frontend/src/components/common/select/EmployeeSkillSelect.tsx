@@ -72,7 +72,7 @@ export default function EmployeeSkillSelect({
       </div>
       <ShiftSelect
         id="employee-shift-select"
-        onChange={([shift]) => {
+        onChange={(shift: Shift) => {
           setInputShift(shift);
         }}
       />

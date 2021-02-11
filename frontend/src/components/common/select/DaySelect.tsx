@@ -1,6 +1,6 @@
 import { daySubject } from "../../../rxjs/record.subject";
 import { Day, DayName } from "../../../types";
-import FormSelect from "../FormSelect";
+import  { MultiFormSelect } from "../FormSelect";
 
 export type DaySelectProps = {
   id: string;
@@ -16,9 +16,8 @@ function DaySelect({ id, multiple, value, onChange }: DaySelectProps) {
   };
 
   return (
-    <FormSelect
+    <MultiFormSelect
       id={id}
-      multiple={multiple}
       name="day-select"
       label="Day select"
       value={value}

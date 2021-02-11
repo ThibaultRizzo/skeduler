@@ -1,31 +1,53 @@
 import { EnumFactory } from "../../../utils/enum";
-import FormSelect from "../FormSelect";
+import { MultiFormSelect, SingleFormSelect } from "../FormSelect";
 
 type EnumSelectProps<T extends Object> = {
   id: string;
   label: string;
   value: string;
   factory: EnumFactory<T>;
-  multiple?: boolean;
-  onChange: (value: T[]) => void;
 };
 
-export default function EnumSelect<T extends Object>({
+type SingleEnumSelectProps<T extends Object> = EnumSelectProps<T> & {
+  onChange: (value: T) => void;
+}
+
+type MultiEnumSelectProps<T extends Object> = EnumSelectProps<T> & {
+  onChange: (value: T[]) => void;
+}
+
+export function SingleEnumSelect<T extends Object>({
   id,
   label,
   factory,
-  multiple = false,
   value,
   onChange,
-}: EnumSelectProps<T>) {
+}: SingleEnumSelectProps<T>) {
   return (
-    <FormSelect
+    <SingleFormSelect<T>
       id={id}
-      multiple={multiple}
       name="enum-select"
       label={label}
-      // TODO: Fix this horror
-      value={(value as any) as string[]}
+      onChange={onChange}
+      getData={async () => factory.list}
+      getKey={(v) => v.toString()}
+      getLabel={(v) => v.toString()}
+    />
+  );
+}
+
+export function MultiEnumSelect<T extends Object>({
+  id,
+  label,
+  factory,
+  value,
+  onChange,
+}: MultiEnumSelectProps<T>) {
+  return (
+    <MultiFormSelect<T>
+      id={id}
+      name="enum-select"
+      label={label}
       onChange={onChange}
       getData={async () => factory.list}
       getKey={(v) => v.toString()}

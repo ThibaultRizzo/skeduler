@@ -1,11 +1,11 @@
 import { Shift } from "../../../types";
 import { shiftSubject } from "../../../rxjs/record.subject";
-import FormSelect from "../FormSelect";
+import { SingleFormSelect, MultiFormSelect } from "../FormSelect";
 
 type ShiftSelectProps = {
   id: string;
   multiple?: boolean;
-  onChange: (value: Shift[]) => void;
+  onChange: ((value: Shift[]) => void) | ((value: Shift) => void);
 };
 
 export default function ShiftSelect({
@@ -13,16 +13,29 @@ export default function ShiftSelect({
   multiple = false,
   onChange,
 }: ShiftSelectProps) {
-  return (
-    <FormSelect
-      id={id}
-      multiple={multiple}
-      name="shift-select"
-      label="Shift select"
-      onChange={onChange}
-      getData={shiftSubject.lazyFetchAll}
-      getKey={(d) => d.id}
-      getLabel={(d) => d.title}
-    />
-  );
+  if (multiple) {
+
+    return (
+      <MultiFormSelect<Shift>
+        id={id}
+        name="shift-select"
+        label="Shift select"
+        onChange={onChange as (value: Shift[]) => void}
+        getData={shiftSubject.lazyFetchAll}
+        getKey={(d) => d.id}
+        getLabel={(d) => d.title}
+      />
+    );
+  } else {
+    return (
+      <SingleFormSelect<Shift>
+        id={id}
+        name="shift-select"
+        label="Shift select"
+        onChange={onChange as (value: Shift) => void}
+        getData={shiftSubject.lazyFetchAll}
+        getKey={(d) => d.id}
+        getLabel={(d) => d.title} />
+    )
+  }
 }

@@ -3,6 +3,8 @@ import EmployeeForm from "../../components/employee/EmployeeForm";
 import { employeeSubject } from "../../rxjs/record.subject";
 import { DraftEmployee } from "../../model";
 import { Day, Employee, EmployeeSkill } from "../../types";
+import EmployeeDetails from "../../components/employee/EmployeeDetails";
+import "../../styles/layout/pages/employee.scss";
 
 function EmployeePage() {
   const cellDictionary = new CellDictionary<Employee>([
@@ -26,7 +28,9 @@ function EmployeePage() {
       cellDictionary={cellDictionary}
       subject={employeeSubject}
       formComponent={EmployeeForm}
-    />
+    >
+      {(employee) => <EmployeeDetails employee={employee} />}
+    </CRUDPage>
   );
 }
 export default EmployeePage;

@@ -8,3 +8,9 @@ class InvalidDateError(BaseException):
     """Raised when date is invalid"""
 
     pass
+
+
+class InvalidInputError(BaseException):
+    """Raised when input is invalid"""
+
+    pass

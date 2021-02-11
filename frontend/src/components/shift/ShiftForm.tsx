@@ -1,10 +1,10 @@
-import { ErrorDictionary } from "../../../hooks/useValidation";
-import { Draft, shifttoDraft } from "../../../model";
-import { shiftSubject } from "../../../rxjs/record.subject";
-import { Shift, ShiftImportance } from "../../../types";
-import { shiftImportanceFactory } from "../../../utils/enum";
-import CRUDForm, { FormField, FormFieldType } from "../CRUDForm";
-import EnumSelect from "../select/EnumSelect";
+import { ErrorDictionary } from "../../hooks/useValidation";
+import { Draft, shifttoDraft } from "../../model";
+import { shiftSubject } from "../../rxjs/record.subject";
+import { Shift, ShiftImportance } from "../../types";
+import { shiftImportanceFactory } from "../../utils/enum";
+import CRUDForm, { FormField, FormFieldType } from "../common/CRUDForm";
+import { SingleEnumSelect } from "../common/select/EnumSelect";
 
 type ShiftFormProps = {
   record: Shift | null;
@@ -95,10 +95,10 @@ function ShiftForm({ record }: ShiftFormProps) {
       fields={fields}
     >
       {(shift, setShift) => (
-        <EnumSelect<ShiftImportance>
+        <SingleEnumSelect<ShiftImportance>
           id="shift-importance-select"
           label="Shift importance"
-          onChange={([shiftImportance]) => {
+          onChange={(shiftImportance) => {
             setShift({ ...shift, shiftImportance });
           }}
           value={shift.shiftImportance}

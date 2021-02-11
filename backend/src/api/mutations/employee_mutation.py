@@ -1,6 +1,8 @@
 from . import mutation
 from ...database import db
 from ...models import Day, Employee, EmployeeSkill, Shift, EmployeeEvent
+from ...enums import EventStatus
+from ..errors import NoRecordError
 
 
 @mutation("createEmployee")
@@ -77,20 +79,20 @@ def resolve_delete_employee(_, info, id):
     return True
 
 
-@mutation("addEvent")
-def resolve_add_event(_, info, input):
+@mutation("createEvent")
+def resolve_create_event(_, info, input):
     employee_id = input.get("employee")
     shift_id = input.get("shift", None)
 
     employee = Employee.query.get(employee_id)
 
     if employee is None:
-        raise Exception("Could not find employee with ID: " + employee_id)
+        raise NoRecordError("Could not find employee with ID: " + employee_id)
 
     if shift_id is not None:
         shift = Shift.query.get(shift_id)
         if shift is None:
-            raise Exception("Could not find shift with ID: " + shift_id)
+            raise NoRecordError("Could not find shift with ID: " + shift_id)
 
     employee_event = EmployeeEvent(
         employee=employee,
@@ -105,4 +107,34 @@ def resolve_add_event(_, info, input):
     )
     db.session.add(employee_event)
     db.session.commit()
-    return True
+    return employee_event.to_dict()
+
+
+@mutation("updateEvent")
+def resolve_update_event(_, info, input):
+    event_id = input["id"]
+    event = EmployeeEvent.query.get(event_id)
+    if event is None:
+        raise NoRecordError("Could not find employee event with ID: " + event_id)
+    else:
+        event.shift = input.get("shift")
+        event.start_date = input.get("startDate")
+        event.duration = input.get("duration")
+        event.event_type = input.get("type")
+        event.status = input.get("status")
+        event.nature = input.get("nature")
+        event.is_desired = input.get("isDesired")
+
+        db.session.commit()
+        return event.to_dict()
+
+
+@mutation("deleteEvent")
+def resolve_delete_event(_, info, id):
+    event = EmployeeEvent.query.get(id)
+    if event is None:
+        raise NoRecordError("Could not find employee event with ID: " + id)
+    else:
+        EmployeeEvent.query.filter_by(id=id).delete()
+        db.session.commit()
+        return True

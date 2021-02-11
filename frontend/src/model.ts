@@ -1,4 +1,4 @@
-import { CreateEmployeeInput, Shift, Employee } from "./types";
+import { CreateEmployeeInput, Shift, Employee, EmployeeEvent, CreateEventInput } from "./types";
 
 
 export type DraftEmployee = CreateEmployeeInput
@@ -17,6 +17,10 @@ export function employeetoDraft({ contract, name, skills, workingDays }: Employe
         skills: skills.map(({ shift, level }) => ({ level, shift: shift.id })) || [],
         workingDays: workingDays?.map(d => d.name.name) || []
     }
+}
+
+export function employeeEventToDraft({ id, employee, shift, ...event }: EmployeeEvent): CreateEventInput {
+    return { employee: employee.id, shift: shift?.id, ...event }
 }
 
 

@@ -5,6 +5,13 @@ from ...solver.errors import SolverException
 ariadne_mutation = MutationType()
 
 
+def returnError(message):
+    return {
+        "success": False,
+        "errors": [message],
+    }
+
+
 def mutation(func_name):
     @convert_kwargs_to_snake_case
     def mutation_wrapper(func):
@@ -34,11 +41,14 @@ def mutation(func_name):
                     "success": False,
                     "errors": ["Solver encountered an error: " + err.message],
                 }
-            except NoRecordError:
+            except NoRecordError as e:
                 payload = {
                     "success": False,
-                    "errors": ["Given ID does not match any persisted entity"],
+                    "errors": ["NoRecordError", e],
                 }
+            except TypeError as e:
+                print(str(e))
+                payload = returnError(e.message)
             except BaseException as e:
                 print(str(e))
                 payload = {

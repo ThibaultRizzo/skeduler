@@ -1,5 +1,6 @@
 from sqlalchemy import Table, Column, String, ForeignKey, Integer, Date, Enum, Boolean
-import datetime
+from sqlalchemy.ext.hybrid import hybrid_property
+from datetime import timedelta
 from ..database import db
 from .helper import ID
 from .dto import Period
@@ -107,6 +108,14 @@ class EmployeeEvent(db.Model):
     nature = Column(Enum(EventNature), nullable=False)
     is_desired = Column(Boolean, nullable=False)
 
+    @hybrid_property
+    def end_date(self):
+        return self.start_date + timedelta(days=self.duration)
+
+    @end_date.expression
+    def end_date(self):
+        return self.start_date
+
     def get_event_dates(self):
         period = Period(self.start_date, self.duration)
         return period.get_date_list()
@@ -120,3 +129,22 @@ class EmployeeEvent(db.Model):
             return -EVENT_WEIGHT_DICT.get(self.nature)
         else:
             return EVENT_WEIGHT_DICT.get(self.nature)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "employee": self.employee_id,
+            "shift": {"id": self.shift_id},
+            "duration": self.duration,
+            "startDate": self.start_date,
+            "endDate": self.end_date,
+            "type": self.type.name,
+            "nature": self.nature.name,
+            "status": self.status.name,
+            "isDesired": self.is_desired,
+        }
+
+    def __repr__(self):
+        return "<EmployeeEvent: {} {} for {} day(s)>".format(
+            self.type, self.start_date, self.duration
+        )

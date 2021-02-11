@@ -1,5 +1,5 @@
 import CRUDPage, { CellDictionary } from "../../components/common/CRUDPage";
-import DayForm from "../../components/common/day/DayForm";
+import DayForm from "../../components/day/DayForm";
 import { Draft } from "../../model";
 import { daySubject } from "../../rxjs/record.subject";
 import { Day, DayEnum } from "../../types";

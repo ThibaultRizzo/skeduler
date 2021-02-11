@@ -28,6 +28,22 @@ const employeeFragment = gql`
   }
 `;
 
+const employeeEventFragment = gql`
+  fragment employeeEventFragment on EmployeeEvent {
+      id
+      shift {
+        id
+      }
+      startDate
+      endDate
+      duration
+      type
+      status
+      nature
+      isDesired
+  }
+`;
+
 /***********
  * Queries *
  ***********/
@@ -42,6 +58,19 @@ export const GET_EMPLOYEES = gql`
     }
   }
   ${employeeFragment}
+`;
+
+export const GET_EMPLOYEE_EVENTS = gql`
+  query getEmployeeEvents($id: String!, $startDate: Datetime!, $endDate: Datetime!) {
+    employeeEvents(id: $id, startDate: $startDate, endDate: $endDate) {
+      result {
+        ...employeeEventFragment
+      }
+      success
+      errors
+    }
+  }
+  ${employeeEventFragment}
 `;
 
 /*************
@@ -77,6 +106,42 @@ export const UPDATE_EMPLOYEE = gql`
 export const DELETE_EMPLOYEE = gql`
   mutation deleteEmployee($id: String!) {
     deleteEmployee(id: $id) {
+      ...deleteOpFragment
+    }
+  }
+  ${deleteOpFragment}
+`;
+
+
+export const CREATE_EMPLOYEE_EVENT = gql`
+  mutation createEvent($input: CreateEventInput!) {
+    createEvent(input: $input) {
+      result {
+        ...employeeEventFragment
+      }
+      success
+      errors
+    }
+  }
+  ${employeeEventFragment}
+`;
+
+export const UPDATE_EMPLOYEE_EVENT = gql`
+  mutation updateEvent($input: UpdateEventInput!) {
+    updateEvent(input: $input) {
+      result {
+        ...employeeEventFragment
+      }
+      success
+      errors
+    }
+  }
+  ${employeeEventFragment}
+`;
+
+export const DELETE_EMPLOYEE_EVENT = gql`
+  mutation deleteEvent($id: String!) {
+    deleteEvent(id: $id) {
       ...deleteOpFragment
     }
   }

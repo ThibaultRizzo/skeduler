@@ -2760,6 +2760,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/date-fns@npm:^2.6.0":
+  version: 2.6.0
+  resolution: "@types/date-fns@npm:2.6.0"
+  dependencies:
+    date-fns: "*"
+  checksum: 9b136620fa858d4652ac3fb8bf9918d896e56220bec2c9cb90715dc768f1b3ab13077e4ec2c3ffc85ab8ae0378221a13982bfdc63fe2a685c28f0584bd381ab6
+  languageName: node
+  linkType: hard
+
 "@types/eslint@npm:^7.2.6":
   version: 7.2.6
   resolution: "@types/eslint@npm:7.2.6"
@@ -6062,6 +6071,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-fns@npm:*, date-fns@npm:^2.17.0":
+  version: 2.17.0
+  resolution: "date-fns@npm:2.17.0"
+  checksum: 51ee9e264aac54d2a16471691d560838bad681f729573f520b03ec0c21f28904c73bf98ec2d33603e71bdabf8506140449c2b50d0db6fdd042faed9fe5467b92
+  languageName: node
+  linkType: hard
+
 "date-fns@npm:^1.27.2":
   version: 1.30.1
   resolution: "date-fns@npm:1.30.1"
@@ -7865,12 +7881,14 @@ __metadata:
     "@testing-library/jest-dom": ^5.11.4
     "@testing-library/react": ^11.1.0
     "@testing-library/user-event": ^12.1.10
+    "@types/date-fns": ^2.6.0
     "@types/jest": ^26.0.15
     "@types/react": ^16.9.53
     "@types/react-dom": ^16.9.8
     "@types/react-router-dom": ^5.1.7
     axios: ^0.21.0
     clsx: ^1.1.1
+    date-fns: ^2.17.0
     graphql: ^15.4.0
     husky: ^4.3.5
     lint-staged: ^10.5.3

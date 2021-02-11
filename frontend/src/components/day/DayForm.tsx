@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useSubject } from "../../../hooks/useAsyncState";
-import { daySubject } from "../../../rxjs/record.subject";
-import { Day } from "../../../types";
+import { useSubject } from "../../hooks/useAsyncState";
+import { daySubject } from "../../rxjs/record.subject";
+import { Day } from "../../types";
 
 type DayFormProps = {
   record: Day | null;

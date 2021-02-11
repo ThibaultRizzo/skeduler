@@ -18,12 +18,20 @@ export type Query = {
   shift: ShiftPayload;
   days: DaysPayload;
   employees: EmployeesPayload;
+  employeeEvents: EmployeeEventsPayload;
   schedule: SchedulePayload;
 };
 
 
 export type QueryShiftArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryEmployeeEventsArgs = {
+  id: Scalars['String'];
+  startDate: Scalars['Datetime'];
+  endDate: Scalars['Datetime'];
 };
 
 export type ShiftsPayload = {
@@ -127,6 +135,7 @@ export type EmployeeEvent = {
   employee: Employee;
   shift?: Maybe<Shift>;
   startDate: Scalars['Datetime'];
+  endDate: Scalars['Datetime'];
   duration: Scalars['Int'];
   type: EventType;
   status: EventStatus;
@@ -154,6 +163,13 @@ export enum EventNature {
   Wanted = 'WANTED',
   Prefered = 'PREFERED'
 }
+
+export type EmployeeEventsPayload = {
+  __typename?: 'EmployeeEventsPayload';
+  result?: Maybe<Array<EmployeeEvent>>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Scalars['String']>>;
+};
 
 export type SchedulePayload = {
   __typename?: 'SchedulePayload';
@@ -193,7 +209,9 @@ export type Mutation = {
   createEmployee?: Maybe<EmployeePayload>;
   updateEmployee?: Maybe<EmployeePayload>;
   deleteEmployee: Payload;
-  addEvent?: Maybe<Payload>;
+  createEvent?: Maybe<EmployeeEventPayload>;
+  updateEvent?: Maybe<EmployeeEventPayload>;
+  deleteEvent?: Maybe<Payload>;
   toggleDayActivation?: Maybe<ToggleDayActivationPayload>;
   generateSchedule?: Maybe<SchedulePayload>;
   createOrganization: Scalars['Boolean'];
@@ -230,8 +248,18 @@ export type MutationDeleteEmployeeArgs = {
 };
 
 
-export type MutationAddEventArgs = {
-  input: AddEventInput;
+export type MutationCreateEventArgs = {
+  input: CreateEventInput;
+};
+
+
+export type MutationUpdateEventArgs = {
+  input: UpdateEventInput;
+};
+
+
+export type MutationDeleteEventArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -273,7 +301,7 @@ export type UpdateShiftInput = {
 
 export type Payload = {
   __typename?: 'Payload';
-  result: Scalars['Boolean'];
+  result?: Maybe<Scalars['Boolean']>;
   success: Scalars['Boolean'];
   errors?: Maybe<Array<Scalars['String']>>;
 };
@@ -305,8 +333,26 @@ export type UpdateEmployeeInput = {
   skills: Array<ShiftSkillInput>;
 };
 
-export type AddEventInput = {
+export type CreateEventInput = {
   employee: Scalars['String'];
+  shift?: Maybe<Scalars['String']>;
+  startDate: Scalars['Datetime'];
+  duration: Scalars['Int'];
+  type: EventType;
+  status: EventStatus;
+  nature: EventNature;
+  isDesired: Scalars['Boolean'];
+};
+
+export type EmployeeEventPayload = {
+  __typename?: 'EmployeeEventPayload';
+  result?: Maybe<EmployeeEvent>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Scalars['String']>>;
+};
+
+export type UpdateEventInput = {
+  id: Scalars['String'];
   shift?: Maybe<Scalars['String']>;
   startDate: Scalars['Datetime'];
   duration: Scalars['Int'];

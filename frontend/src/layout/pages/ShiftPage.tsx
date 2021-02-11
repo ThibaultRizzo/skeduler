@@ -1,5 +1,5 @@
 import CRUDPage, { CellDictionary } from "../../components/common/CRUDPage";
-import ShiftForm from "../../components/common/shift/ShiftForm";
+import ShiftForm from "../../components/shift/ShiftForm";
 import { Draft } from "../../model";
 import { shiftSubject } from "../../rxjs/record.subject";
 import { Shift } from "../../types";

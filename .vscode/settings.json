@@ -1,10 +1,14 @@
 {
     "typescript.tsdk": "./frontend/node_modules/typescript/lib",
     "python.formatting.provider": "black",
+    "python.pythonPath": "${workspaceFolder}/backend/venv/Scripts/python.exe",
+    "python.autoComplete.extraPaths": [
+      "${workspaceFolder}/backend/venv/Lib/site-packages"
+    ],
     "beautify.onSave": true,
     "editor.formatOnSave": true,
     "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
-    "source.fixAll.eslint": true
+    "python.linting.mypyEnabled": true,
   }

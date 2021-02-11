@@ -3,6 +3,9 @@ import { BehaviorSubject, Subscription } from "rxjs"
 import snackbarSubject, { LogLevel } from "./snackbar.subject";
 import { ApiError, isApiError } from '../api/helper';
 
+/*********
+ * Types *
+ *********/
 export type BaseCRUDRecord = {
     id: string
 }
@@ -17,24 +20,26 @@ export type Read<T, R> = {
 }
 
 
-export type ReadSubjectProps<T extends BaseCRUDRecord, O = {}> = Read<T, ApiError> & {
-    custom?: (subject: ReadSubject<T>) => O
-}
-export type CRUDSubjectProps<T extends BaseCRUDRecord, D> = CUD<T, D, ApiError> & ReadSubjectProps<T, D>
-export type SimpleSubjectProp<T extends BaseCRUDRecord> = {
+export type ReadSubjectProps<T extends BaseCRUDRecord> = Read<T, ApiError>
+export type CUDSubjectProps<T extends BaseCRUDRecord, D> = CUD<T, D, ApiError>
+export type CRUDSubjectProps<T extends BaseCRUDRecord, D> = ReadSubjectProps<T> & CUDSubjectProps<T, D>;
+
+
+
+export type SimpleSubject<T extends BaseCRUDRecord> = {
     subscribe: (setState: (d: T[] | null) => void) => Subscription,
     unsubscribe: () => void
 }
-
-
-
-export type CRUDSubject<T extends BaseCRUDRecord, D> = ReadSubject<T> & CUD<T, D, null>
-export type ReadSubject<T extends BaseCRUDRecord, O = {}> = Read<T, null> & {
-    custom?: (subject: ReadSubject<T>) => O
-} & SimpleSubjectProp<T> & {
+export type ReadSubject<T extends BaseCRUDRecord> = Read<T, null> & SimpleSubject<T> & {
     lazyFetchAll: () => Promise<T[]>
 }
+export type CUDSubject<T extends BaseCRUDRecord, D> = CUD<T, D, null> & SimpleSubject<T>
+export type CRUDSubject<T extends BaseCRUDRecord, D> = ReadSubject<T> & CUDSubject<T, D>
 
+
+/***********
+ * Helpers *
+ ***********/
 export function executeFnOrOpenSnackbar<T>(fn: (val: T) => unknown, payloadOrError: T | ApiError) {
     if (fn) {
         if (isApiError(payloadOrError)) {
@@ -52,7 +57,18 @@ export function getResultElseNull<T>(result: T | ApiError): T | null {
     return isApiError(result) ? null : result as T;
 }
 
-export function buildReadonlyRecordSubject<T extends BaseCRUDRecord, O = {}>({ fetchAll }: ReadSubjectProps<T, O>, injectedSubject?: BehaviorSubject<T[] | null>): ReadSubject<T, O> {
+/*********************
+ * Subject factories *
+ *********************/
+export function buildSimpleSubject<T extends BaseCRUDRecord>(injectedSubject?: BehaviorSubject<T[] | null>): SimpleSubject<T> {
+    const subject = injectedSubject ? injectedSubject : new BehaviorSubject<T[] | null>(null);
+    return {
+        subscribe: (setState: (arr: T[] | null) => void) => subject.subscribe(setState),
+        unsubscribe: () => subject.unsubscribe()
+    };
+}
+
+export function buildReadonlyRecordSubject<T extends BaseCRUDRecord>({ fetchAll }: ReadSubjectProps<T>, injectedSubject?: BehaviorSubject<T[] | null>): ReadSubject<T> {
     const subject = injectedSubject ? injectedSubject : new BehaviorSubject<T[] | null>(null);
     const fetchSubject = async () => {
         const recordList = await fetchAll();
@@ -63,8 +79,7 @@ export function buildReadonlyRecordSubject<T extends BaseCRUDRecord, O = {}>({ f
     // Fetch first
     fetchSubject();
     return {
-        subscribe: (setState: (arr: T[] | null) => void) => subject.subscribe(setState),
-        unsubscribe: () => subject.unsubscribe(),
+        ...buildSimpleSubject(subject),
         lazyFetchAll: async () => {
             const currentValue = subject.value;
             if (currentValue) {
@@ -77,18 +92,12 @@ export function buildReadonlyRecordSubject<T extends BaseCRUDRecord, O = {}>({ f
         fetchAll: fetchSubject,
     };
 }
-export function buildRecordSubject<T extends BaseCRUDRecord, D>({ createOne, updateOne, deleteOne, fetchAll }: CRUDSubjectProps<T, D>): CRUDSubject<T, D> {
-    const subject = new BehaviorSubject<T[] | null>(null);
-    const fetchSubject = async () => {
-        const recordList = await fetchAll();
-        executeFnOrOpenSnackbar(v => subject.next(v), recordList)
-        return getResultElseNull(recordList);
-    };
-    // Fetch first
-    fetchSubject();
+
+export function buildCUDRecordSubject<T extends BaseCRUDRecord, D>({ createOne, updateOne, deleteOne }: CUDSubjectProps<T, D>, s?: BehaviorSubject<T[] | null>): CUDSubject<T, D> {
+    const subject = s ? s : new BehaviorSubject<T[] | null>(null);
+
     return {
-        subscribe: (setState: (arr: T[] | null) => void) => subject.subscribe(setState),
-        unsubscribe: () => subject.unsubscribe(),
+        ...buildSimpleSubject(subject),
         createOne: async (draftRecord) => {
             const newRecordOrError = await createOne(draftRecord);
             if (isApiError(newRecordOrError)) {
@@ -124,16 +133,16 @@ export function buildRecordSubject<T extends BaseCRUDRecord, D>({ createOne, upd
             }
             return getResultElseNull(isDeletedOrError);
         },
-        lazyFetchAll: async () => {
-            const currentValue = subject.value;
-            if (currentValue) {
-                return Promise.resolve(currentValue)
-            } else {
-                const sub = await fetchSubject();
-                return sub || [];
-            }
-        },
-        fetchAll: fetchSubject
+    }
+}
+
+
+export function buildRecordSubject<T extends BaseCRUDRecord, D>({ createOne, updateOne, deleteOne, fetchAll }: CRUDSubjectProps<T, D>): CRUDSubject<T, D> {
+    const subject = new BehaviorSubject<T[] | null>(null);
+
+    return {
+        ...buildReadonlyRecordSubject({ fetchAll }, subject),
+        ...buildCUDRecordSubject({ createOne, updateOne, deleteOne }, subject)
     };
 
 }

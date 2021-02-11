@@ -1,4 +1,4 @@
-import { ShiftImportance } from "../types";
+import { EventNature, EventStatus, EventType, ShiftImportance } from "../types";
 
 export const getEnumKey = (enumObj: { [key: string]: string }, value: string): string => {
     const res = Object.entries(enumObj).find(([k, v]) => v === value);
@@ -19,3 +19,6 @@ export const enumFactory = <T>(enumType: Enumerable<T>): EnumFactory<T> => {
 }
 
 export const shiftImportanceFactory = enumFactory(ShiftImportance);
+export const eventNatureFactory = enumFactory(EventNature);
+export const eventStatusFactory = enumFactory(EventStatus);
+export const eventTypeFactory = enumFactory(EventType);
