@@ -1,51 +1,52 @@
 import gql from "graphql-tag";
 
+/************
+ * Fragments *
+ ************/
+
+const completeScheduleFragment = gql`
+  fragment completeScheduleFragment on CompleteSchedule {
+    schedule {
+      day
+      shifts {
+        shift
+        employee
+      }
+    }
+    meta {
+      createdAt
+    }
+  }
+`;
 
 /***********
  * Queries *
  ***********/
 export const GET_SCHEDULE = gql`
-query getSchedule {
-  schedule {
-    result {
-      schedule {
-        day
-        shifts {
-          shift
-          employee
-        }
+  query getSchedule {
+    schedule {
+      result {
+        ...completeScheduleFragment
       }
-      meta {
-        createdAt
-      }
+      success
+      errors
     }
-    success
-    errors
   }
-}
+  ${completeScheduleFragment}
 `;
 
 /*************
  * Mutations *
  *************/
 export const GENERATE_SCHEDULE = gql`
-mutation generateSchedule($input: GenerateScheduleInput!) {
+  mutation generateSchedule($input: GenerateScheduleInput!) {
     generateSchedule(input: $input) {
-        result {
-      schedule {
-        day
-        shifts {
-          shift
-          employee
-        }
+      result {
+        ...completeScheduleFragment
       }
-      meta {
-        createdAt
-      }
-    }
-        success
-        errors
+      success
+      errors
     }
   }
+  ${completeScheduleFragment}
 `;
-

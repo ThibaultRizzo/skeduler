@@ -40,6 +40,7 @@ def resolve_update_employee(_, info, input):
 
     days = db.session.query(Day).filter(Day.name.in_(input["workingDays"])).all()
     employee.working_days = days
+    print(input["workingDays"])
 
     # TODO: Throw error when same skill is being added twice
     skills = input["skills"]

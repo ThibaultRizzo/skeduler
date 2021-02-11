@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { setDayActivation } from "../../../api/day.api";
 import { useSubject } from "../../../hooks/useAsyncState";
 import { daySubject } from "../../../rxjs/record.subject";
 import { Day } from "../../../types";
@@ -18,10 +17,7 @@ function DayForm({ record }: DayFormProps) {
 
   async function toggleDayActivation(day: Day) {
     setIsToggling(true);
-    const res = await setDayActivation(day);
-    if (res) {
-      daySubject.toggleDayActivation(res);
-    }
+    daySubject.toggleDayActivation(day);
     setIsToggling(false);
   }
 
@@ -40,7 +36,7 @@ function DayForm({ record }: DayFormProps) {
               onChange={() => toggleDayActivation(day)}
               disabled={isToggling}
             />
-            <label htmlFor={`day-${day.id}`}>{day.name}</label>
+            <label htmlFor={`day-${day.id}`}>{day.name.name}</label>
           </div>
         ))
       ) : (

@@ -14,7 +14,10 @@ from flask_cors import CORS
 type_defs = gql(load_schema_from_path("schema.graphql"))
 
 schema = make_executable_schema(
-    type_defs, datetime_scalar, queries.query, mutations.base.ariadne_mutation
+    type_defs,
+    datetime_scalar,
+    queries.base.ariadne_query,
+    mutations.base.ariadne_mutation,
 )
 
 

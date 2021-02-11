@@ -123,47 +123,23 @@ type Shift {
   coverSunday: Int!
 }
 
-type Result {
-  result: Boolean!
-  success: Boolean!
-  errors: [String!]
-}
-
-type ShiftsResult {
-  result: [Shift!]
-  success: Boolean!
-  errors: [String!]
-}
-
-type EmployeesResult {
-  result: [Employee!]
-  success: Boolean!
-  errors: [String!]
-}
-
-type DaysResult {
-  result: [Day!]
-  success: Boolean
-  errors: [String!]
-}
-
 type Query {
-  shifts: ShiftsResult!
+  shifts: ShiftsPayload!
   shift(id: String!): ShiftPayload!
-  days: DaysResult!
-  employees: EmployeesResult!
+  days: DaysPayload!
+  employees: EmployeesPayload!
   schedule: SchedulePayload!
 }
 
 type Mutation {
   createShift(input: CreateShiftInput!): ShiftPayload
   updateShift(input: UpdateShiftInput!): ShiftPayload
-  deleteShift(id: String!): Result!
+  deleteShift(id: String!): Payload!
 
   createEmployee(input: CreateEmployeeInput!): EmployeePayload
   updateEmployee(input: UpdateEmployeeInput!): EmployeePayload
-  deleteEmployee(id: String!): Result!
-  addEvent(input: AddEventInput!): Result
+  deleteEmployee(id: String!): Payload!
+  addEvent(input: AddEventInput!): Payload
 
   toggleDayActivation(
     input: ToggleDayActivationInput!
@@ -205,12 +181,6 @@ input UpdateShiftInput {
   coverSunday: Int!
 }
 
-type ShiftPayload {
-  result: Shift
-  success: Boolean!
-  errors: [String!]
-}
-
 input ShiftSkillInput {
   shift: String!
   level: ShiftSkillLevel!
@@ -244,6 +214,35 @@ input AddEventInput {
 ##############
 #  Payload   #
 ##############
+type Payload {
+  result: Boolean!
+  success: Boolean!
+  errors: [String!]
+}
+
+type ShiftsPayload {
+  result: [Shift!]
+  success: Boolean!
+  errors: [String!]
+}
+
+type EmployeesPayload {
+  result: [Employee!]
+  success: Boolean!
+  errors: [String!]
+}
+
+type DaysPayload {
+  result: [Day!]
+  success: Boolean!
+  errors: [String!]
+}
+
+type ShiftPayload {
+  result: Shift
+  success: Boolean!
+  errors: [String!]
+}
 
 type EmployeePayload {
   result: Employee

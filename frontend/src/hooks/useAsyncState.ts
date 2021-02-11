@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { BaseCRUDRecord, SimpleSubjectProp } from "../rxjs/crud.subject";
+import { ApiResponse } from "../api/helper";
+import { BaseCRUDRecord, executeFnOrOpenSnackbar, SimpleSubjectProp } from "../rxjs/crud.subject";
 
-export function useAsyncState<T>(initialState: T, asyncLoader: () => Promise<T>, filterData?: (data: T) => T): [state: T, setState: (s: T) => void] {
+export function useAsyncState<T>(initialState: T, asyncLoader: () => ApiResponse<T>, filterData?: (data: T) => T): [state: T, setState: (s: T) => void] {
     const [state, setState] = useState(initialState);
     useEffect(() => {
-        asyncLoader().then(data => {
-            setState(data)
+        asyncLoader().then(dataOrError => {
+            executeFnOrOpenSnackbar(v => setState(v), dataOrError)
         })
     }, [asyncLoader]);
     return [state, setState];

@@ -10,18 +10,18 @@ export const createEmployee = async (input: DraftEmployee): ApiResponse<Employee
     return getResultOrError(res.data.data.createEmployee);
 }
 
-export const updateEmployee = async (input: WithId<DraftEmployee>): Promise<Employee | null> => {
+export const updateEmployee = async (input: WithId<DraftEmployee>): ApiResponse<Employee> => {
     const res = await httpWrapper.mutation(UPDATE_EMPLOYEE, { input });
-    return res.data.data.updateEmployee?.result || null;
+    return getResultOrError(res.data.data.updateEmployee);
 }
 
-export const deleteEmployee = async (id: string): Promise<boolean> => {
+export const deleteEmployee = async (id: string): ApiResponse<boolean> => {
     const res = await httpWrapper.mutation(DELETE_EMPLOYEE, { id });
     // TODO: Handle potential errors
-    return res.data.data.deleteEmployee?.success || false;
+    return getResultOrError(res.data.data.deleteEmployee);
 }
 
-export const getEmployees = async (): Promise<Employee[]> => {
+export const getEmployees = async (): ApiResponse<Employee[]> => {
     const res = await httpWrapper.query(GET_EMPLOYEES);
-    return res.data.data.employees?.result || [];
+    return getResultOrError(res.data.data.employees);
 }

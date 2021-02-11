@@ -1,103 +1,84 @@
 import gql from "graphql-tag";
+import { deleteOpFragment } from "./helper.graphql";
 
+/************
+ * Fragments *
+ ************/
+
+const employeeFragment = gql`
+  fragment employeeFragment on Employee {
+    id
+    name
+    contract
+    skills {
+      level
+      shift {
+        id
+        title
+      }
+    }
+    workingDays {
+      id
+      active
+      name {
+        name
+        value
+      }
+    }
+  }
+`;
 
 /***********
  * Queries *
  ***********/
 export const GET_EMPLOYEES = gql`
-query getEmployees {
- employees {
-     result {
-  id
-  name
-  contract
-  skills {
-    level
-    shift {
-      id
-      title
-
-    }
-
-  }
-  workingDays {
-    id
-    active
-    name {
-        name
-        value
+  query getEmployees {
+    employees {
+      result {
+        ...employeeFragment
+      }
+      success
+      errors
     }
   }
-}
-success
-            errors
-     }
-}
+  ${employeeFragment}
 `;
-
 
 /*************
  * Mutations *
  *************/
 
 export const CREATE_EMPLOYEE = gql`
-mutation createEmployee($input: CreateEmployeeInput!) {
-	createEmployee(input:$input) {
-    result {
-      id
-      name
-      contract
-      skills {
-				level
-        shift {
-          title
-        }
+  mutation createEmployee($input: CreateEmployeeInput!) {
+    createEmployee(input: $input) {
+      result {
+        ...employeeFragment
       }
-      workingDays {
-        id
-        name {
-          name
-          value
-        }
-        active
-      }
+      success
+      errors
     }
-    success
-    errors
   }
-}
+  ${employeeFragment}
 `;
 
 export const UPDATE_EMPLOYEE = gql`
-mutation updateEmployee($input: UpdateEmployeeInput!) {
-	updateEmployee(input:$input) {
-    result {
-      id
-      name
-      contract
-      skills {
-				level
-        shift {
-          title
-        }
+  mutation updateEmployee($input: UpdateEmployeeInput!) {
+    updateEmployee(input: $input) {
+      result {
+        ...employeeFragment
       }
-      workingDays {
-        id
-        name
-        active
-      }
+      success
+      errors
     }
-    success
-    errors
   }
-}
+  ${employeeFragment}
 `;
 
 export const DELETE_EMPLOYEE = gql`
-mutation deleteEmployee($id: String!) {
+  mutation deleteEmployee($id: String!) {
     deleteEmployee(id: $id) {
-        success
-        errors
+      ...deleteOpFragment
     }
   }
+  ${deleteOpFragment}
 `;

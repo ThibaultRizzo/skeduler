@@ -1,9 +1,9 @@
-import { getDays } from '../api/day.api';
+import { getDays, setDayActivation } from '../api/day.api';
 import { createEmployee, deleteEmployee, getEmployees, updateEmployee } from '../api/employee.api';
 import { createShift, deleteShift, getShifts, updateShift } from '../api/shift.api';
 import { Draft, DraftEmployee } from '../model';
 import { Day, Employee, Shift } from '../types';
-import { buildReadonlyRecordSubject, buildRecordSubject, ReadSubject } from "./crud.subject";
+import { buildReadonlyRecordSubject, buildRecordSubject, ReadSubject, executeFnOrOpenSnackbar } from "./crud.subject";
 import { BehaviorSubject } from 'rxjs';
 
 export const employeeSubject = buildRecordSubject<Employee, DraftEmployee>({
@@ -30,10 +30,11 @@ const buildDaySubject = (): DaySubjectProps => {
     }, subject);
     return {
         ...readOnlySubjectProps,
-        toggleDayActivation: (res: Day) => {
+        toggleDayActivation: async (day: Day) => {
             const currentValue = subject.value;
             if (currentValue) {
-                subject.next(currentValue.map((d) => (d.id === res.id ? res : d)))
+                const res = await setDayActivation(day);
+                executeFnOrOpenSnackbar(v => subject.next(v), (currentValue.map((d) => (d.id === (res as Day).id ? res : d)) as Day[]))
             }
         }
     }

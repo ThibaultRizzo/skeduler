@@ -23,16 +23,17 @@ export const isApiError = (v: any): boolean => {
 }
 
 export const getResultOrError = <T>(payload: Payload<T> | null | undefined): T | ApiError => {
-    if (!payload || !payload.result) {
+    if (payload && payload.success) {
+        return payload.result as T;
+    } else if (payload && !payload.success && payload.errors && payload.errors.length > 0) {
+        return {
+            error: !!payload.errors ? payload.errors.join(',') : '',
+            origin: ApiErrorOrigin.graphql // TODO: Get actual origin
+        }
+    } else {
         return {
             error: 'Something went wrong',
             origin: ApiErrorOrigin.unknown
         }
-    } else {
-        return !payload.success ?
-            {
-                error: !!payload.errors ? payload.errors.join(',') : '',
-                origin: ApiErrorOrigin.graphql // TODO: Get actual origin
-            } : payload.result;
     }
 }

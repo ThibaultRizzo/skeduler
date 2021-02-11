@@ -2,7 +2,7 @@ import CRUDPage, { CellDictionary } from "../../components/common/CRUDPage";
 import DayForm from "../../components/common/day/DayForm";
 import { Draft } from "../../model";
 import { daySubject } from "../../rxjs/record.subject";
-import { Day, DayEnum, Shift } from "../../types";
+import { Day, DayEnum } from "../../types";
 
 function DayPage() {
   const cellDictionary = new CellDictionary<Day>([
@@ -13,7 +13,7 @@ function DayPage() {
     { key: "active" },
   ]);
   return (
-    <CRUDPage<Day, Draft<Shift>>
+    <CRUDPage<Day, Draft<Day>>
       cellDictionary={cellDictionary}
       subject={daySubject}
       formComponent={DayForm}

@@ -9,6 +9,7 @@ import {
 import { CompleteSchedule, Day, Employee, Shift } from "../../types";
 import Loader from "../Loader";
 import "../../styles/layout/pages/schedule.scss";
+import { executeFnOrOpenSnackbar } from "../../rxjs/crud.subject";
 
 function SchedulePage() {
   const [schedule, setSchedule] = useAsyncState<CompleteSchedule | null>(
@@ -46,14 +47,13 @@ function SchedulePage() {
   }, []);
 
   const isScheduleDisplayable =
-    !!schedule &&
     Object.keys(dayDict).length > 0 &&
     Object.keys(shiftDict).length > 0 &&
     Object.keys(employeeDict).length > 0;
   async function onScheduleGeneration() {
     setLoading(true);
-    const schedule = await generateSchedule();
-    setSchedule(schedule);
+    const sch = await generateSchedule();
+    executeFnOrOpenSnackbar((v) => setSchedule(v), sch);
     setLoading(false);
   }
   return (
@@ -61,7 +61,10 @@ function SchedulePage() {
       <button onClick={onScheduleGeneration} disabled={isLoading}>
         Generate
       </button>
-      <Loader isLoading={isLoading || !isScheduleDisplayable}>
+      <Loader
+        isLoading={isLoading || !isScheduleDisplayable}
+        isEmpty={!schedule}
+      >
         <div className="schedule-grid">
           {schedule &&
             schedule!.schedule.map((row) => (

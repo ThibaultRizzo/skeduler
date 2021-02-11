@@ -18,6 +18,7 @@ def resolve_generate_schedule(*_, input):
     if schedule is None:
         raise SolverException("Could not find a feasible solution")
     else:
+        print(schedule)
         db.session.add(schedule)
         db.session.commit()
         return schedule.get_schedule_per_day()
