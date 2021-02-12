@@ -19,8 +19,8 @@ export function employeetoDraft({ contract, name, skills, workingDays }: Employe
     }
 }
 
-export function employeeEventToDraft({ id, employee, shift, ...event }: EmployeeEvent): CreateEventInput {
-    return { employee: employee.id, shift: shift?.id, ...event }
+export function employeeEventToDraft({ id, shift, employee, endDate, ...event }: EmployeeEvent, employeeId: string): CreateEventInput {
+    return { employee: employeeId, shift: shift?.id, ...event }
 }
 
 

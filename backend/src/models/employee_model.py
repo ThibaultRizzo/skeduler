@@ -110,7 +110,7 @@ class EmployeeEvent(db.Model):
 
     @hybrid_property
     def end_date(self):
-        return self.start_date + timedelta(days=self.duration)
+        return self.start_date + timedelta(days=self.duration - 1)
 
     @end_date.expression
     def end_date(self):

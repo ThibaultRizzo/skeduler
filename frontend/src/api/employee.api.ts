@@ -1,6 +1,6 @@
 import { ApiResponse, getResultOrError } from './helper';
 import { Draft, DraftEmployee, WithId } from '../model';
-import { CREATE_EMPLOYEE, CREATE_EMPLOYEE_EVENT, DELETE_EMPLOYEE, DELETE_EMPLOYEE_EVENT, GET_EMPLOYEES, GET_EMPLOYEE_EVENTS, UPDATE_EMPLOYEE, UPDATE_EMPLOYEE_EVENT } from '../graphql/employee.graph';
+import { CREATE_EMPLOYEE, CREATE_EMPLOYEE_EVENT, DELETE_EMPLOYEE, DELETE_EMPLOYEE_EVENT, GET_EMPLOYEES, GET_EMPLOYEE_EVENTS, GET_EMPLOYEE_EVENTS_BY_INTERVAL, UPDATE_EMPLOYEE, UPDATE_EMPLOYEE_EVENT } from '../graphql/employee.graph';
 import httpWrapper from '../http';
 import { CreateEventInput, Employee, EmployeeEvent, UpdateEventInput } from "../types";
 
@@ -47,7 +47,12 @@ export const deleteEmployeeEvent = async (id: string): ApiResponse<boolean> => {
     return getResultOrError(res.data.data.deleteEvent);
 }
 
-export const getEmployeeEvents = async (id: string, interval: Interval): ApiResponse<EmployeeEvent[]> => {
-    const res = await httpWrapper.query(GET_EMPLOYEE_EVENTS, { id, startDate: interval.start, endDate: interval.end });
+export const getEmployeeEvents = async (id: string): ApiResponse<EmployeeEvent[]> => {
+    const res = await httpWrapper.query(GET_EMPLOYEE_EVENTS, { id });
     return getResultOrError(res.data.data.employeeEvents);
+}
+
+export const getEmployeeEventsByInterval = async (id: string, interval: Interval): ApiResponse<EmployeeEvent[]> => {
+    const res = await httpWrapper.query(GET_EMPLOYEE_EVENTS_BY_INTERVAL, { id, startDate: interval.start, endDate: interval.end });
+    return getResultOrError(res.data.data.employeeEventsByInterval);
 }

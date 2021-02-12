@@ -1,8 +1,8 @@
 import { getDays, setDayActivation } from '../api/day.api';
-import { createEmployee, createEmployeeEvent, deleteEmployee, deleteEmployeeEvent, getEmployeeEvents, getEmployees, updateEmployee, updateEmployeeEvent } from '../api/employee.api';
+import { createEmployee, createEmployeeEvent, deleteEmployee, deleteEmployeeEvent, getEmployeeEventsByInterval, getEmployees, updateEmployee, updateEmployeeEvent } from '../api/employee.api';
 import { createShift, deleteShift, getShifts, updateShift } from '../api/shift.api';
 import { Draft, DraftEmployee } from '../model';
-import { CreateEventInput, Day, Employee, EmployeeEvent, Shift } from '../types';
+import { CreateEventInput, Day, Employee, EmployeeEvent, Shift, UpdateEventInput } from '../types';
 import { buildReadonlyRecordSubject, buildRecordSubject, ReadSubject, executeFnOrOpenSnackbar, buildCUDRecordSubject, getResultElseNull } from "./crud.subject";
 import { BehaviorSubject } from 'rxjs';
 
@@ -15,7 +15,7 @@ export const employeeSubject = buildRecordSubject<Employee, DraftEmployee>({
 
 export const buildEmployeeEventSubject = () => {
     const subject = new BehaviorSubject<EmployeeEvent[] | null>(null);
-    const cudSubject = buildCUDRecordSubject<EmployeeEvent, CreateEventInput>({
+    const cudSubject = buildCUDRecordSubject<EmployeeEvent, CreateEventInput, UpdateEventInput>({
         createOne: createEmployeeEvent,
         updateOne: updateEmployeeEvent,
         deleteOne: deleteEmployeeEvent,
@@ -23,7 +23,7 @@ export const buildEmployeeEventSubject = () => {
     return {
         ...cudSubject,
         fetchInterval: async (employeeId: string, interval: Interval) => {
-            const recordList = await getEmployeeEvents(employeeId, interval);
+            const recordList = await getEmployeeEventsByInterval(employeeId, interval);
             executeFnOrOpenSnackbar((v) => subject.next(v), recordList);
             return getResultElseNull(recordList);
         }

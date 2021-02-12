@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Employee, EmployeeEvent } from "../../types";
+import { EmployeeEvent } from "../../types";
 import eachDayOfInterval from "date-fns/eachDayOfInterval";
 import startOfMonth from "date-fns/startOfMonth";
 import endOfMonth from "date-fns/endOfMonth";
@@ -9,9 +9,10 @@ import sidebarStore from "../../store/sidebar.store";
 import EmployeeEventForm from "./EmployeeEventForm";
 import { employeeEventSubject } from "../../rxjs/record.subject";
 import { useSubject } from "../../hooks/useAsyncState";
+import { v4 as uuidv4 } from 'uuid';
 
 type EmployeeAgendaProps = {
-  employee: string;
+  employeeId: string;
 };
 
 type AgendaSquareProps = {
@@ -39,52 +40,50 @@ const AgendaSquare = ({ date, events, onEventClick }: AgendaSquareProps) => {
       </h4>
       <div>
         {
-          events && events.map(ev => <span onClick={() => onEventClick(ev)}>
-            {ev.nature}
+          events && events.map(ev => <span key={uuidv4()} onClick={() => onEventClick(ev)}>
+            {ev.type}
           </span>)
         }
       </div>
     </div>
   );
 };
-const EmployeeAgenda = ({ employee }: EmployeeAgendaProps) => {
+const EmployeeAgenda = ({ employeeId }: EmployeeAgendaProps) => {
   const now = new Date();
-  const [interval, setInterval] = useState<Interval>({
+  const [interval] = useState<Interval>({
     start: startOfMonth(now),
     end: endOfMonth(now),
   });
   useEffect(() => {
-    employeeEventSubject.fetchInterval(employee, interval)
-  }, [employee])
+    employeeEventSubject.fetchInterval(employeeId, interval)
+  }, [employeeId])
 
   const dates = eachDayOfInterval(interval);
   const prependedDays = getDiffDays(interval.start as Date, 1);
 
-  const eventMap: Map<Date, EmployeeEvent[]> = new Map(dates.map(d => [d, []]));
+  const eventMap = new Map<string, EmployeeEvent[]>(dates.map(d => [d.toISOString(), []]));
   const [events] = useSubject(null, employeeEventSubject);
   events?.forEach(ev => {
-    const dates = eachDayOfInterval({ start: new Date(ev.startDate), end: new Date(ev.endDate) });
-    dates.forEach(d => eventMap.get(d)?.push(ev));
+    const dates = eachDayOfInterval({ start: ev.startDate, end: ev.endDate });
+    dates.forEach(d => eventMap.get(d.toISOString())?.push(ev));
   })
-
-  // events.forEach(event => eventDict.(event.startDate) ? eventDict.set(eventDict.get(date)) : [date])
-  // reduce((acc,val) =>  ? ({...acc, [val.toISOString()]: val}), new Map())
 
   function openCreationForm() {
     sidebarStore.openSidebar(
       "Create record",
       EmployeeEventForm, {
-      employee
+      employee: employeeId
     }
     );
   }
 
   function onEventClick(record: EmployeeEvent) {
+    console.log({ record, employee: employeeId })
     sidebarStore.openSidebar(
       "Update record",
       EmployeeEventForm,
       {
-        employee,
+        employee: employeeId,
         record
       }
     );
@@ -92,13 +91,14 @@ const EmployeeAgenda = ({ employee }: EmployeeAgendaProps) => {
 
   return (
     <article>
+      <h3>Agenda</h3>
       <button onClick={openCreationForm}>Create event</button>
       <section className="agenda">
-        {iter(prependedDays).map((_, i) => (
-          <AgendaSquare key={`empty-${i}`} date={null} events={[]} onEventClick={onEventClick} />
+        {iter(prependedDays).map(() => (
+          <AgendaSquare key={uuidv4()} date={null} events={[]} onEventClick={onEventClick} />
         ))}
-        {dates.map((date) => (
-          <AgendaSquare key={date.getDate()} date={date} events={eventMap.get(date) || []} onEventClick={onEventClick} />
+        {dates.map((date, i) => (
+          <AgendaSquare key={uuidv4()} date={date} events={eventMap.get(date.toISOString()) || []} onEventClick={onEventClick} />
         ))}
       </section>
     </article>

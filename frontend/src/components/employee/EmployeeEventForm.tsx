@@ -4,7 +4,6 @@ import {
 } from "../../model";
 import {
   CreateEventInput,
-  Employee,
   EmployeeEvent,
   EventNature,
   EventStatus,
@@ -25,7 +24,7 @@ type EmployeeEventFormProps = {
 
 function EmployeeEventForm({ record, employee }: EmployeeEventFormProps) {
   const initialState: CreateEventInput = record
-    ? employeeEventToDraft(record)
+    ? employeeEventToDraft(record, employee)
     : {
       duration: 1,
       employee,
@@ -74,7 +73,8 @@ function EmployeeEventForm({ record, employee }: EmployeeEventFormProps) {
       id: "start-date-input",
       name: "startDate",
       getter: d => {
-        return lightFormat(d.startDate, 'yyyy-MM-dd')
+        const date = typeof (d.startDate) === 'string' ? parseISO(d.startDate) : d.startDate;
+        return lightFormat(date, 'yyyy-MM-dd')
       },
       setter: (d): Date | null => {
         return d && typeof (d) === 'string' ? parseISO(d) : null
@@ -92,7 +92,7 @@ function EmployeeEventForm({ record, employee }: EmployeeEventFormProps) {
       {record && <button onClick={() => employeeEventSubject.deleteOne(record.id)}>Delete</button>}
       <CRUDForm<CreateEventInput>
         createOne={e => employeeEventSubject.createOne({ ...e, employee })}
-        updateOne={(d) => employeeEventSubject.updateOne({ id: record!.id, ...d })}
+        updateOne={({ employee, ...d }) => employeeEventSubject.updateOne({ id: record!.id, ...d })}
         isCreation={!record}
         name="employee-event"
         initialState={initialState}

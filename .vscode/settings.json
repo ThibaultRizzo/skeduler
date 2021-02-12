@@ -11,4 +11,8 @@
     "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
     "python.linting.mypyEnabled": true,
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/node_modules/**": true
+  }
   }

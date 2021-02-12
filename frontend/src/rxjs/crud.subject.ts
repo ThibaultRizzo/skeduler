@@ -10,9 +10,9 @@ export type BaseCRUDRecord = {
     id: string
 }
 
-export type CUD<T, D, R> = {
+export type CUD<T, D, U = WithId<D>, R = null> = {
     createOne: (draftRecord: D) => Promise<T | R>,
-    updateOne: (record: WithId<D>) => Promise<T | R>,
+    updateOne: (record: U) => Promise<T | R>,
     deleteOne: (id: string) => Promise<boolean | R>,
 }
 export type Read<T, R> = {
@@ -21,8 +21,8 @@ export type Read<T, R> = {
 
 
 export type ReadSubjectProps<T extends BaseCRUDRecord> = Read<T, ApiError>
-export type CUDSubjectProps<T extends BaseCRUDRecord, D> = CUD<T, D, ApiError>
-export type CRUDSubjectProps<T extends BaseCRUDRecord, D> = ReadSubjectProps<T> & CUDSubjectProps<T, D>;
+export type CUDSubjectProps<T extends BaseCRUDRecord, D, U = WithId<D>> = CUD<T, D, U, ApiError>
+export type CRUDSubjectProps<T extends BaseCRUDRecord, D, U = WithId<D>> = ReadSubjectProps<T> & CUDSubjectProps<T, D, U>;
 
 
 
@@ -33,8 +33,8 @@ export type SimpleSubject<T extends BaseCRUDRecord> = {
 export type ReadSubject<T extends BaseCRUDRecord> = Read<T, null> & SimpleSubject<T> & {
     lazyFetchAll: () => Promise<T[]>
 }
-export type CUDSubject<T extends BaseCRUDRecord, D> = CUD<T, D, null> & SimpleSubject<T>
-export type CRUDSubject<T extends BaseCRUDRecord, D> = ReadSubject<T> & CUDSubject<T, D>
+export type CUDSubject<T extends BaseCRUDRecord, D, U = WithId<D>> = CUD<T, D, U, null> & SimpleSubject<T>
+export type CRUDSubject<T extends BaseCRUDRecord, D, U = WithId<D>> = ReadSubject<T> & CUDSubject<T, D, U>
 
 
 /***********
@@ -93,7 +93,7 @@ export function buildReadonlyRecordSubject<T extends BaseCRUDRecord>({ fetchAll 
     };
 }
 
-export function buildCUDRecordSubject<T extends BaseCRUDRecord, D>({ createOne, updateOne, deleteOne }: CUDSubjectProps<T, D>, s?: BehaviorSubject<T[] | null>): CUDSubject<T, D> {
+export function buildCUDRecordSubject<T extends BaseCRUDRecord, D, U>({ createOne, updateOne, deleteOne }: CUDSubjectProps<T, D, U>, s?: BehaviorSubject<T[] | null>): CUDSubject<T, D, U> {
     const subject = s ? s : new BehaviorSubject<T[] | null>(null);
 
     return {

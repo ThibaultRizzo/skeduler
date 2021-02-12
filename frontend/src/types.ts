@@ -19,6 +19,7 @@ export type Query = {
   days: DaysPayload;
   employees: EmployeesPayload;
   employeeEvents: EmployeeEventsPayload;
+  employeeEventsByInterval: EmployeeEventsPayload;
   schedule: SchedulePayload;
 };
 
@@ -29,6 +30,11 @@ export type QueryShiftArgs = {
 
 
 export type QueryEmployeeEventsArgs = {
+  employeeId: Scalars['String'];
+};
+
+
+export type QueryEmployeeEventsByIntervalArgs = {
   id: Scalars['String'];
   startDate: Scalars['Datetime'];
   endDate: Scalars['Datetime'];

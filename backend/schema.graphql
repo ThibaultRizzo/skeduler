@@ -130,6 +130,9 @@ type Query {
   days: DaysPayload!
   employees: EmployeesPayload!
   employeeEvents(
+    employeeId: String!
+  ): EmployeeEventsPayload!
+  employeeEventsByInterval(
     id: String!
     startDate: Datetime!
     endDate: Datetime!

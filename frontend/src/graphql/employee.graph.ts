@@ -61,8 +61,21 @@ export const GET_EMPLOYEES = gql`
 `;
 
 export const GET_EMPLOYEE_EVENTS = gql`
-  query getEmployeeEvents($id: String!, $startDate: Datetime!, $endDate: Datetime!) {
-    employeeEvents(id: $id, startDate: $startDate, endDate: $endDate) {
+  query getEmployeeEvents($id: String!) {
+    employeeEvents(employeeId: $id) {
+      result {
+        ...employeeEventFragment
+      }
+      success
+      errors
+    }
+  }
+  ${employeeEventFragment}
+`;
+
+export const GET_EMPLOYEE_EVENTS_BY_INTERVAL = gql`
+  query getEmployeeEventsByInterval($id: String!, $startDate: Datetime!, $endDate: Datetime!) {
+    employeeEventsByInterval(id: $id, startDate: $startDate, endDate: $endDate) {
       result {
         ...employeeEventFragment
       }

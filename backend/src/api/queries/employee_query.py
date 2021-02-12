@@ -11,7 +11,15 @@ def resolve_employees(obj, info):
 
 
 @query("employeeEvents")
-def resolve_employees(obj, info, id, startDate, endDate):
+def resolve_employee_events(obj, info, employeeId):
+    return [
+        event.to_dict()
+        for event in EmployeeEvent.query.filter_by(employee_id=employeeId).all()
+    ]
+
+
+@query("employeeEventsByInterval")
+def resolve_employee_events_by_interval(obj, info, id, startDate, endDate):
     nb_days = endDate - startDate
     if nb_days.days < 0:
         raise InvalidInputError("End date should be after start date")

@@ -29,8 +29,8 @@ const EmployeeDetails = ({ employee }: EmployeeDetailsProps) => {
           />
         </section>
 
-        <EmployeeAgenda employee={employee.id} />
-        <EmployeeEventList />
+        <EmployeeAgenda employeeId={employee.id} />
+        <EmployeeEventList employeeId={employee.id} />
       </article>
     );
   }
