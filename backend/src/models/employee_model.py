@@ -134,7 +134,7 @@ class EmployeeEvent(db.Model):
         return {
             "id": self.id,
             "employee": self.employee_id,
-            "shift": {"id": self.shift_id},
+            "shift": {"id": self.shift_id} if self.shift_id is not None else None,
             "duration": self.duration,
             "startDate": self.start_date,
             "endDate": self.end_date,

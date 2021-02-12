@@ -1,7 +1,8 @@
 import { WithId } from '../model';
-import { BehaviorSubject, Subscription } from "rxjs"
+import { Subscription } from "rxjs"
 import snackbarSubject, { LogLevel } from "./snackbar.subject";
 import { ApiError, isApiError } from '../api/helper';
+import { BehaviorArrayLikeSubject } from './subject';
 
 /*********
  * Types *
@@ -60,16 +61,16 @@ export function getResultElseNull<T>(result: T | ApiError): T | null {
 /*********************
  * Subject factories *
  *********************/
-export function buildSimpleSubject<T extends BaseCRUDRecord>(injectedSubject?: BehaviorSubject<T[] | null>): SimpleSubject<T> {
-    const subject = injectedSubject ? injectedSubject : new BehaviorSubject<T[] | null>(null);
+export function buildSimpleSubject<T extends BaseCRUDRecord>(injectedSubject?: BehaviorArrayLikeSubject<T>): SimpleSubject<T> {
+    const subject = injectedSubject ? injectedSubject : new BehaviorArrayLikeSubject<T>(null);
     return {
         subscribe: (setState: (arr: T[] | null) => void) => subject.subscribe(setState),
         unsubscribe: () => subject.unsubscribe()
     };
 }
 
-export function buildReadonlyRecordSubject<T extends BaseCRUDRecord>({ fetchAll }: ReadSubjectProps<T>, injectedSubject?: BehaviorSubject<T[] | null>): ReadSubject<T> {
-    const subject = injectedSubject ? injectedSubject : new BehaviorSubject<T[] | null>(null);
+export function buildReadonlyRecordSubject<T extends BaseCRUDRecord>({ fetchAll }: ReadSubjectProps<T>, injectedSubject?: BehaviorArrayLikeSubject<T>): ReadSubject<T> {
+    const subject = injectedSubject ? injectedSubject : new BehaviorArrayLikeSubject<T>(null);
     const fetchSubject = async () => {
         const recordList = await fetchAll();
         executeFnOrOpenSnackbar((v) => subject.next(v), recordList)
@@ -93,8 +94,8 @@ export function buildReadonlyRecordSubject<T extends BaseCRUDRecord>({ fetchAll 
     };
 }
 
-export function buildCUDRecordSubject<T extends BaseCRUDRecord, D, U>({ createOne, updateOne, deleteOne }: CUDSubjectProps<T, D, U>, s?: BehaviorSubject<T[] | null>): CUDSubject<T, D, U> {
-    const subject = s ? s : new BehaviorSubject<T[] | null>(null);
+export function buildCUDRecordSubject<T extends BaseCRUDRecord, D, U>({ createOne, updateOne, deleteOne }: CUDSubjectProps<T, D, U>, s?: BehaviorArrayLikeSubject<T>): CUDSubject<T, D, U> {
+    const subject = s ? s : new BehaviorArrayLikeSubject<T>(null);
 
     return {
         ...buildSimpleSubject(subject),
@@ -105,7 +106,7 @@ export function buildCUDRecordSubject<T extends BaseCRUDRecord, D, U>({ createOn
                 snackbarSubject.openSnackbar({ title: apiError.error, level: LogLevel.ERROR })
             } else {
                 const newRecord = newRecordOrError as T;
-                subject.next([...(subject.value || []), newRecord]);
+                subject.createRecord(newRecord);
                 snackbarSubject.openSnackbar({ title: 'Record created', level: LogLevel.SUCCESS })
             }
             return getResultElseNull(newRecordOrError);
@@ -117,7 +118,7 @@ export function buildCUDRecordSubject<T extends BaseCRUDRecord, D, U>({ createOn
                 snackbarSubject.openSnackbar({ title: apiError.error, level: LogLevel.ERROR })
             } else {
                 const updatedRecord = updatedRecordOrError as T;
-                subject.next(subject.value?.map(r => r.id === updatedRecord.id ? updatedRecord : r) || [updatedRecord]);
+                subject.updateRecord(updatedRecord);
                 snackbarSubject.openSnackbar({ title: 'Record updated', level: LogLevel.SUCCESS })
             }
             return getResultElseNull(updatedRecordOrError);
@@ -128,7 +129,7 @@ export function buildCUDRecordSubject<T extends BaseCRUDRecord, D, U>({ createOn
                 const apiError = isDeletedOrError as ApiError;
                 snackbarSubject.openSnackbar({ title: apiError.error, level: LogLevel.ERROR })
             } else {
-                subject.next(subject.value?.filter(r => r.id !== id) || []);
+                subject.deleteRecord(id);
                 snackbarSubject.openSnackbar({ title: 'Record deleted', level: LogLevel.SUCCESS })
             }
             return getResultElseNull(isDeletedOrError);
@@ -138,7 +139,7 @@ export function buildCUDRecordSubject<T extends BaseCRUDRecord, D, U>({ createOn
 
 
 export function buildRecordSubject<T extends BaseCRUDRecord, D>({ createOne, updateOne, deleteOne, fetchAll }: CRUDSubjectProps<T, D>): CRUDSubject<T, D> {
-    const subject = new BehaviorSubject<T[] | null>(null);
+    const subject = new BehaviorArrayLikeSubject<T>(null);
 
     return {
         ...buildReadonlyRecordSubject({ fetchAll }, subject),

@@ -24,14 +24,17 @@ def resolve_employee_events_by_interval(obj, info, id, startDate, endDate):
     if nb_days.days < 0:
         raise InvalidInputError("End date should be after start date")
     events = EmployeeEvent.query.filter(
-        or_(
-            and_(
-                EmployeeEvent.start_date >= startDate,
-                EmployeeEvent.start_date <= endDate,
-            ),
-            and_(
-                EmployeeEvent.start_date <= startDate,
-                EmployeeEvent.end_date >= startDate,
+        and_(
+            EmployeeEvent.employee_id == id,
+            or_(
+                and_(
+                    EmployeeEvent.start_date >= startDate,
+                    EmployeeEvent.start_date <= endDate,
+                ),
+                and_(
+                    EmployeeEvent.start_date <= startDate,
+                    EmployeeEvent.end_date >= startDate,
+                ),
             ),
         )
     ).all()

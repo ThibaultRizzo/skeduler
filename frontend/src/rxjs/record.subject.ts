@@ -1,10 +1,10 @@
 import { getDays, setDayActivation } from '../api/day.api';
-import { createEmployee, createEmployeeEvent, deleteEmployee, deleteEmployeeEvent, getEmployeeEventsByInterval, getEmployees, updateEmployee, updateEmployeeEvent } from '../api/employee.api';
+import { createEmployee, createEmployeeEvent, deleteEmployee, deleteEmployeeEvent, getEmployeeEvents, getEmployeeEventsByInterval, getEmployees, updateEmployee, updateEmployeeEvent } from '../api/employee.api';
 import { createShift, deleteShift, getShifts, updateShift } from '../api/shift.api';
 import { Draft, DraftEmployee } from '../model';
 import { CreateEventInput, Day, Employee, EmployeeEvent, Shift, UpdateEventInput } from '../types';
-import { buildReadonlyRecordSubject, buildRecordSubject, ReadSubject, executeFnOrOpenSnackbar, buildCUDRecordSubject, getResultElseNull } from "./crud.subject";
-import { BehaviorSubject } from 'rxjs';
+import { buildReadonlyRecordSubject, buildRecordSubject, ReadSubject, executeFnOrOpenSnackbar, buildCUDRecordSubject, getResultElseNull, buildSimpleSubject } from "./crud.subject";
+import { BehaviorArrayLikeSubject } from './subject';
 
 export const employeeSubject = buildRecordSubject<Employee, DraftEmployee>({
     createOne: createEmployee,
@@ -14,17 +14,49 @@ export const employeeSubject = buildRecordSubject<Employee, DraftEmployee>({
 });
 
 export const buildEmployeeEventSubject = () => {
-    const subject = new BehaviorSubject<EmployeeEvent[] | null>(null);
+    const allEventsSubject = new BehaviorArrayLikeSubject<EmployeeEvent>(null);
+    const agendaSubject = new BehaviorArrayLikeSubject<EmployeeEvent>(null);
+
     const cudSubject = buildCUDRecordSubject<EmployeeEvent, CreateEventInput, UpdateEventInput>({
         createOne: createEmployeeEvent,
         updateOne: updateEmployeeEvent,
         deleteOne: deleteEmployeeEvent,
-    }, subject)
+    })
     return {
-        ...cudSubject,
+        agenda: buildSimpleSubject(agendaSubject),
+        all: buildSimpleSubject(allEventsSubject),
+        createOne: async (r: CreateEventInput) => {
+            const record = await cudSubject.createOne(r);
+            if (record) {
+                agendaSubject.createRecord(record)
+                allEventsSubject.createRecord(record)
+            }
+            return record;
+        },
+        updateOne: async (r: UpdateEventInput) => {
+            const record = await cudSubject.updateOne(r);
+            if (record) {
+                agendaSubject.updateRecord(record)
+                allEventsSubject.updateRecord(record)
+            }
+            return record;
+        },
+        deleteOne: async (id: string) => {
+            const isDeleted = await cudSubject.deleteOne(id);
+            if (isDeleted) {
+                agendaSubject.deleteRecord(id)
+                allEventsSubject.deleteRecord(id)
+            }
+            return isDeleted;
+        },
+        fetchAll: async (employeeId: string) => {
+            const recordList = await getEmployeeEvents(employeeId);
+            executeFnOrOpenSnackbar((v) => allEventsSubject.next(v), recordList);
+            return getResultElseNull(recordList);
+        },
         fetchInterval: async (employeeId: string, interval: Interval) => {
             const recordList = await getEmployeeEventsByInterval(employeeId, interval);
-            executeFnOrOpenSnackbar((v) => subject.next(v), recordList);
+            executeFnOrOpenSnackbar((v) => agendaSubject.next(v), recordList);
             return getResultElseNull(recordList);
         }
     }
@@ -43,7 +75,7 @@ type DaySubjectProps = {
     toggleDayActivation: (day: Day) => void
 } & ReadSubject<Day>;
 const buildDaySubject = (): DaySubjectProps => {
-    const subject = new BehaviorSubject<Day[] | null>(null);
+    const subject = new BehaviorArrayLikeSubject<Day>(null);
     const readOnlySubjectProps = buildReadonlyRecordSubject<Day>({
         fetchAll: getDays,
     }, subject);

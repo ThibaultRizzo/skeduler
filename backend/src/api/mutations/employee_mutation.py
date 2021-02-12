@@ -9,12 +9,8 @@ from ..errors import NoRecordError
 def resolve_create_employee(_, info, input):
     workingDays = input["workingDays"]
 
-    days = db.session.query(Day).filter(Day.name.in_(workingDays)).all()
+    days = Day.query.filter(Day.name.in_(workingDays)).all()
     shift_ids = map(lambda s: s["shift"], input["skills"])
-    # shifts = db.session.query(Shift).filter(Shift.id.in_(shift_ids)).all()
-    # skills = map(
-    #     lambda s: EmployeeSkill(level=s["level"], shift_id=s["id"]), input["skills"]
-    # )
 
     employee = Employee(
         name=input["name"],
@@ -40,9 +36,8 @@ def resolve_update_employee(_, info, input):
     employee.name = input["name"]
     employee.contract = input["contract"]
 
-    days = db.session.query(Day).filter(Day.name.in_(input["workingDays"])).all()
+    days = Day.query.filter(Day.name.in_(input["workingDays"])).all()
     employee.working_days = days
-    print(input["workingDays"])
 
     # TODO: Throw error when same skill is being added twice
     skills = input["skills"]

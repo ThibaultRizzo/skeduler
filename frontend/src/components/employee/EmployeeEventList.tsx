@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { getEmployeeEvents } from "../../api/employee.api";
-import { useAsyncState } from "../../hooks/useAsyncState";
 import { EmployeeEvent } from "../../types";
 import eachMonthOfInterval from "date-fns/eachMonthOfInterval";
 import { getMonthYear } from "../../utils/utils";
 import { compareDesc } from "date-fns";
+import { employeeEventSubject } from "../../rxjs/record.subject";
+import { useSubject } from "../../hooks/useAsyncState";
+import EmployeeEventForm from "./EmployeeEventForm";
+import sidebarStore from "../../store/sidebar.store";
 
 type EmployeeEventListProps = {
   employeeId: string
@@ -12,7 +14,11 @@ type EmployeeEventListProps = {
 
 
 const EmployeeEventList = ({ employeeId }: EmployeeEventListProps) => {
-  const [events] = useAsyncState<EmployeeEvent[] | null, string>(null, getEmployeeEvents, [employeeId]);
+  const [events] = useSubject(null, employeeEventSubject.all);
+
+  useEffect(() => {
+    employeeEventSubject.fetchAll(employeeId)
+  }, [employeeId])
   const eventsPerMonthMap = new Map<string, EmployeeEvent[]>()
   if (events) {
     events.forEach(ev => {
@@ -22,6 +28,18 @@ const EmployeeEventList = ({ employeeId }: EmployeeEventListProps) => {
       console.log({ eventsPerMonthMap })
     })
   }
+
+  function onEventClick(record: EmployeeEvent) {
+    sidebarStore.openSidebar(
+      "Update record",
+      EmployeeEventForm,
+      {
+        employee: employeeId,
+        record
+      }
+    );
+  }
+
   return <article>
     <h3>Event List</h3>
 
@@ -33,7 +51,7 @@ const EmployeeEventList = ({ employeeId }: EmployeeEventListProps) => {
             <section key={monthYear}>
               <h4>{monthYear}</h4>
               {eventsPerMonthMap.get(monthYear)!.sort((a, b) => compareDesc(a.startDate, b.startDate)).map(ev => (
-                <p key={ev.id + monthYear}>{`${ev.type} : ${ev.startDate} for ${ev.duration} days`}</p>
+                <p key={ev.id + monthYear} onClick={() => onEventClick(ev)}>{`${ev.type} : ${ev.startDate} for ${ev.duration} days`}</p>
               ))}
             </section>
           ))

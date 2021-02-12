@@ -10,6 +10,7 @@ import EmployeeEventForm from "./EmployeeEventForm";
 import { employeeEventSubject } from "../../rxjs/record.subject";
 import { useSubject } from "../../hooks/useAsyncState";
 import { v4 as uuidv4 } from 'uuid';
+import { getMonthYear } from "../../utils/utils";
 
 type EmployeeAgendaProps = {
   employeeId: string;
@@ -62,7 +63,7 @@ const EmployeeAgenda = ({ employeeId }: EmployeeAgendaProps) => {
   const prependedDays = getDiffDays(interval.start as Date, 1);
 
   const eventMap = new Map<string, EmployeeEvent[]>(dates.map(d => [d.toISOString(), []]));
-  const [events] = useSubject(null, employeeEventSubject);
+  const [events] = useSubject(null, employeeEventSubject.agenda);
   events?.forEach(ev => {
     const dates = eachDayOfInterval({ start: ev.startDate, end: ev.endDate });
     dates.forEach(d => eventMap.get(d.toISOString())?.push(ev));
@@ -78,7 +79,6 @@ const EmployeeAgenda = ({ employeeId }: EmployeeAgendaProps) => {
   }
 
   function onEventClick(record: EmployeeEvent) {
-    console.log({ record, employee: employeeId })
     sidebarStore.openSidebar(
       "Update record",
       EmployeeEventForm,
@@ -91,7 +91,7 @@ const EmployeeAgenda = ({ employeeId }: EmployeeAgendaProps) => {
 
   return (
     <article>
-      <h3>Agenda</h3>
+      <h3>Agenda - <span>{getMonthYear(interval.start as Date)}</span></h3>
       <button onClick={openCreationForm}>Create event</button>
       <section className="agenda">
         {iter(prependedDays).map(() => (
