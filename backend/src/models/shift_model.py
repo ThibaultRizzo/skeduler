@@ -5,9 +5,9 @@ from ..enums import ShiftImportance
 
 
 SHIFT_PENALTY_WEIGHT_DICT = {
-    ShiftImportance.MAJOR: 10,
-    ShiftImportance.AVERAGE: 5,
-    ShiftImportance.MINOR: 2,
+    ShiftImportance.MAJOR: 30,
+    ShiftImportance.AVERAGE: 20,
+    ShiftImportance.MINOR: 10,
 }
 
 
@@ -59,3 +59,6 @@ class Shift(db.Model):
 
     def __repr__(self):
         return "<Shift: {}>".format(self.title)
+
+
+REST_SHIFT = Shift(title="R", duration=0)

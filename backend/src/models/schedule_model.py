@@ -1,7 +1,10 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column, String, Enum, Date, Integer, ForeignKey
 from .helper import ID, created_at
 from textwrap import wrap
 from ..database import db
+from src.utils import chunk, complete_str
+from src.enums import SolverStatus
+from .shift_model import REST_SHIFT
 
 
 class Schedule(db.Model):
@@ -12,6 +15,9 @@ class Schedule(db.Model):
     employees = db.relationship(
         "ScheduleEmployee", cascade="all, delete, delete-orphan"
     )
+    start_date = Column(Date, nullable=False)
+    nb_days = Column(Integer, nullable=False)
+    status = Column(Enum(SolverStatus), nullable=False)
 
     def to_dict(self):
         return {
@@ -56,8 +62,6 @@ class Schedule(db.Model):
                     if shifts_per_employee[e][s][d] == "1":
                         shift_employee = employee
 
-                if shift_employee == None:
-                    print(employee, e)
                 shifts.append({"shift": shift, "employee": shift_employee})
 
             sch.append({"day": day, "shifts": shifts})
@@ -87,11 +91,11 @@ class Schedule(db.Model):
 
         return [encoded_schedule, employee_id_list, shift_id_list, day_id_list]
 
-    def to_schedule(bin_schedule, employees, shifts, days):
-        encoded_schedule = Schedule.encode(bin_schedule, employees, shifts, days)
+    def to_schedule(bin_schedule, employees, base_shifts, days, period, status):
+        encoded_schedule = Schedule.encode(bin_schedule, employees, base_shifts, days)
         shifts = []
-        for (s, i) in enumerate(shifts):
-            shifts.append(ScheduleShift(order=i, shift_id=s["shift"]))
+        for s, shift in enumerate(base_shifts):
+            shifts.append(ScheduleShift(order=s, shift_id=shift.id))
 
         employees = []
         for (s, i) in enumerate(employees):
@@ -101,8 +105,50 @@ class Schedule(db.Model):
             encoded_schedule=encoded_schedule,
             shifts=shifts,
             employees=employees,
+            start_date=period.start_date,
+            nb_days=period.nb_days,
+            status=status,
         )
         return schedule
+
+    def print(self, employees, shifts, working_days):
+        largest_title_size = len(max(shifts, key=lambda s: len(s.title)).title)
+        cell_size = (
+            largest_title_size
+            if largest_title_size < 10 and largest_title_size > 2
+            else 10
+        )
+
+        header = (cell_size * " ") + "".join(
+            (
+                d.name.name[0:2] + " " * (cell_size - 2)
+                if d.active
+                else f"({d.name.name[0:2]}){' ' * (cell_size - 4)}"
+            )
+            for d in working_days
+        )
+
+        encoded_sch = self.encoded_schedule.split()[3]
+
+        print(header)
+        employees_chunks = chunk(encoded_sch, int(len(encoded_sch) / len(employees)))
+        for e, employee_chunk in enumerate(employees_chunks):
+            employee = employees[e]
+            employee_name = f"{complete_str(employee.name, cell_size, ' ')}"
+
+            shifts_chunks = chunk(employees_chunks[e], self.nb_days)
+
+            res = [""] * self.nb_days
+            for s, shift_chunk in enumerate(shifts_chunks):
+                shift = REST_SHIFT if s == 0 else shifts[s - 1]
+                for b, bit in enumerate(shift_chunk):
+                    if int(bit) == 1:
+                        res[b] = complete_str(shift.title, cell_size, " ")
+
+            for w, week_chunk in enumerate(chunk(res, len(working_days))):
+                line_header = employee_name if w == 0 else " " * cell_size
+                line = line_header + "".join(week_chunk)
+                print(line)
 
 
 class ScheduleShift(db.Model):
@@ -122,7 +168,7 @@ class ScheduleShift(db.Model):
     order = Column(Integer, primary_key=True)
 
     def __repr__(self):
-        return "<ScheduleShift: {}, {}, {}, {}>".format(
+        return "<ScheduleShift: {}, {}, {}>".format(
             self.schedule_id, self.shift_id, self.order
         )
 

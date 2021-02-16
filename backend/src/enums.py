@@ -1,4 +1,5 @@
 import enum
+from ortools.sat.python import cp_model
 
 
 class DayEnum(enum.Enum):
@@ -28,6 +29,7 @@ class EventType(enum.Enum):
     UNPAID_LEAVE = "UNPAID_LEAVE"
     HOLIDAY = "HOLIDAY"
     ILLNESS = "ILLNESS"
+    REQUEST = "REQUEST"
 
 
 class EventNature(enum.Enum):
@@ -47,3 +49,15 @@ class ShiftImportance(enum.Enum):
     MAJOR = "MAJOR"
     AVERAGE = "AVERAGE"
     MINOR = "MINOR"
+
+
+class SolverStatus(enum.Enum):
+    UNKNOWN = cp_model.UNKNOWN
+    MODEL_INVALID = cp_model.MODEL_INVALID
+    FEASIBLE = cp_model.FEASIBLE
+    INFEASIBLE = cp_model.INFEASIBLE
+    OPTIMAL = cp_model.OPTIMAL
+
+
+class RuleType(enum.Enum):
+    SHIFT = "SHIFT"

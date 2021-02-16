@@ -7,3 +7,11 @@ class SolverException(Exception):
 
     def __str__(self):
         return f"SolverException -> {self.message}"
+
+
+class ConflictingConstraintException(SolverException):
+    def __init__(self, constraints):
+        super().__init__("Constraints conflicting: {constraints.size}")
+
+    def __str__(self):
+        return f"ConflictingConstraintException -> {self.message}"

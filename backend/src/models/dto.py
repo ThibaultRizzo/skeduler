@@ -30,7 +30,7 @@ class Period:
         if self.start_date < period_start_date:
             return self.end_date >= period_start_date
         elif self.start_date > period_start_date:
-            return self.start_date >= period_end_date
+            return self.start_date <= period_end_date
         else:
             return True
 
@@ -46,6 +46,9 @@ class Period:
         else:
             raise Exception("to_datetime only accepts dates/datetimes")
 
+    def __repr__(self):
+        return f"<Period: {self.start_date} - {self.end_date}>"
+
 
 class SolverPeriod(Period):
     def __init__(self, start_date, nb_weeks, days):
@@ -54,7 +57,8 @@ class SolverPeriod(Period):
             raise TypeError("Number of weeks should be a positive integer")
         elif DayEnum.get_by_order(start_date.isoweekday()) is not DayEnum.MONDAY:
             raise TypeError("Start date should be a monday")
-
+        elif len(days) is not 7:
+            raise TypeError(f"7 days are needed, currently only passed {len(days)}")
         self.nb_weeks = nb_weeks
         self.days = days
         self.days_dict = dict((d.name, d) for d in days)
@@ -70,3 +74,6 @@ class SolverPeriod(Period):
     ## Returns a list of days matching the period in ascending order
     def get_day_list(self):
         return [self.days_dict.get(d) for d in self.get_day_enum_list()]
+
+    def __repr__(self):
+        return f"<SolverPeriod: {self.start_date} - {self.end_date}>"

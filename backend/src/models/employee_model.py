@@ -36,10 +36,6 @@ class Employee(db.Model):
         "EmployeeEvent", backref="employee", cascade="all, delete, delete-orphan"
     )
 
-    # Shifts placement fully mastered by employee
-    # Shifts placement not yet mastered by employee
-    # training_shifts = db.relationship("Shift")
-
     # Returns events VALIDATED, matching the period
     def get_mandatory_events(self, period):
         return [
@@ -107,6 +103,14 @@ class EmployeeEvent(db.Model):
     status = Column(Enum(EventStatus), nullable=False)
     nature = Column(Enum(EventNature), nullable=False)
     is_desired = Column(Boolean, nullable=False)
+
+    # @hybrid_property
+    # def is_desired(self):
+    #     return self.type in [EventType.REQUEST]
+
+    # @is_desired.expression
+    # def is_desired(self):
+    #     return self.type
 
     @hybrid_property
     def end_date(self):
