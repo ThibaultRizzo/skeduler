@@ -10,7 +10,6 @@ class MetaInterface(metaclass=abc.ABCMeta):
             for func in dir(cls)
             if callable(getattr(cls, func)) and not func.startswith("__")
         ]
-        print(method_list)
         result = True
         for method in method_list:
             result = hasattr(subclass, method) and callable(getattr(subclass, method))
@@ -38,7 +37,6 @@ class IFixedAssignment(MetaInterface):
 #             for func in dir(cls)
 #             if callable(getattr(cls, func)) and not func.startswith("__")
 #         ]
-#         print(method_list)
 #         result = True
 #         for method in method_list:
 #             result = hasattr(subclass, method) and callable(getattr(subclass, method))

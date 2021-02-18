@@ -1,12 +1,7 @@
 #############
 #   Enum    #
 #############
-type DayEnum {
-  name: DayName!
-  value: Int!
-}
-
-enum DayName {
+enum DayEnum {
   MONDAY
   TUESDAY
   WEDNESDAY
@@ -49,6 +44,16 @@ enum ShiftImportance {
   MINOR
 }
 
+enum SequenceRuleType {
+  SHIFT_SEQUENCE,
+  SHIFT_SUM_SEQUENCE
+}
+
+enum RulePenalty {
+  HARD,
+  MEDIUM,
+  SOFT
+}
 ############
 #  Scalar   #
 ############
@@ -80,6 +85,7 @@ type CompleteSchedule {
 type Day {
   id: String!
   name: DayEnum!
+  order: Int!
   active: Boolean!
 }
 
@@ -93,8 +99,8 @@ type Employee {
 }
 
 type EmployeeSkill {
-  shift: Shift!
-  employee: Employee!
+  shift_id: String!
+  employee_id: Employee!
   level: ShiftSkillLevel!
 }
 
@@ -125,20 +131,59 @@ type Shift {
   coverSunday: Int!
 }
 
+type CompanySequenceRule {
+  id: String!
+  companyId: String!
+  ruleType: SequenceRuleType!
+  shiftId: String
+  hardMin: Int!
+  softMin: Int!
+  penaltyMin: RulePenalty!
+  hardMax: Int!
+  softMax: Int!
+  penaltyMax: RulePenalty!
+}
+
+type CompanyTransitionRule {
+  id: String!
+  companyId: String!
+  fromShiftId: String
+  toShiftId: String
+  penalty: RulePenalty!
+}
+
+type CompanySummary {
+  id: String!
+  name: String!
+}
+
+type Company {
+  id: String!
+  name: String!
+  workingDays: [Day!]!
+  sequenceRules: [CompanySequenceRule!]!
+  transitionRules: [CompanyTransitionRule!]!
+}
+
 type Query {
   shifts: ShiftsPayload!
-  shift(id: String!): ShiftPayload!
   days: DaysPayload!
   employees: EmployeesPayload!
   employeeEvents(
     employeeId: String!
   ): EmployeeEventsPayload!
   employeeEventsByInterval(
-    id: String!
+    employeeId: String!
     startDate: Datetime!
     endDate: Datetime!
   ): EmployeeEventsPayload!
   schedule: SchedulePayload!
+
+  companies: CompaniesPayload!
+  company: CompanyPayload!
+  sequenceRules: CompanySequenceRulesPayload!
+  transitionRules: CompanyTransitionRulesPayload!
+
 }
 
 type Mutation {
@@ -153,13 +198,22 @@ type Mutation {
   updateEvent(input: UpdateEventInput!): EmployeeEventPayload
   deleteEvent(id: String!): Payload
 
-  toggleDayActivation(
-    input: ToggleDayActivationInput!
-  ): ToggleDayActivationPayload
+  setDayActivation(
+    input: SetDayActivationInput!
+  ): SetDayActivationPayload
 
   generateSchedule(input: GenerateScheduleInput!): SchedulePayload
 
-  createOrganization: Boolean!
+  createCompany(input: CreateCompanyInput!): CompanyPayload
+  updateCompany(input: UpdateCompanyInput!): CompanyPayload
+  deleteCompany(id: String!): Payload!
+  createSequenceRule(input: CreateSequenceRuleInput!): SequenceRulePayload
+  updateSequenceRule(input: UpdateSequenceRuleInput!): SequenceRulePayload
+  deleteSequenceRule(id: String!): Payload!
+  createTransitionRule(input: CreateTransitionRuleInput!): TransitionRulePayload
+  updateTransitionRule(input: UpdateTransitionRuleInput!): TransitionRulePayload
+  deleteTransitionRule(id: String!): Payload!
+
 }
 
 ############
@@ -194,14 +248,14 @@ input UpdateShiftInput {
 }
 
 input ShiftSkillInput {
-  shift: String!
+  shift_id: String!
   level: ShiftSkillLevel!
 }
 
 input CreateEmployeeInput {
   name: String!
   contract: Int!
-  workingDays: [DayName!]!
+  workingDays: [DayEnum!]!
   skills: [ShiftSkillInput!]!
 }
 
@@ -209,13 +263,13 @@ input UpdateEmployeeInput {
   id: String!
   name: String!
   contract: Int!
-  workingDays: [DayName!]!
+  workingDays: [DayEnum!]!
   skills: [ShiftSkillInput!]!
 }
 
 input CreateEventInput {
-  employee: String!
-  shift: String
+  employee_id: String!
+  shift_id: String
   startDate: Datetime!
   duration: Int!
   type: EventType!
@@ -226,13 +280,54 @@ input CreateEventInput {
 
 input UpdateEventInput {
   id: String!
-  shift: String
+  shift_id: String
   startDate: Datetime!
   duration: Int!
   type: EventType!
   status: EventStatus!
   nature: EventNature!
   isDesired: Boolean!
+}
+
+input CreateCompanyInput {
+  name: String!
+}
+
+input UpdateCompanyInput {
+  id: String!
+  name: String!
+}
+
+
+
+input CreateSequenceRuleInput {
+  companyId: String!
+  ruleType: SequenceRuleType!
+  shiftId: String
+  hardMin: Int!
+  softMin: Int!
+  penaltyMin: RulePenalty!
+  hardMax: Int!
+  softMax: Int!
+  penaltyMax: RulePenalty!
+}
+input UpdateSequenceRuleInput {
+  id: String!
+  shiftId: String
+  hardMin: Int!
+  softMin: Int!
+  penaltyMin: RulePenalty!
+  hardMax: Int!
+  softMax: Int!
+  penaltyMax: RulePenalty!
+}
+
+input CreateTransitionRuleInput {
+id: String!
+}
+input UpdateTransitionRuleInput {
+  id: String!
+  name: String!
 }
 
 ##############
@@ -286,12 +381,12 @@ type EmployeeEventsPayload {
   errors: [String!]
 }
 
-input ToggleDayActivationInput {
+input SetDayActivationInput {
   id: String!
   active: Boolean!
 }
 
-type ToggleDayActivationPayload {
+type SetDayActivationPayload {
   result: Day
   success: Boolean!
   errors: [String!]
@@ -305,6 +400,41 @@ input GenerateScheduleInput {
 
 type SchedulePayload {
   result: CompleteSchedule
+  success: Boolean!
+  errors: [String!]
+}
+
+type CompaniesPayload {
+  result: [CompanySummary!]
+  success: Boolean!
+  errors: [String!]
+}
+
+type CompanyPayload {
+  result: CompanySummary
+  success: Boolean!
+  errors: [String!]
+}
+
+type CompanySequenceRulesPayload {
+  result: [CompanySequenceRule!]
+  success: Boolean!
+  errors: [String!]
+}
+
+type CompanyTransitionRulesPayload {
+  result: [CompanyTransitionRule!]
+  success: Boolean!
+  errors: [String!]
+}
+type SequenceRulePayload {
+  result: CompanySequenceRule
+  success: Boolean!
+  errors: [String!]
+}
+
+type TransitionRulePayload {
+  result: CompanyTransitionRule
   success: Boolean!
   errors: [String!]
 }

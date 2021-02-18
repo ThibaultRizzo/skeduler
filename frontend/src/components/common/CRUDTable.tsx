@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSubject } from "../../hooks/useAsyncState";
+import { useIterableSubject } from "../../hooks/useAsyncState";
 import {
   BaseCRUDRecord,
   CRUDSubject,
@@ -20,7 +20,7 @@ function CRUDTable<T extends BaseCRUDRecord, D>({
   onSelect,
   onDelete,
 }: CRUDTableProps<T, D>) {
-  const [lines] = useSubject(null, subject);
+  const [lines] = useIterableSubject(null, subject);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
 
   function toggleLine({ id }: T) {
@@ -96,15 +96,15 @@ function CRUDTable<T extends BaseCRUDRecord, D>({
               </tr>
             ))
           ) : (
-            <tr>
-              <td>No records</td>
-            </tr>
-          )
+              <tr>
+                <td>No records</td>
+              </tr>
+            )
         ) : (
-          <tr>
-            <td>Pulling records...</td>
-          </tr>
-        )}
+            <tr>
+              <td>Pulling records...</td>
+            </tr>
+          )}
       </tbody>
     </table>
   );

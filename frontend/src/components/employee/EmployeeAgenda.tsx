@@ -8,7 +8,7 @@ import { iter } from "../../utils/layout";
 import sidebarStore from "../../store/sidebar.store";
 import EmployeeEventForm from "./EmployeeEventForm";
 import { employeeEventSubject } from "../../rxjs/record.subject";
-import { useSubject } from "../../hooks/useAsyncState";
+import { useIterableSubject } from "../../hooks/useAsyncState";
 import { v4 as uuidv4 } from 'uuid';
 import { getMonthYear } from "../../utils/utils";
 
@@ -63,7 +63,7 @@ const EmployeeAgenda = ({ employeeId }: EmployeeAgendaProps) => {
   const prependedDays = getDiffDays(interval.start as Date, 1);
 
   const eventMap = new Map<string, EmployeeEvent[]>(dates.map(d => [d.toISOString(), []]));
-  const [events] = useSubject(null, employeeEventSubject.agenda);
+  const [events] = useIterableSubject(null, employeeEventSubject.agenda);
   events?.forEach(ev => {
     const dates = eachDayOfInterval({ start: ev.startDate, end: ev.endDate });
     dates.forEach(d => eventMap.get(d.toISOString())?.push(ev));

@@ -3,5 +3,5 @@
 source bin/activate.sh
 
 flask create_db
-flask create_org
+flask create_company
 cd -

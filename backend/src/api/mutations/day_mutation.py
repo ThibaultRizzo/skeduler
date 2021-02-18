@@ -1,19 +1,13 @@
 from . import mutation
-from ...models import Day
-from ...database import db
+from src.models import Day
+from src.database import db
+from src.enums import DayEnum
 
 
-@mutation("toggleDayActivation")
-def resolve_toggle_day_activation(_, info, input):
-    id = input["id"]
-    active = input["active"]
-    day = Day.query.get(id)
-    day.active = active
-    db.session.commit()
-    return day.to_dict()
+@mutation("setDayActivation", inject_company_id=False)
+def resolve_set_day_activation(obj, info, input):
+    return Day.updateOne(**input)
 
 
 def generate_days():
-    for day in DayEnum:
-        db.session.add(Day(name=day, active=True))
-    db.session.commit()
+    return [Day(name=day, active=True) for day in DayEnum]

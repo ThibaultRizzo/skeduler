@@ -1,30 +1,57 @@
-from sqlalchemy import Column, String
-from src.database import db
-from .helper import ID
+from sqlalchemy import Column, Enum, String, Integer, ForeignKey, inspect
+from sqlalchemy.orm import validates
+from src.database import db, PkModel, PkCompanyModel, reference_col
+from src.enums import SequenceRuleType, RulePenalty
+from src.utils import snake_to_camel_case
 
 
-class Company(db.Model):
-    id = ID()
+class Company(PkModel):
     name = Column(String(128), unique=True)
-    rules = db.relationship(
-        "CompanyRule", backref="rule", cascade="all, delete, delete-orphan"
+    working_days = db.relationship(
+        "Day", backref="company", cascade="all, delete, delete-orphan"
     )
+    sequence_rules = db.relationship(
+        "CompanySequenceRule", backref="company", cascade="all, delete, delete-orphan"
+    )
+    transition_rules = db.relationship(
+        "CompanyTransitionRule", backref="company", cascade="all, delete, delete-orphan"
+    )
+
+    # def create(**kwargs):
+    #     return super.create(**kwargs, ['id', 'working_days'])
 
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
-            "rules": self.rules,
         }
 
     def __repr__(self):
         return "<Company: {}>".format(self.id, self.name)
 
 
-class CompanyRule(db.Model):
-    id = ID()
-    company_id = Column(
-        String(128), ForeignKey("company.id", ondelete="CASCADE"), nullable=False
-    )
-    rule_type = Column(Enum(RuleType), nullable=False)
-    entity_id = Column(String(128), nullable=False)
+class CompanySequenceRule(PkCompanyModel):
+    rule_type = Column(Enum(SequenceRuleType), nullable=False)
+    shift_id = reference_col("shift", nullable=True)
+    hard_min = Column(Integer, nullable=False)
+    soft_min = Column(Integer, nullable=False)
+    penalty_min = Column(Enum(RulePenalty), nullable=False)
+    hard_max = Column(Integer, nullable=False)
+    soft_max = Column(Integer, nullable=False)
+    penalty_max = Column(Enum(RulePenalty), nullable=False)
+
+    # @validates(
+    #     "hard_min",
+    #     "soft_min",
+    #     "hard_max",
+    #     "soft_max",
+    # )
+    # def validate_constraints(self, key, value):
+    #     assert value > 0
+    #     return value
+
+
+class CompanyTransitionRule(PkCompanyModel):
+    from_shift_id = reference_col("shift", nullable=True)
+    to_shift_id = reference_col("shift", nullable=True)
+    penalty = Column(Enum(RulePenalty), nullable=False)

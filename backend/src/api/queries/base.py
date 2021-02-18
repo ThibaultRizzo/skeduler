@@ -1,38 +1,39 @@
 from ariadne import QueryType, convert_kwargs_to_snake_case
 from ..errors import NoRecordError, InvalidInputError
+import logging
+
+_logger = logging.getLogger()
 
 ariadne_query = QueryType()
 
 
-def returnError(message):
+def getErrorPayload(e, message):
+    _logger.error(e)
     return {
         "success": False,
         "errors": [message],
     }
 
 
-def query(func_name):
+def query(func_name, inject_company_id=True):
     @convert_kwargs_to_snake_case
     def query_wrapper(func):
-        def decorator(*args, **kwargs):
+        def decorator(obj, info, **kwargs):
             try:
-                result = func(*args, **kwargs)
+                if inject_company_id:
+                    # TODO: Find better way to pass company ID
+                    company_id = info.context.headers.get("companyId")
+                    result = func(obj, info, company_id, **kwargs)
+                else:
+                    result = func(obj, info, **kwargs)
                 payload = {"success": True, "result": result}
 
             except NoRecordError as e:
-                payload = {
-                    "success": False,
-                    "errors": ["NoRecordError", e],
-                }
+                payload = getErrorPayload(e, "NoRecordError")
             except InvalidInputError as e:
-                payload = returnError(e)
+                payload = getErrorPayload(e, "InvalidInputError")
             except BaseException as e:
-                print(str(e))
-                payload = {
-                    "success": False,
-                    "errors": ["Something went wrong", e],
-                }
-
+                payload = getErrorPayload(e, "Something went wrong")
             return payload
 
         return ariadne_query.field(func_name)(decorator)

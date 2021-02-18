@@ -10,6 +10,7 @@ from . import queries, mutations
 from .resolver import datetime_scalar
 from flask_cors import CORS
 
+from src.enums import all_enums
 
 type_defs = gql(load_schema_from_path("schema.graphql"))
 
@@ -18,6 +19,7 @@ schema = make_executable_schema(
     datetime_scalar,
     queries.base.ariadne_query,
     mutations.base.ariadne_mutation,
+    [e.to_graph() for e in all_enums],
 )
 
 

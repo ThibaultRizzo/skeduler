@@ -1,11 +1,10 @@
 from . import mutation
-from .day_mutation import generate_days
-from ...models import Day, Shift, Employee, SolverPeriod
-from ...solver.solver import solve_shift_scheduling, SolverException
+from src.models import Day, Shift, Employee, SolverPeriod
+from src.solver.solver import solve_shift_scheduling, SolverException
 
 
 @mutation("generateSchedule")
-def resolve_generate_schedule(*_, input):
+def resolve_generate_schedule(_, info, company_id, input):
     start_date = input.get("startDate")
     nb_weeks = input.get("nbWeeks")
 
@@ -18,7 +17,6 @@ def resolve_generate_schedule(*_, input):
     if schedule is None:
         raise SolverException("Could not find a feasible solution")
     else:
-        print(schedule)
         db.session.add(schedule)
         db.session.commit()
         return schedule.get_schedule_per_day()

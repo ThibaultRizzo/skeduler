@@ -5,7 +5,7 @@ from subprocess import call
 from .database import db
 from flask.cli import FlaskGroup
 
-from .api.mutations.organization_mutation import create_organization
+from .api.mutations import company_mutation
 
 import click
 
@@ -23,10 +23,9 @@ def init_app(app):
         db.create_all()
         db.session.commit()
 
-    @app.cli.command("create_org")
-    def create_org():
-        create_organization()
-        db.session.commit()
+    @app.cli.command("create_company")
+    def create_company():
+        company_mutation.resolve_create_company(None, None, {"name": ""})
 
 
 @click.command()

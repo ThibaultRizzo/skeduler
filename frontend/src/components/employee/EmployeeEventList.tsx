@@ -4,7 +4,7 @@ import eachMonthOfInterval from "date-fns/eachMonthOfInterval";
 import { getMonthYear } from "../../utils/utils";
 import { compareDesc } from "date-fns";
 import { employeeEventSubject } from "../../rxjs/record.subject";
-import { useSubject } from "../../hooks/useAsyncState";
+import { useIterableSubject } from "../../hooks/useAsyncState";
 import EmployeeEventForm from "./EmployeeEventForm";
 import sidebarStore from "../../store/sidebar.store";
 
@@ -14,7 +14,7 @@ type EmployeeEventListProps = {
 
 
 const EmployeeEventList = ({ employeeId }: EmployeeEventListProps) => {
-  const [events] = useSubject(null, employeeEventSubject.all);
+  const [events] = useIterableSubject(null, employeeEventSubject.all);
 
   useEffect(() => {
     employeeEventSubject.fetchAll(employeeId)

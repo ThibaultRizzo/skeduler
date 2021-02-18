@@ -5,7 +5,6 @@ eval `ssh-agent -s`
 ssh-add ./.ssh/thibault-skeduler-test.pem
 
 ./constants.sh
-print($IP_ADDRESS)
 
 ssh ubuntu@$IP_ADDRESS<< EOF
     cd projects/skeduler

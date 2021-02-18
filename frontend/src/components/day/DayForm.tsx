@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSubject } from "../../hooks/useAsyncState";
+import { useIterableSubject } from "../../hooks/useAsyncState";
 import { daySubject } from "../../rxjs/record.subject";
 import { Day } from "../../types";
 
@@ -11,7 +11,7 @@ function DayForm({ record }: DayFormProps) {
   if (!record) {
     throw new Error("DayForm cannot be used to create a new day");
   }
-  const [days] = useSubject(null, daySubject);
+  const [days] = useIterableSubject(null, daySubject);
 
   const [isToggling, setIsToggling] = useState<boolean>(false);
 
@@ -40,8 +40,8 @@ function DayForm({ record }: DayFormProps) {
           </div>
         ))
       ) : (
-        <p>Fetching days...</p>
-      )}
+          <p>Fetching days...</p>
+        )}
       <div />
     </section>
   );

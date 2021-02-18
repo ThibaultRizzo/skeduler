@@ -9,6 +9,9 @@ from .model import ScheduleCpModel
 from .errors import SolverException
 from ..enums import ShiftSkillLevel, DayEnum
 from ..models import SolverPeriod, Schedule
+import logging
+
+_logger = logging.getLogger()
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument(
@@ -82,7 +85,7 @@ def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS)
             status,
         )
     else:
-        print(solver.ResponseStats())
+        _logger.info(solver.ResponseStats())
         return None
 
 

@@ -1,8 +1,18 @@
 import pytest
 from src.solver.solver import solve_shift_scheduling
 from src.models import Employee, EmployeeSkill, EmployeeEvent, Day, Shift, SolverPeriod
-from src.enums import ShiftImportance, DayEnum, EventType, EventNature, EventStatus
+from src.enums import (
+    ShiftImportance,
+    DayEnum,
+    EventType,
+    EventNature,
+    EventStatus,
+    SolverStatus,
+)
 from datetime import datetime, timezone
+import logging
+
+_logger = logging.getLogger()
 
 day_dict = {
     "monday": Day(id="D1", name=DayEnum.MONDAY, active=True),
@@ -87,7 +97,7 @@ shift_dict = {
         duration=8,
         cover_monday=1,
         cover_tuesday=1,
-        cover_wednesay=1,
+        cover_wednesday=1,
         cover_thursday=1,
         cover_friday=1,
         cover_saturday=0,
@@ -100,7 +110,7 @@ shift_dict = {
         duration=8,
         cover_monday=1,
         cover_tuesday=1,
-        cover_wednesay=1,
+        cover_wednesday=1,
         cover_thursday=1,
         cover_friday=1,
         cover_saturday=0,
@@ -125,7 +135,7 @@ def days():
     return [day for day in day_dict.values()]
 
 
-def test_empty_db(employees, shifts, days):
+def test_schedule_optimal(employees, shifts, days):
     """Start with a blank database."""
     start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
     period = SolverPeriod(start_date, 2, days)
@@ -134,6 +144,5 @@ def test_empty_db(employees, shifts, days):
         shifts,
         period,
     )
-    schedule.print(employees, shifts, days)
-    assert False
-    assert b"No entries here so far"
+    _logger.info(schedule)
+    assert schedule.status == SolverStatus.OPTIMAL.value, "Schedule is optimal"

@@ -8,13 +8,7 @@ from .base import (
     negated_bounded_span,
 )
 from .errors import ConflictingConstraintException
-
-WEIGHT_DICT = {
-    "VERY_IMPORTANT": 30,
-    "IMPORTANT": 20,
-    "MUST": 10,
-    "SHOULD": 5,
-}
+from src.models.penalty import SCHEDULE_WEIGHT_DICT
 
 
 # TODO: Use this link to set initial solution ? https://github.com/google/or-tools/issues/1152
@@ -176,11 +170,11 @@ class ScheduleCpModel(cp_model.CpModel):
                     works,
                     0,  # -tolerated_delta_contract_hours + employee.contract,
                     employee.contract,
-                    WEIGHT_DICT.get("IMPORTANT"),
+                    SCHEDULE_WEIGHT_DICT.get("IMPORTANT"),
                     employee.contract,
                     2
                     * employee.contract,  # tolerated_delta_contract_hours + employee.contract,
-                    WEIGHT_DICT.get("IMPORTANT"),
+                    SCHEDULE_WEIGHT_DICT.get("IMPORTANT"),
                     "diff_sum_hours_contract(employee %i, week %i)" % (e, w),
                 )
                 self.obj_int_vars.extend(variables)
@@ -288,7 +282,6 @@ class ScheduleCpModel(cp_model.CpModel):
         employee_shift_mastery = ScheduleCpModel.get_employee_shift_mastery(
             self.employees, self.base_shifts
         )
-        print(employee_shift_mastery)
 
         for e in range(self.nb_employees):
             for s in range(1, self.nb_shifts):
@@ -312,7 +305,7 @@ class ScheduleCpModel(cp_model.CpModel):
                             0,
                             0,
                             self.nb_days,
-                            WEIGHT_DICT.get("SHOULD"),
+                            SCHEDULE_WEIGHT_DICT.get("SHOULD"),
                             "mastery_constraints(employee %i, shift %i)" % (e, shift),
                         )
                         self.obj_int_vars.extend(variables)

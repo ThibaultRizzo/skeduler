@@ -1,8 +1,17 @@
 import enum
 from ortools.sat.python import cp_model
+from ariadne import EnumType
 
 
-class DayEnum(enum.Enum):
+class GraphEnum(enum.Enum):
+    __abstract__ = True
+
+    @classmethod
+    def to_graph(cls):
+        return EnumType(cls.__name__, cls)
+
+
+class DayEnum(GraphEnum):
     MONDAY = 1
     TUESDAY = 2
     WEDNESDAY = 3
@@ -18,13 +27,13 @@ class DayEnum(enum.Enum):
         return DayEnum.get_by_order(date.isoweekday())
 
 
-class ShiftSkillLevel(enum.Enum):
+class ShiftSkillLevel(GraphEnum):
     NO_SKILL = 0
     LEARNING = 1
     MASTER = 2
 
 
-class EventType(enum.Enum):
+class EventType(str, GraphEnum):
     PAID_LEAVE = "PAID_LEAVE"
     UNPAID_LEAVE = "UNPAID_LEAVE"
     HOLIDAY = "HOLIDAY"
@@ -32,26 +41,26 @@ class EventType(enum.Enum):
     REQUEST = "REQUEST"
 
 
-class EventNature(enum.Enum):
+class EventNature(str, GraphEnum):
     MANDATORY = "MANDATORY"
     IMPORTANT = "IMPORTANT"
     WANTED = "WANTED"
     PREFERED = "PREFERED"
 
 
-class EventStatus(enum.Enum):
+class EventStatus(str, GraphEnum):
     PENDING = "PENDING"
     CONFIRMED = "CONFIRMED"
     DECLINED = "DECLINED"
 
 
-class ShiftImportance(enum.Enum):
+class ShiftImportance(GraphEnum):
     MAJOR = "MAJOR"
     AVERAGE = "AVERAGE"
     MINOR = "MINOR"
 
 
-class SolverStatus(enum.Enum):
+class SolverStatus(GraphEnum):
     UNKNOWN = cp_model.UNKNOWN
     MODEL_INVALID = cp_model.MODEL_INVALID
     FEASIBLE = cp_model.FEASIBLE
@@ -59,5 +68,25 @@ class SolverStatus(enum.Enum):
     OPTIMAL = cp_model.OPTIMAL
 
 
-class RuleType(enum.Enum):
-    SHIFT = "SHIFT"
+class SequenceRuleType(GraphEnum):
+    SHIFT_SEQUENCE = "SHIFT_SEQUENCE"
+    SHIFT_SUM_SEQUENCE = "SHIFT_SUM_SEQUENCE"
+
+
+class RulePenalty(GraphEnum):
+    HARD = "HARD"
+    MEDIUM = "MEDIUM"
+    SOFT = "SOFT"
+
+
+all_enums = [
+    DayEnum,
+    ShiftSkillLevel,
+    ShiftImportance,
+    RulePenalty,
+    SequenceRuleType,
+    # SolverStatus,
+    EventNature,
+    EventStatus,
+    EventType,
+]

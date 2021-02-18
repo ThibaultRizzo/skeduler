@@ -7,14 +7,6 @@ from flask import Flask
 from src import commands, api
 from src.extensions import db, migrate
 
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     format="[%(asctime)s]: {} %(levelname)s %(message)s".format(os.getpid()),
-#     datefmt="%Y-%m-%d %H:%M:%S",
-#     handlers=[logging.StreamHandler()],
-# )
-# logger = logging.getLogger()
-
 
 def create_app(config_object="src.settings"):
     app = Flask(__name__)
@@ -55,6 +47,13 @@ def register_commands(app):
 
 def configure_logger(app):
     """Configure loggers."""
-    handler = logging.StreamHandler(sys.stdout)
-    if not app.logger.handlers:
-        app.logger.addHandler(handler)
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="[%(asctime)s]: {} %(levelname)s %(message)s".format(os.getpid()),
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[logging.StreamHandler()],
+    )
+    # logger = logging.getLogger()
+    # handler = logging.StreamHandler(sys.stdout)
+    # if not app.logger.handlers:
+    #     app.loggeraddHandler(handler)

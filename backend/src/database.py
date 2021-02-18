@@ -1,13 +1,36 @@
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy import Column, String, DateTime, inspect
+from enum import Enum
+import uuid
+import datetime
 from .extensions import db
+from src.utils import snake_to_camel_case, filter_keys
+
 
 # Alias common SQLAlchemy names
 Column = db.Column
 relationship = db.relationship
 
 
-# TODO: PLay around with these: https://github.com/cookiecutter-flask/cookiecutter-flask/blob/master/%7B%7Bcookiecutter.app_name%7D%7D/%7B%7Bcookiecutter.app_name%7D%7D/database.py
+def ID():
+    return Column("id", String(36), default=lambda: str(uuid.uuid4()), primary_key=True)
+
+
+def created_at():
+    return Column(DateTime, default=datetime.datetime.utcnow)
+
+
+# TODO: Play around with these: https://github.com/cookiecutter-flask/cookiecutter-flask/blob/master/%7B%7Bcookiecutter.app_name%7D%7D/%7B%7Bcookiecutter.app_name%7D%7D/database.py
 class CRUDMixin(object):
     """Mixin that adds convenience methods for CRUD (create, read, update, delete) operations."""
+
+    @classmethod
+    def get_or_throw(cls, id):
+        entity = cls.query.get(id)
+        if entity is None:
+            raise NoRecordError(f"Could not find {cls} with ID: " + _id)
+        else:
+            return entity
 
     @classmethod
     def create(cls, **kwargs):
@@ -15,11 +38,17 @@ class CRUDMixin(object):
         instance = cls(**kwargs)
         return instance.save()
 
+    @classmethod
+    def updateOne(cls, **kwargs):
+        _id = kwargs["id"]
+        entity = cls.get_or_throw(_id)
+        return entity.update(**kwargs).to_dict()
+
     def update(self, commit=True, **kwargs):
         """Update specific fields of a record."""
         for attr, value in kwargs.items():
             setattr(self, attr, value)
-        return commit and self.save() or self
+        return commit and self.save() or self.to_dict()
 
     def save(self, commit=True):
         """Save the record."""
@@ -28,9 +57,14 @@ class CRUDMixin(object):
             db.session.commit()
         return self
 
+    @classmethod
+    def deleteOne(cls, id):
+        is_deleted = cls.query.filter_by(id=id).delete()
+        db.session.commit()
+        return True if is_deleted == 1 else 0
+
     def delete(self, commit=True):
         """Remove the record from the database."""
-        db.session.delete(self)
         return commit and db.session.commit()
 
 
@@ -44,19 +78,22 @@ class PkModel(Model):
     """Base model class that includes CRUD convenience methods, plus adds a 'primary key' column named ``id``."""
 
     __abstract__ = True
-    id = Column(db.Integer, primary_key=True)
+    id = ID()
+
+    @classmethod
+    def get_all(cls):
+        """Get all records."""
+        return [entity.to_dict() for entity in cls.query.all()]
 
     @classmethod
     def get_by_id(cls, record_id):
         """Get record by ID."""
-        if any(
-            (
-                isinstance(record_id, basestring) and record_id.isdigit(),
-                isinstance(record_id, (int, float)),
-            )
-        ):
-            return cls.query.get(int(record_id))
+        if isinstance(record_id, str):
+            return cls.query.get(record_id).to_dict()
         return None
+
+    def to_dict(self):
+        return to_dict(self, [])
 
 
 def reference_col(
@@ -75,3 +112,38 @@ def reference_col(
         nullable=nullable,
         **column_kwargs,
     )
+
+
+class PkCompanyModel(PkModel):
+    """Base model class that includes company_id foreign key and utility functions around company."""
+
+    __abstract__ = True
+
+    @declared_attr
+    def company_id(cls):
+        return reference_col(
+            "company",
+            False,
+            "id",
+            {"ondelete": "CASCADE"},
+            {"primary_key": False},
+        )
+
+    @classmethod
+    def get_all_by_company_id(cls, company_id):
+        return [
+            entity.to_dict()
+            for entity in cls.query.filter_by(company_id=company_id).all()
+        ]
+
+
+def to_dict(cls, excluded_fields):
+    return {
+        snake_to_camel_case(k): (
+            getattr(cls, k).name
+            if isinstance(getattr(cls, k), Enum)
+            else getattr(cls, k)
+        )
+        for k in cls.__mapper__.all_orm_descriptors.keys()  # inspect(cls).attrs.keys()
+        if k not in excluded_fields
+    }

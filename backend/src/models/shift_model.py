@@ -1,26 +1,17 @@
 from sqlalchemy import Column, String, Integer, Enum
-from ..database import db
-from .helper import ID
-from ..enums import ShiftImportance
+from src.database import db, PkModel, PkCompanyModel
+from src.enums import ShiftImportance
+from .penalty import SHIFT_PENALTY_WEIGHT_DICT
 
 
-SHIFT_PENALTY_WEIGHT_DICT = {
-    ShiftImportance.MAJOR: 30,
-    ShiftImportance.AVERAGE: 20,
-    ShiftImportance.MINOR: 10,
-}
-
-
-class Shift(db.Model):
-
-    id = ID()
+class Shift(PkCompanyModel):
     title = Column(String(16), unique=True)
     duration = Column(Integer)
     skills = db.relationship("EmployeeSkill", cascade="all, delete, delete-orphan")
 
     cover_monday = Column(Integer, default=0)
     cover_tuesday = Column(Integer, default=0)
-    cover_wednesay = Column(Integer, default=0)
+    cover_wednesday = Column(Integer, default=0)
     cover_thursday = Column(Integer, default=0)
     cover_friday = Column(Integer, default=0)
     cover_saturday = Column(Integer, default=0)
@@ -35,27 +26,12 @@ class Shift(db.Model):
         return (
             self.cover_monday,
             self.cover_tuesday,
-            self.cover_wednesay,
+            self.cover_wednesday,
             self.cover_thursday,
             self.cover_friday,
             self.cover_saturday,
             self.cover_sunday,
         )
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "duration": self.duration,
-            "shiftImportance": self.shift_importance.name,
-            "coverMonday": self.cover_monday,
-            "coverTuesday": self.cover_tuesday,
-            "coverWednesday": self.cover_wednesay,
-            "coverThursday": self.cover_thursday,
-            "coverFriday": self.cover_friday,
-            "coverSaturday": self.cover_saturday,
-            "coverSunday": self.cover_sunday,
-        }
 
     def __repr__(self):
         return "<Shift: {}>".format(self.title)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BehaviorSubject } from "rxjs";
 import { ApiResponse } from "../api/helper";
 import { BaseCRUDRecord, executeFnOrOpenSnackbar, SimpleSubject } from "../rxjs/crud.subject";
 
@@ -12,8 +13,20 @@ export function useAsyncState<T, A = []>(initialState: T, asyncLoader: (...args:
     return [state, setState];
 }
 
-export function useSubject<T extends BaseCRUDRecord>(initialState: T[] | null, subject: SimpleSubject<T>): [state: T[] | null, setState: (s: T[] | null) => void] {
+export function useIterableSubject<T extends BaseCRUDRecord>(initialState: T[] | null, subject: SimpleSubject<T>): [state: T[] | null, setState: (s: T[] | null) => void] {
     const [state, setState] = useState<T[] | null>(initialState);
+
+    useEffect(() => {
+        const sub = subject.subscribe(setState);
+        return function cleanup() {
+            sub.unsubscribe();
+        }
+    }, [subject]);
+    return [state, setState];
+}
+
+export function useSubject<T extends BaseCRUDRecord>(initialState: T | null, subject: BehaviorSubject<T | null>): [state: T | null, setState: (s: T | null) => void] {
+    const [state, setState] = useState<T | null>(initialState);
 
     useEffect(() => {
         const sub = subject.subscribe(setState);

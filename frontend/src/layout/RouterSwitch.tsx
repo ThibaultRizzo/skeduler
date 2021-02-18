@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import { StandardProps } from "../types/types";
+import CompanyPage from "./pages/CompanyPage";
 import DayPage from "./pages/DayPage";
 
 import EmployeePage from "./pages/EmployeePage";
@@ -21,6 +22,12 @@ export const routes: RouteDefinition[] = [
     component: SchedulePage,
     path: "/schedule",
     name: "Schedule",
+    isInNav: true,
+  },
+  {
+    component: CompanyPage,
+    path: "/company",
+    name: "Company",
     isInNav: true,
   },
   {
@@ -79,8 +86,8 @@ function RouterSwitch({ ...props }: RouterSwitchProps) {
           return isUserAuthenticated ? (
             <Redirect to="/schedule" />
           ) : (
-            <Redirect to="/login" />
-          );
+              <Redirect to="/login" />
+            );
         }}
       />
       {/* Catch-all route */}
