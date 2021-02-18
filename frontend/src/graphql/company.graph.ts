@@ -4,34 +4,25 @@ import gql from "graphql-tag";
  * Fragments *
  ************/
 
-const companyFragment = gql`
-  fragment companyFragment on Company {
+const companySummaryFragment = gql`
+  fragment companySummaryFragment on CompanySummary {
     id
     name
-
-      transitionRules {
-        id
-        from_shiftId
-        to_shiftId
-        penalty
-      }
   }
 `;
 
 const companySequenceRuleFragment = gql`
   fragment companySequenceRuleFragment on CompanySequenceRule {
-
-  id
-  company_id
-  ruleType
-  shiftId
-  hardMin
-  softMin
-  penaltyMin
-  hardMax
-  softMax
-  penaltyMax
-
+    id
+    companyId
+    ruleType
+    shiftId
+    hardMin
+    softMin
+    penaltyMin
+    hardMax
+    softMax
+    penaltyMax
   }
 `;
 
@@ -39,9 +30,9 @@ const companyTransitionRuleFragment = gql`
   fragment companyTransitionRuleFragment on CompanyTransitionRule {
       transitionRules {
         id
-        company_id
-        from_shiftId
-        to_shiftId
+        companyId
+        fromShiftId
+        toShiftId
         penalty
       }
   }
@@ -54,26 +45,26 @@ export const GET_COMPANIES = gql`
   query getCompanies {
     companies {
       result {
-        ...companyFragment
+        ...companySummaryFragment
       }
       success
       errors
     }
   }
-  ${companyFragment}
+  ${companySummaryFragment}
 `;
 
 export const GET_COMPANY = gql`
-  query getCompany($id: String!) {
+  query getCompany {
     company {
       result {
-        ...companyFragment
+        ...companySummaryFragment
       }
       success
       errors
     }
   }
-  ${companyFragment}
+  ${companySummaryFragment}
 `;
 
 export const GET_COMPANY_SEQUENCE_RULES = gql`
@@ -97,26 +88,26 @@ export const CREATE_COMPANY = gql`
   mutation createCompany($input: CreateCompanyInput!) {
     createCompany(input: $input) {
       result {
-        ...companyFragment
+        ...companySummaryFragment
       }
       success
       errors
     }
   }
-  ${companyFragment}
+  ${companySummaryFragment}
 `;
 
 export const UPDATE_COMPANY = gql`
   mutation updateCompany($input: UpdateCompanyInput!) {
     updateCompany(input: $input) {
       result {
-        ...companyFragment
+        ...companySummaryFragment
       }
       success
       errors
     }
   }
-  ${companyFragment}
+  ${companySummaryFragment}
 `;
 
 export const DELETE_COMPANY = gql`

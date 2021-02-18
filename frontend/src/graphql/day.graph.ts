@@ -7,11 +7,9 @@ import gql from "graphql-tag";
 const dayFragment = gql`
   fragment dayFragment on Day {
     id
+    name
+    order
     active
-    name {
-      name
-      value
-    }
   }
 `;
 
@@ -35,8 +33,8 @@ export const GET_DAYS = gql`
  * Mutations *
  *************/
 export const SET_DAY_ACTIVATION = gql`
-  mutation setDayActivation($input: ToggleDayActivationInput!) {
-    toggleDayActivation(input: $input) {
+  mutation setDayActivation($input: SetDayActivationInput!) {
+    setDayActivation(input: $input) {
       result {
         ...dayFragment
       }

@@ -8,34 +8,36 @@ import { deleteOpFragment } from "./helper.graphql";
 const employeeFragment = gql`
   fragment employeeFragment on Employee {
     id
-    name
-    contract
-    skills {
-      level
-      shift {
+      name
+      contract
+      workingDays {
         id
-        title
-      }
-    }
-    workingDays {
-      id
-      active
-      name {
         name
-        value
+        order
+        active
       }
-    }
+      skills {
+        level
+        shift_id
+        employee_id
+      }
   }
 `;
 
 const employeeEventFragment = gql`
   fragment employeeEventFragment on EmployeeEvent {
-      id
+    id
       shift {
         id
+        title
+        duration
       }
       startDate
       endDate
+      employee {
+        id
+        name
+      }
       duration
       type
       status
@@ -75,7 +77,7 @@ export const GET_EMPLOYEE_EVENTS = gql`
 
 export const GET_EMPLOYEE_EVENTS_BY_INTERVAL = gql`
   query getEmployeeEventsByInterval($id: String!, $startDate: Datetime!, $endDate: Datetime!) {
-    employeeEventsByInterval(id: $id, startDate: $startDate, endDate: $endDate) {
+    employeeEventsByInterval(employeeId: $id, startDate: $startDate, endDate: $endDate) {
       result {
         ...employeeEventFragment
       }

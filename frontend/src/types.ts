@@ -15,7 +15,6 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   shifts: ShiftsPayload;
-  shift: ShiftPayload;
   days: DaysPayload;
   employees: EmployeesPayload;
   employeeEvents: EmployeeEventsPayload;
@@ -23,11 +22,8 @@ export type Query = {
   schedule: SchedulePayload;
   companies: CompaniesPayload;
   company: CompanyPayload;
-};
-
-
-export type QueryShiftArgs = {
-  id: Scalars['String'];
+  sequenceRules: CompanySequenceRulesPayload;
+  transitionRules: CompanyTransitionRulesPayload;
 };
 
 
@@ -37,14 +33,9 @@ export type QueryEmployeeEventsArgs = {
 
 
 export type QueryEmployeeEventsByIntervalArgs = {
-  id: Scalars['String'];
+  employeeId: Scalars['String'];
   startDate: Scalars['Datetime'];
   endDate: Scalars['Datetime'];
-};
-
-
-export type QueryCompanyArgs = {
-  id: Scalars['String'];
 };
 
 export type ShiftsPayload = {
@@ -75,13 +66,6 @@ export enum ShiftImportance {
   Minor = 'MINOR'
 }
 
-export type ShiftPayload = {
-  __typename?: 'ShiftPayload';
-  result?: Maybe<Shift>;
-  success: Scalars['Boolean'];
-  errors?: Maybe<Array<Scalars['String']>>;
-};
-
 export type DaysPayload = {
   __typename?: 'DaysPayload';
   result?: Maybe<Array<Day>>;
@@ -93,16 +77,11 @@ export type Day = {
   __typename?: 'Day';
   id: Scalars['String'];
   name: DayEnum;
+  order: Scalars['Int'];
   active: Scalars['Boolean'];
 };
 
-export type DayEnum = {
-  __typename?: 'DayEnum';
-  name: DayName;
-  value: Scalars['Int'];
-};
-
-export enum DayName {
+export enum DayEnum {
   Monday = 'MONDAY',
   Tuesday = 'TUESDAY',
   Wednesday = 'WEDNESDAY',
@@ -131,8 +110,8 @@ export type Employee = {
 
 export type EmployeeSkill = {
   __typename?: 'EmployeeSkill';
-  shift: Shift;
-  employee: Employee;
+  shift_id: Scalars['String'];
+  employee_id: Employee;
   level: ShiftSkillLevel;
 };
 
@@ -235,6 +214,54 @@ export type CompanyPayload = {
   errors?: Maybe<Array<Scalars['String']>>;
 };
 
+export type CompanySequenceRulesPayload = {
+  __typename?: 'CompanySequenceRulesPayload';
+  result?: Maybe<Array<CompanySequenceRule>>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Scalars['String']>>;
+};
+
+export type CompanySequenceRule = {
+  __typename?: 'CompanySequenceRule';
+  id: Scalars['String'];
+  companyId: Scalars['String'];
+  ruleType: SequenceRuleType;
+  shiftId?: Maybe<Scalars['String']>;
+  hardMin: Scalars['Int'];
+  softMin: Scalars['Int'];
+  penaltyMin: RulePenalty;
+  hardMax: Scalars['Int'];
+  softMax: Scalars['Int'];
+  penaltyMax: RulePenalty;
+};
+
+export enum SequenceRuleType {
+  ShiftSequence = 'SHIFT_SEQUENCE',
+  ShiftSumSequence = 'SHIFT_SUM_SEQUENCE'
+}
+
+export enum RulePenalty {
+  Hard = 'HARD',
+  Medium = 'MEDIUM',
+  Soft = 'SOFT'
+}
+
+export type CompanyTransitionRulesPayload = {
+  __typename?: 'CompanyTransitionRulesPayload';
+  result?: Maybe<Array<CompanyTransitionRule>>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Scalars['String']>>;
+};
+
+export type CompanyTransitionRule = {
+  __typename?: 'CompanyTransitionRule';
+  id: Scalars['String'];
+  companyId: Scalars['String'];
+  fromShiftId?: Maybe<Scalars['String']>;
+  toShiftId?: Maybe<Scalars['String']>;
+  penalty: RulePenalty;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createShift?: Maybe<ShiftPayload>;
@@ -246,11 +273,17 @@ export type Mutation = {
   createEvent?: Maybe<EmployeeEventPayload>;
   updateEvent?: Maybe<EmployeeEventPayload>;
   deleteEvent?: Maybe<Payload>;
-  toggleDayActivation?: Maybe<ToggleDayActivationPayload>;
+  setDayActivation?: Maybe<SetDayActivationPayload>;
   generateSchedule?: Maybe<SchedulePayload>;
   createCompany?: Maybe<CompanyPayload>;
   updateCompany?: Maybe<CompanyPayload>;
   deleteCompany: Payload;
+  createSequenceRule?: Maybe<SequenceRulePayload>;
+  updateSequenceRule?: Maybe<SequenceRulePayload>;
+  deleteSequenceRule: Payload;
+  createTransitionRule?: Maybe<TransitionRulePayload>;
+  updateTransitionRule?: Maybe<TransitionRulePayload>;
+  deleteTransitionRule: Payload;
 };
 
 
@@ -299,8 +332,8 @@ export type MutationDeleteEventArgs = {
 };
 
 
-export type MutationToggleDayActivationArgs = {
-  input: ToggleDayActivationInput;
+export type MutationSetDayActivationArgs = {
+  input: SetDayActivationInput;
 };
 
 
@@ -323,6 +356,36 @@ export type MutationDeleteCompanyArgs = {
   id: Scalars['String'];
 };
 
+
+export type MutationCreateSequenceRuleArgs = {
+  input: CreateSequenceRuleInput;
+};
+
+
+export type MutationUpdateSequenceRuleArgs = {
+  input: UpdateSequenceRuleInput;
+};
+
+
+export type MutationDeleteSequenceRuleArgs = {
+  id: Scalars['String'];
+};
+
+
+export type MutationCreateTransitionRuleArgs = {
+  input: CreateTransitionRuleInput;
+};
+
+
+export type MutationUpdateTransitionRuleArgs = {
+  input: UpdateTransitionRuleInput;
+};
+
+
+export type MutationDeleteTransitionRuleArgs = {
+  id: Scalars['String'];
+};
+
 export type CreateShiftInput = {
   title: Scalars['String'];
   duration: Scalars['Int'];
@@ -334,6 +397,13 @@ export type CreateShiftInput = {
   coverFriday: Scalars['Int'];
   coverSaturday: Scalars['Int'];
   coverSunday: Scalars['Int'];
+};
+
+export type ShiftPayload = {
+  __typename?: 'ShiftPayload';
+  result?: Maybe<Shift>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Scalars['String']>>;
 };
 
 export type UpdateShiftInput = {
@@ -360,12 +430,12 @@ export type Payload = {
 export type CreateEmployeeInput = {
   name: Scalars['String'];
   contract: Scalars['Int'];
-  workingDays: Array<DayName>;
+  workingDays: Array<DayEnum>;
   skills: Array<ShiftSkillInput>;
 };
 
 export type ShiftSkillInput = {
-  shift: Scalars['String'];
+  shift_id: Scalars['String'];
   level: ShiftSkillLevel;
 };
 
@@ -380,13 +450,13 @@ export type UpdateEmployeeInput = {
   id: Scalars['String'];
   name: Scalars['String'];
   contract: Scalars['Int'];
-  workingDays: Array<DayName>;
+  workingDays: Array<DayEnum>;
   skills: Array<ShiftSkillInput>;
 };
 
 export type CreateEventInput = {
-  employee: Scalars['String'];
-  shift?: Maybe<Scalars['String']>;
+  employee_id: Scalars['String'];
+  shift_id?: Maybe<Scalars['String']>;
   startDate: Scalars['Datetime'];
   duration: Scalars['Int'];
   type: EventType;
@@ -404,7 +474,7 @@ export type EmployeeEventPayload = {
 
 export type UpdateEventInput = {
   id: Scalars['String'];
-  shift?: Maybe<Scalars['String']>;
+  shift_id?: Maybe<Scalars['String']>;
   startDate: Scalars['Datetime'];
   duration: Scalars['Int'];
   type: EventType;
@@ -413,13 +483,13 @@ export type UpdateEventInput = {
   isDesired: Scalars['Boolean'];
 };
 
-export type ToggleDayActivationInput = {
+export type SetDayActivationInput = {
   id: Scalars['String'];
   active: Scalars['Boolean'];
 };
 
-export type ToggleDayActivationPayload = {
-  __typename?: 'ToggleDayActivationPayload';
+export type SetDayActivationPayload = {
+  __typename?: 'SetDayActivationPayload';
   result?: Maybe<Day>;
   success: Scalars['Boolean'];
   errors?: Maybe<Array<Scalars['String']>>;
@@ -440,20 +510,7 @@ export type UpdateCompanyInput = {
   name: Scalars['String'];
 };
 
-export enum SequenceRuleType {
-  ShiftSequence = 'SHIFT_SEQUENCE',
-  ShiftSumSequence = 'SHIFT_SUM_SEQUENCE'
-}
-
-export enum RulePenalty {
-  Hard = 'HARD',
-  Medium = 'MEDIUM',
-  Soft = 'SOFT'
-}
-
-export type CompanySequenceRule = {
-  __typename?: 'CompanySequenceRule';
-  id: Scalars['String'];
+export type CreateSequenceRuleInput = {
   companyId: Scalars['String'];
   ruleType: SequenceRuleType;
   shiftId?: Maybe<Scalars['String']>;
@@ -465,13 +522,38 @@ export type CompanySequenceRule = {
   penaltyMax: RulePenalty;
 };
 
-export type CompanyTransitionRule = {
-  __typename?: 'CompanyTransitionRule';
+export type SequenceRulePayload = {
+  __typename?: 'SequenceRulePayload';
+  result?: Maybe<CompanySequenceRule>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Scalars['String']>>;
+};
+
+export type UpdateSequenceRuleInput = {
   id: Scalars['String'];
-  companyId: Scalars['String'];
-  fromShiftId?: Maybe<Scalars['String']>;
-  toShiftId?: Maybe<Scalars['String']>;
-  penalty: RulePenalty;
+  shiftId?: Maybe<Scalars['String']>;
+  hardMin: Scalars['Int'];
+  softMin: Scalars['Int'];
+  penaltyMin: RulePenalty;
+  hardMax: Scalars['Int'];
+  softMax: Scalars['Int'];
+  penaltyMax: RulePenalty;
+};
+
+export type CreateTransitionRuleInput = {
+  id: Scalars['String'];
+};
+
+export type TransitionRulePayload = {
+  __typename?: 'TransitionRulePayload';
+  result?: Maybe<CompanyTransitionRule>;
+  success: Scalars['Boolean'];
+  errors?: Maybe<Array<Scalars['String']>>;
+};
+
+export type UpdateTransitionRuleInput = {
+  id: Scalars['String'];
+  name: Scalars['String'];
 };
 
 export type Company = {

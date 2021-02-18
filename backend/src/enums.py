@@ -11,7 +11,7 @@ class GraphEnum(enum.Enum):
         return EnumType(cls.__name__, cls)
 
 
-class DayEnum(GraphEnum):
+class DayEnum(enum.Enum):
     MONDAY = 1
     TUESDAY = 2
     WEDNESDAY = 3
@@ -25,6 +25,20 @@ class DayEnum(GraphEnum):
 
     def get_by_datetime(date):
         return DayEnum.get_by_order(date.isoweekday())
+
+    def to_graph():
+        return EnumType(
+            "DayEnum",
+            {
+                "MONDAY": "MONDAY",
+                "TUESDAY": "TUESDAY",
+                "WEDNESDAY": "WEDNESDAY",
+                "THURSDAY": "THURSDAY",
+                "FRIDAY": "FRIDAY",
+                "SATURDAY": "SATURDAY",
+                "SUNDAY": "SUNDAY",
+            },
+        )
 
 
 class ShiftSkillLevel(GraphEnum):
