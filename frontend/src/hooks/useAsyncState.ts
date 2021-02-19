@@ -1,3 +1,4 @@
+import { BehaviorArrayLikeSubject } from './../rxjs/subject';
 import { useEffect, useState } from "react";
 import { BehaviorSubject } from "rxjs";
 import { ApiResponse } from "../api/helper";
@@ -27,6 +28,18 @@ export function useIterableSubject<T extends BaseCRUDRecord>(initialState: T[] |
 
 export function useSubject<T extends BaseCRUDRecord>(initialState: T | null, subject: BehaviorSubject<T | null>): [state: T | null, setState: (s: T | null) => void] {
     const [state, setState] = useState<T | null>(initialState);
+
+    useEffect(() => {
+        const sub = subject.subscribe(setState);
+        return function cleanup() {
+            sub.unsubscribe();
+        }
+    }, [subject]);
+    return [state, setState];
+}
+
+export function useArraySubject<T extends BaseCRUDRecord>(initialState: T[] | null, subject: BehaviorArrayLikeSubject<T>): [state: T[] | null, setState: (s: T[] | null) => void] {
+    const [state, setState] = useState<T[] | null>(initialState);
 
     useEffect(() => {
         const sub = subject.subscribe(setState);

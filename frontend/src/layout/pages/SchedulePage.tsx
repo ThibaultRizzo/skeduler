@@ -70,7 +70,7 @@ function SchedulePage() {
             schedule!.schedule.map((row) => (
               <div key={row.day} className="schedule-day">
                 <div className="schedule-day-header">
-                  {dayDict[row.day]?.name.name || ""}
+                  {dayDict[row.day]?.name || ""}
                 </div>
                 {row.shifts.map((shift) => (
                   <div

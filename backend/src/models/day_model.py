@@ -10,7 +10,7 @@ class Day(PkCompanyModel):
 
     @hybrid_property
     def order(self):
-        return self.name.value
+        return self.name.get_order()
 
     @order.expression
     def order(self):

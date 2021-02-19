@@ -1,11 +1,11 @@
 import { daySubject } from "../../../rxjs/record.subject";
-import { Day, DayName } from "../../../types";
-import  { MultiFormSelect } from "../FormSelect";
+import { Day, DayEnum } from "../../../types";
+import { MultiFormSelect } from "../FormSelect";
 
 export type DaySelectProps = {
   id: string;
   multiple: boolean;
-  value?: DayName[];
+  value?: DayEnum[];
   onChange: (value: Day[]) => void;
 };
 
@@ -23,8 +23,8 @@ function DaySelect({ id, multiple, value, onChange }: DaySelectProps) {
       value={value}
       onChange={onChange}
       getData={getActiveDays}
-      getKey={(d) => d.name.name}
-      getLabel={(d) => d.name.name}
+      getKey={(d) => d.name}
+      getLabel={(d) => d.name}
     />
   );
 }

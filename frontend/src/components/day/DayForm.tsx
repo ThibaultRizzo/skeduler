@@ -31,12 +31,12 @@ function DayForm({ record }: DayFormProps) {
             <input
               type="checkbox"
               id={`day-${day.id}`}
-              name={day.name.name}
+              name={day.name}
               checked={day.active}
               onChange={() => toggleDayActivation(day)}
               disabled={isToggling}
             />
-            <label htmlFor={`day-${day.id}`}>{day.name.name}</label>
+            <label htmlFor={`day-${day.id}`}>{day.name}</label>
           </div>
         ))
       ) : (

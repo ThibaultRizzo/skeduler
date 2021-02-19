@@ -110,8 +110,8 @@ export type Employee = {
 
 export type EmployeeSkill = {
   __typename?: 'EmployeeSkill';
-  shift_id: Scalars['String'];
-  employee_id: Employee;
+  shiftId: Scalars['String'];
+  employeeId: Scalars['String'];
   level: ShiftSkillLevel;
 };
 
@@ -435,7 +435,7 @@ export type CreateEmployeeInput = {
 };
 
 export type ShiftSkillInput = {
-  shift_id: Scalars['String'];
+  shiftId: Scalars['String'];
   level: ShiftSkillLevel;
 };
 
@@ -455,8 +455,8 @@ export type UpdateEmployeeInput = {
 };
 
 export type CreateEventInput = {
-  employee_id: Scalars['String'];
-  shift_id?: Maybe<Scalars['String']>;
+  employeeId: Scalars['String'];
+  shiftId?: Maybe<Scalars['String']>;
   startDate: Scalars['Datetime'];
   duration: Scalars['Int'];
   type: EventType;
@@ -474,7 +474,7 @@ export type EmployeeEventPayload = {
 
 export type UpdateEventInput = {
   id: Scalars['String'];
-  shift_id?: Maybe<Scalars['String']>;
+  shiftId?: Maybe<Scalars['String']>;
   startDate: Scalars['Datetime'];
   duration: Scalars['Int'];
   type: EventType;

@@ -19,12 +19,12 @@ const EmployeeDetails = ({ employee }: EmployeeDetailsProps) => {
           <LabelValue label="Contract" value={employee.contract} />
           <LabelValue
             label="Contract"
-            value={employee.workingDays?.map((w) => w.name.name).join(",")}
+            value={employee.workingDays?.map((w) => w.name).join(",")}
           />
           <LabelValue
             label="Skills"
             value={employee.skills
-              .map((s) => `${s.shift.title} - ${s.level}`)
+              .map((s) => `${s.shiftId} - ${s.level}`)
               .join(",")}
           />
         </section>

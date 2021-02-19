@@ -14,13 +14,13 @@ export type WithId<T> = T & {
 export function employeetoDraft({ contract, name, skills, workingDays }: Employee): DraftEmployee {
     return {
         contract, name,
-        skills: skills.map(({ shift, level }) => ({ level, shift: shift.id })) || [],
-        workingDays: workingDays?.map(d => d.name.name) || []
+        skills: skills.map(({ shiftId, level }) => ({ level, shiftId: shiftId })) || [],
+        workingDays: workingDays?.map(d => d.name) || []
     }
 }
 
 export function employeeEventToDraft({ id, shift, employee, endDate, ...event }: EmployeeEvent, employeeId: string): CreateEventInput {
-    return { employee: employeeId, shift: shift?.id, ...event }
+    return { employeeId: employeeId, shiftId: shift?.id, ...event }
 }
 
 

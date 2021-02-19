@@ -60,7 +60,7 @@ function EmployeeForm({ record }: EmployeeFormProps) {
             onChange={(workingDays) =>
               setEmployee({
                 ...employee,
-                workingDays: workingDays.map((d) => d.name.name),
+                workingDays: workingDays.map((d) => d.name),
               })
             }
           />

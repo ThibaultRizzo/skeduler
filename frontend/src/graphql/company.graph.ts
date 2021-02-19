@@ -28,13 +28,11 @@ const companySequenceRuleFragment = gql`
 
 const companyTransitionRuleFragment = gql`
   fragment companyTransitionRuleFragment on CompanyTransitionRule {
-      transitionRules {
         id
         companyId
         fromShiftId
         toShiftId
         penalty
-      }
   }
 `;
 
@@ -67,9 +65,9 @@ export const GET_COMPANY = gql`
   ${companySummaryFragment}
 `;
 
-export const GET_COMPANY_SEQUENCE_RULES = gql`
-  query getCompanySequenceRules($id: String!) {
-    company {
+export const GET_SEQUENCE_RULES = gql`
+  query getCompanySequenceRules {
+    sequenceRules {
       result {
         ...companySequenceRuleFragment
       }
@@ -78,6 +76,19 @@ export const GET_COMPANY_SEQUENCE_RULES = gql`
     }
   }
   ${companySequenceRuleFragment}
+`;
+
+export const GET_TRANSITION_RULES = gql`
+  query getCompanyTransitionRules {
+    transitionRules {
+      result {
+        ...companyTransitionRuleFragment
+      }
+      success
+      errors
+    }
+  }
+  ${companyTransitionRuleFragment}
 `;
 
 /*************
@@ -113,6 +124,78 @@ export const UPDATE_COMPANY = gql`
 export const DELETE_COMPANY = gql`
   mutation deleteCompany($id: String!) {
     deleteCompany(id: $id) {
+      result
+      success
+      errors
+    }
+  }
+`;
+
+export const CREATE_SEQUENCE_RULE = gql`
+  mutation createSequenceRule($input: CreateSequenceRuleInput!) {
+    createSequenceRule(input: $input) {
+      result {
+        ...companySequenceRuleFragment
+      }
+      success
+      errors
+    }
+  }
+  ${companySequenceRuleFragment}
+`;
+
+export const UPDATE_SEQUENCE_RULE = gql`
+  mutation updateSequenceRule($input: UpdateSequenceRuleInput!) {
+    updateSequenceRule(input: $input) {
+      result {
+        ...companySequenceRuleFragment
+      }
+      success
+      errors
+    }
+  }
+  ${companySequenceRuleFragment}
+`;
+
+export const DELETE_SEQUENCE_RULE = gql`
+  mutation deleteSequenceRule($id: String!) {
+    deleteSequenceRule(id: $id) {
+      result
+      success
+      errors
+    }
+  }
+`;
+
+export const CREATE_TRANSITION_RULE = gql`
+  mutation createTransitionRule($input: CreateTransitionRuleInput!) {
+    createTransitionRule(input: $input) {
+      result {
+        ...companyTransitionRuleFragment
+      }
+      success
+      errors
+    }
+  }
+  ${companyTransitionRuleFragment}
+`;
+
+export const UPDATE_TRANSITION_RULE = gql`
+  mutation updateTransitionRule($input: UpdateTransitionRuleInput!) {
+    updateTransitionRule(input: $input) {
+      result {
+        ...companyTransitionRuleFragment
+      }
+      success
+      errors
+    }
+  }
+  ${companyTransitionRuleFragment}
+`;
+
+export const DELETE_TRANSITION_RULE = gql`
+  mutation deleteTransitionRule($id: String!) {
+    deleteTransitionRule(id: $id) {
       result
       success
       errors

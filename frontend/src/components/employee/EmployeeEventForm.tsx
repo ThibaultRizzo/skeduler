@@ -27,7 +27,7 @@ function EmployeeEventForm({ record, employee }: EmployeeEventFormProps) {
     ? employeeEventToDraft(record, employee)
     : {
       duration: 1,
-      employee,
+      employeeId: employee,
       isDesired: true,
       nature: EventNature.Important,
       startDate: new Date(),
@@ -91,8 +91,8 @@ function EmployeeEventForm({ record, employee }: EmployeeEventFormProps) {
     <section>
       {record && <button onClick={() => employeeEventSubject.deleteOne(record.id)}>Delete</button>}
       <CRUDForm<CreateEventInput>
-        createOne={e => employeeEventSubject.createOne({ ...e, employee })}
-        updateOne={({ employee, ...d }) => employeeEventSubject.updateOne({ id: record!.id, ...d })}
+        createOne={e => employeeEventSubject.createOne({ ...e, employeeId: employee })}
+        updateOne={({ employeeId, ...d }) => employeeEventSubject.updateOne({ id: record!.id, ...d })}
         isCreation={!record}
         name="employee-event"
         initialState={initialState}
@@ -104,7 +104,7 @@ function EmployeeEventForm({ record, employee }: EmployeeEventFormProps) {
             <ShiftSelect
               id="employee-event-shift-select"
               onChange={(shift: Shift) => {
-                setEmployeeEvent({ ...employeeEvent, shift: shift?.id });
+                setEmployeeEvent({ ...employeeEvent, shiftId: shift.id });
               }}
             />
 

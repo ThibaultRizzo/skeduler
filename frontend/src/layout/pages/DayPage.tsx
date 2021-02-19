@@ -8,7 +8,7 @@ function DayPage() {
   const cellDictionary = new CellDictionary<Day>([
     {
       key: "name",
-      formatValue: (day: DayEnum) => day.name,
+      formatValue: (day: DayEnum) => day,
     },
     { key: "active" },
   ]);

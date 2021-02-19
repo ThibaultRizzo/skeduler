@@ -18,8 +18,8 @@ const employeeFragment = gql`
       }
       skills {
         level
-        shift_id
-        employee_id
+        shiftId
+        employeeId
       }
   }
 `;

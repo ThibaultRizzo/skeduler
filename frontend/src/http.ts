@@ -20,6 +20,7 @@ function dateParser(data: string) {
     return JSON.parse(data, reviver)
 }
 baseAxios.defaults.headers.post['Content-Type'] = "application/json";
+baseAxios.defaults.headers.common['companyId'] = sessionStorage.getItem('companyId')
 baseAxios.defaults.transformResponse = [
     dateParser,
     ...(axios.defaults.transformResponse as AxiosTransformer[]),

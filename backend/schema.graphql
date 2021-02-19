@@ -99,8 +99,8 @@ type Employee {
 }
 
 type EmployeeSkill {
-  shift_id: String!
-  employee_id: Employee!
+  shiftId: String!
+  employeeId: String!
   level: ShiftSkillLevel!
 }
 
@@ -248,7 +248,7 @@ input UpdateShiftInput {
 }
 
 input ShiftSkillInput {
-  shift_id: String!
+  shiftId: String!
   level: ShiftSkillLevel!
 }
 
@@ -268,8 +268,8 @@ input UpdateEmployeeInput {
 }
 
 input CreateEventInput {
-  employee_id: String!
-  shift_id: String
+  employeeId: String!
+  shiftId: String
   startDate: Datetime!
   duration: Int!
   type: EventType!
@@ -280,7 +280,7 @@ input CreateEventInput {
 
 input UpdateEventInput {
   id: String!
-  shift_id: String
+  shiftId: String
   startDate: Datetime!
   duration: Int!
   type: EventType!

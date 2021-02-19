@@ -3,6 +3,7 @@ import { Subscription } from "rxjs"
 import snackbarSubject, { LogLevel } from "./snackbar.subject";
 import { ApiError, isApiError } from '../api/helper';
 import { BehaviorArrayLikeSubject } from './subject';
+import { Dispatch, SetStateAction } from 'react';
 
 /*********
  * Types *
@@ -61,6 +62,48 @@ export function getResultElseNull<T>(result: T | ApiError): T | null {
 /*********************
  * Subject factories *
  *********************/
+export type SimpleListSubject<T extends BaseCRUDRecord> = {
+    subject: BehaviorArrayLikeSubject<T>;
+    unsubscribe: (setState: Dispatch<SetStateAction<T[] | null>>) => () => void;
+}
+export function buildSimpleListSubject<T extends BaseCRUDRecord>(injectedSubject?: BehaviorArrayLikeSubject<T>): SimpleListSubject<T> {
+    const subject = injectedSubject ? injectedSubject : new BehaviorArrayLikeSubject<T>(null);
+    return {
+        subject,
+        unsubscribe: (setState: Dispatch<SetStateAction<T[] | null>>) => {
+            const sub = subject.subscribe(c => setState(c));
+            return () => {
+                sub.unsubscribe();
+            }
+        },
+    }
+}
+
+export function buildReadListSubject<T extends BaseCRUDRecord, R = []>(fetchAll: (...args: R[]) => Promise<ApiError | T[]>, fetchFirst = true, injectedSubject?: BehaviorArrayLikeSubject<T>) {
+    const subject = injectedSubject ? injectedSubject : new BehaviorArrayLikeSubject<T>(null);
+    const fetchSubject = async (...args: R[]) => {
+        const recordList = await fetchAll(...args);
+        executeFnOrOpenSnackbar((v) => subject.next(v), recordList)
+        return getResultElseNull(recordList);
+    };
+
+    if (fetchFirst) {
+        fetchSubject();
+    }
+    return {
+        ...buildSimpleSubject(subject),
+        lazyFetchAll: async (...args: R[]) => {
+            const currentValue = subject.value;
+            if (currentValue) {
+                return Promise.resolve(currentValue)
+            } else {
+                fetchSubject(...args);
+            }
+        },
+        fetchAll: fetchSubject,
+    };
+}
+
 export function buildSimpleSubject<T extends BaseCRUDRecord>(injectedSubject?: BehaviorArrayLikeSubject<T>): SimpleSubject<T> {
     const subject = injectedSubject ? injectedSubject : new BehaviorArrayLikeSubject<T>(null);
     return {

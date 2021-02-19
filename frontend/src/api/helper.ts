@@ -22,9 +22,9 @@ export const isApiError = (v: any): boolean => {
     return !!v && !!v.error && !!v.origin
 }
 
-export const getResultOrError = <T>(payload: Payload<T> | null | undefined): T | ApiError => {
+export const getResultOrError = <T>(payload: Payload<T> | null | undefined, format?: (val: T) => T): T | ApiError => {
     if (payload && payload.success) {
-        return payload.result as T;
+        return format ? format(payload.result as T) : payload.result as T;
     } else if (payload && !payload.success && payload.errors && payload.errors.length > 0) {
         return {
             error: !!payload.errors ? payload.errors.join(',') : '',
@@ -37,3 +37,4 @@ export const getResultOrError = <T>(payload: Payload<T> | null | undefined): T |
         }
     }
 }
+

@@ -11,34 +11,45 @@ class GraphEnum(enum.Enum):
         return EnumType(cls.__name__, cls)
 
 
-class DayEnum(enum.Enum):
-    MONDAY = 1
-    TUESDAY = 2
-    WEDNESDAY = 3
-    THURSDAY = 4
-    FRIDAY = 5
-    SATURDAY = 6
-    SUNDAY = 7
+class DayEnum(str, GraphEnum):
+    MONDAY = "MONDAY"
+    TUESDAY = "TUESDAY"
+    WEDNESDAY = "WEDNESDAY"
+    THURSDAY = "THURSDAY"
+    FRIDAY = "FRIDAY"
+    SATURDAY = "SATURDAY"
+    SUNDAY = "SUNDAY"
+
+    def get_order(self):
+        return [
+            "MONDAY",
+            "TUESDAY",
+            "WEDNESDAY",
+            "THURSDAY",
+            "FRIDAY",
+            "SATURDAY",
+            "SUNDAY",
+        ].index(self) + 1
 
     def get_by_order(order):
-        return next((d for d in DayEnum if d.value is order), None)
+        return next((d for d in DayEnum if d.get_order() is order), None)
 
     def get_by_datetime(date):
         return DayEnum.get_by_order(date.isoweekday())
 
-    def to_graph():
-        return EnumType(
-            "DayEnum",
-            {
-                "MONDAY": "MONDAY",
-                "TUESDAY": "TUESDAY",
-                "WEDNESDAY": "WEDNESDAY",
-                "THURSDAY": "THURSDAY",
-                "FRIDAY": "FRIDAY",
-                "SATURDAY": "SATURDAY",
-                "SUNDAY": "SUNDAY",
-            },
-        )
+    # def to_graph():
+    #     return EnumType(
+    #         "DayEnum",
+    #         {
+    #             "MONDAY": "MONDAY",
+    #             "TUESDAY": "TUESDAY",
+    #             "WEDNESDAY": "WEDNESDAY",
+    #             "THURSDAY": "THURSDAY",
+    #             "FRIDAY": "FRIDAY",
+    #             "SATURDAY": "SATURDAY",
+    #             "SUNDAY": "SUNDAY",
+    #         },
+    #     )
 
 
 class ShiftSkillLevel(GraphEnum):
@@ -68,7 +79,7 @@ class EventStatus(str, GraphEnum):
     DECLINED = "DECLINED"
 
 
-class ShiftImportance(GraphEnum):
+class ShiftImportance(str, GraphEnum):
     MAJOR = "MAJOR"
     AVERAGE = "AVERAGE"
     MINOR = "MINOR"
@@ -82,12 +93,12 @@ class SolverStatus(GraphEnum):
     OPTIMAL = cp_model.OPTIMAL
 
 
-class SequenceRuleType(GraphEnum):
+class SequenceRuleType(str, GraphEnum):
     SHIFT_SEQUENCE = "SHIFT_SEQUENCE"
     SHIFT_SUM_SEQUENCE = "SHIFT_SUM_SEQUENCE"
 
 
-class RulePenalty(GraphEnum):
+class RulePenalty(str, GraphEnum):
     HARD = "HARD"
     MEDIUM = "MEDIUM"
     SOFT = "SOFT"

@@ -32,16 +32,16 @@ export default function EmployeeSkillSelect({
   const [inputLevel, setInputLevel] = useState<ShiftSkillLevel>(
     ShiftSkillLevel.Master
   );
-  const [inputShift, setInputShift] = useState<Shift | null>(null);
+  const [inputShiftId, setInputShiftId] = useState<string | null>(null);
   const [selectedSkills, setSelectedSkills] = useState<ShiftSkillInput[]>(
     value || []
   );
 
   const addSkill = () => {
-    if (inputLevel && inputShift) {
+    if (inputLevel && inputShiftId) {
       setSelectedSkills([
         ...selectedSkills,
-        { level: inputLevel, shift: inputShift.id },
+        { level: inputLevel, shiftId: inputShiftId },
       ]);
     }
   };
@@ -73,15 +73,15 @@ export default function EmployeeSkillSelect({
       <ShiftSelect
         id="employee-shift-select"
         onChange={(shift: Shift) => {
-          setInputShift(shift);
+          setInputShiftId(shift.id);
         }}
       />
       <button
         onClick={addSkill}
         disabled={
           !inputLevel ||
-          !inputShift ||
-          selectedSkills.some((s) => s.shift === inputShift.id)
+          !inputShiftId ||
+          selectedSkills.some((s) => s.shiftId === inputShiftId)
         }
       >
         +
@@ -93,14 +93,14 @@ export default function EmployeeSkillSelect({
               onClick={() =>
                 setSelectedSkills(
                   selectedSkills.filter(
-                    (selected) => selected.shift !== s.shift
+                    (selected) => selected.shiftId !== s.shiftId
                   )
                 )
               }
             >
               -
             </button>
-            {shifts?.find((shift) => shift.id === s.shift)?.title || ""} -{" "}
+            {shifts?.find((shift) => shift.id === s.shiftId)?.title || ""} -{" "}
             {s.level}
           </li>
         ))}
