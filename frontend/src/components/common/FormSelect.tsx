@@ -102,10 +102,11 @@ function FormSelect<T>({
   onSelectChange,
   getKey,
   getLabel,
+  className,
   ...selectProps
 }: FormSelectProps<T>) {
   return (
-    <div>
+    <div className={className}>
       <label htmlFor={id}>{label}</label>
       <select
         id={id}

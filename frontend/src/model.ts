@@ -1,4 +1,4 @@
-import { CreateEmployeeInput, Shift, Employee, EmployeeEvent, CreateEventInput } from "./types";
+import { CreateEmployeeInput, Shift, Employee, EmployeeEvent, CreateEventInput, CreateSequenceRuleInput, CompanySequenceRule, CompanyTransitionRule, CreateTransitionRuleInput } from "./types";
 
 
 export type DraftEmployee = CreateEmployeeInput
@@ -26,4 +26,12 @@ export function employeeEventToDraft({ id, shift, employee, endDate, ...event }:
 
 export function shifttoDraft({ id, ...rest }: Shift): Draft<Shift> {
     return rest
+}
+
+export function sequenceRuleToDraft({ id, ...rest }: CompanySequenceRule): CreateSequenceRuleInput {
+    return rest;
+}
+
+export function transitionRuleToDraft({ id, ...rest }: CompanyTransitionRule): CreateTransitionRuleInput {
+    return rest;
 }

@@ -7,7 +7,7 @@ const LabelValue = ({ label, value }: LabelValueProps) => {
   return (
     <p>
       <b>{label}:</b>
-      <span>{value || "-"}</span>
+      <span>{value || value === 0 ? value : "-"}</span>
     </p>
   );
 };

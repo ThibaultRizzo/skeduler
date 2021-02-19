@@ -541,7 +541,10 @@ export type UpdateSequenceRuleInput = {
 };
 
 export type CreateTransitionRuleInput = {
-  id: Scalars['String'];
+  companyId: Scalars['String'];
+  fromShiftId?: Maybe<Scalars['String']>;
+  toShiftId?: Maybe<Scalars['String']>;
+  penalty: RulePenalty;
 };
 
 export type TransitionRulePayload = {
@@ -553,7 +556,10 @@ export type TransitionRulePayload = {
 
 export type UpdateTransitionRuleInput = {
   id: Scalars['String'];
-  name: Scalars['String'];
+  companyId: Scalars['String'];
+  fromShiftId?: Maybe<Scalars['String']>;
+  toShiftId?: Maybe<Scalars['String']>;
+  penalty: RulePenalty;
 };
 
 export type Company = {

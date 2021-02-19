@@ -23,9 +23,7 @@ const EmployeeEventList = ({ employeeId }: EmployeeEventListProps) => {
   if (events) {
     events.forEach(ev => {
       const monthYears = eachMonthOfInterval({ start: ev.startDate, end: ev.endDate }).map(d => getMonthYear(d));
-      console.log('vvvv', monthYears, ev)
       monthYears.forEach(my => eventsPerMonthMap.has(my) ? eventsPerMonthMap.get(my)!.push(ev) : eventsPerMonthMap.set(my, [ev]));
-      console.log({ eventsPerMonthMap })
     })
   }
 

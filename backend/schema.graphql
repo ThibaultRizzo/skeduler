@@ -323,11 +323,17 @@ input UpdateSequenceRuleInput {
 }
 
 input CreateTransitionRuleInput {
-id: String!
+  companyId: String!
+  fromShiftId: String
+  toShiftId: String
+  penalty: RulePenalty!
 }
 input UpdateTransitionRuleInput {
   id: String!
-  name: String!
+  companyId: String!
+  fromShiftId: String
+  toShiftId: String
+  penalty: RulePenalty!
 }
 
 ##############

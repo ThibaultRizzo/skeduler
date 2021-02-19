@@ -169,6 +169,7 @@ function CRUDForm<D>({
             }}
             value={getter(formState) as string}
             factory={rest.factory}
+            {...props}
           />
         )
       case FormFieldType.ENUM_MULTI:
@@ -185,6 +186,7 @@ function CRUDForm<D>({
             }}
             value={getter(formState) as string}
             factory={rest.factory}
+            {...props}
           />
         )
       case FormFieldType.CUSTOM:

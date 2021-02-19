@@ -22,6 +22,7 @@ export function SingleEnumSelect<T extends Object>({
   factory,
   value,
   onChange,
+  ...props
 }: SingleEnumSelectProps<T>) {
   return (
     <SingleFormSelect<T>
@@ -32,6 +33,7 @@ export function SingleEnumSelect<T extends Object>({
       getData={async () => factory.list}
       getKey={(v) => v.toString()}
       getLabel={(v) => v.toString()}
+      {...props}
     />
   );
 }
