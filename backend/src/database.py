@@ -1,5 +1,6 @@
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column, String, DateTime, inspect
+from sqlalchemy.orm.collections import InstrumentedList
 from enum import Enum
 import uuid
 import datetime
@@ -137,13 +138,19 @@ class PkCompanyModel(PkModel):
         ]
 
 
+def get_attr(cls, k):
+    val = getattr(cls, k)
+    if isinstance(val, Enum):
+        return val.name
+    elif isinstance(val, InstrumentedList):
+        return [v.to_dict() for v in val]
+    else:
+        return val
+
+
 def to_dict(cls, excluded_fields):
     return {
-        snake_to_camel_case(k): (
-            getattr(cls, k).name
-            if isinstance(getattr(cls, k), Enum)
-            else getattr(cls, k)
-        )
+        snake_to_camel_case(k): get_attr(cls, k)
         for k in cls.__mapper__.all_orm_descriptors.keys()  # inspect(cls).attrs.keys()
         if k not in excluded_fields
     }

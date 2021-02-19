@@ -57,13 +57,19 @@ def mutation(func_name, inject_company_id=True):
                     f"the format dd-mm-yyyy",
                 )
             except SolverException as e:
-                payload = getErrorPayload(e, "Solver encountered an error: " + e)
+                payload = getErrorPayload(
+                    e,
+                    "Solver encountered an error: " + e.message
+                    if hasattr(e, "message")
+                    else e,
+                )
             except NoRecordError as e:
                 payload = getErrorPayload(e, "NoRecordError" + e)
             except TypeError as e:
                 payload = getErrorPayload(e, e.message if hasattr(e, "message") else e)
             except BaseException as e:
                 payload = getErrorPayload(e, "Something went wrong")
+                raise e
 
             return payload
 

@@ -429,7 +429,7 @@ class ScheduleCpModel(cp_model.CpModel):
     def get_employee_shift_mastery(employees, shifts):
         find_level = lambda skills, shift: next(
             (
-                ShiftSkillLevel[skill.level].value
+                ShiftSkillLevel[skill.level].get_value()
                 for skill in skills
                 if skill.shift_id is shift.id
             ),

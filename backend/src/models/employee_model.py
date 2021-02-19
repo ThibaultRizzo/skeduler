@@ -89,8 +89,12 @@ class EmployeeSkill(PkModel):
             self.id, self.shift_id, self.employee_id, self.level
         )
 
-    def __str__(self):
-        return "sss"
+    # def to_dict(self):
+    #     return {
+    #         "level": self.level.name,
+    #         "shiftId": self.shift_id,
+    #         "employeeId": self.employee_id,
+    #     }
 
 
 class EmployeeEvent(PkModel):

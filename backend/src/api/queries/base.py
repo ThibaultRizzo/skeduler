@@ -34,6 +34,7 @@ def query(func_name, inject_company_id=True):
                 payload = getErrorPayload(e, "InvalidInputError")
             except BaseException as e:
                 payload = getErrorPayload(e, "Something went wrong")
+                raise e
             return payload
 
         return ariadne_query.field(func_name)(decorator)

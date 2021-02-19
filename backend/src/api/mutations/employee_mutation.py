@@ -12,7 +12,7 @@ def resolve_create_employee(_, info, company_id, input):
     days, skills, rest = pop_keys(input, ["working_days", "skills"])
     rest["working_days"] = Day.get_all_by_company_and_name(company_id, days)
     rest["skills"] = [
-        EmployeeSkill(level=s["level"], shift_id=s["shift"]) for s in skills
+        EmployeeSkill(level=s["level"], shift_id=s["shift_id"]) for s in skills
     ]
     return Employee.create(**rest).to_dict()
 

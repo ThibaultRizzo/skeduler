@@ -19,9 +19,9 @@ class Day(PkCompanyModel):
     def __repr__(self):
         return f"<Day: {self.name}"
 
-    def get_all_by_company_id(company_id):
+    def get_all_by_company_id(company_id, to_dict=True):
         return [
-            entity.to_dict()
+            entity.to_dict() if to_dict is True else entity
             for entity in Day.query.filter_by(company_id=company_id)
             .order_by(Day.order.asc())
             .all()

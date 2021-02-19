@@ -61,7 +61,7 @@ class SolverPeriod(Period):
             raise TypeError(f"7 days are needed, currently only passed {len(days)}")
         self.nb_weeks = nb_weeks
         self.days = days
-        self.days_dict = dict((d.name, d) for d in days)
+        self.days_dict = {d.name: d for d in days}
         self.dates_to_day_index_dict = self.get_dates_dict()
 
     def get_dates_dict(self) -> dict:
