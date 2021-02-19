@@ -25,7 +25,9 @@ def init_app(app):
 
     @app.cli.command("create_company")
     def create_company():
-        company_mutation.resolve_create_company(None, None, {"name": ""})
+        company_mutation.resolve_create_company(
+            info=None, obj=None, input={"name": "Test"}
+        )
 
 
 @click.command()
