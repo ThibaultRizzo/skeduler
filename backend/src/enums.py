@@ -61,6 +61,14 @@ class EventNature(GraphEnum):
     WANTED = "WANTED"
     PREFERED = "PREFERED"
 
+    def get_weight(self):
+        return {
+            EventNature.MANDATORY: 0,
+            EventNature.IMPORTANT: 2,
+            EventNature.WANTED: 4,
+            EventNature.PREFERED: 10,
+        }[self]
+
 
 class EventStatus(GraphEnum):
     PENDING = "PENDING"
@@ -73,6 +81,14 @@ class ShiftImportance(GraphEnum):
     AVERAGE = "AVERAGE"
     MINOR = "MINOR"
 
+    def to_weight(self):
+        _dict = {
+            ShiftImportance.MAJOR: 30,
+            ShiftImportance.AVERAGE: 20,
+            ShiftImportance.MINOR: 10,
+        }
+        return _dict[self]
+
 
 class SolverStatus(GraphEnum):
     UNKNOWN = cp_model.UNKNOWN
@@ -80,6 +96,9 @@ class SolverStatus(GraphEnum):
     FEASIBLE = cp_model.FEASIBLE
     INFEASIBLE = cp_model.INFEASIBLE
     OPTIMAL = cp_model.OPTIMAL
+
+    def by_status_code(code):
+        return next((s for s in SolverStatus if int(s.value) == code), None)
 
 
 class SequenceRuleType(GraphEnum):
@@ -91,6 +110,16 @@ class RulePenalty(GraphEnum):
     HARD = "HARD"
     MEDIUM = "MEDIUM"
     SOFT = "SOFT"
+
+    def weight_dict():
+        return {
+            RulePenalty.SOFT: 5,
+            RulePenalty.MEDIUM: 10,
+            RulePenalty.HARD: 20,
+        }
+
+    def to_weight(self):
+        return RulePenalty.weight_dict()[self]
 
 
 all_enums = [
@@ -104,3 +133,11 @@ all_enums = [
     EventStatus,
     EventType,
 ]
+
+
+SCHEDULE_WEIGHT_DICT = {
+    "VERY_IMPORTANT": 30,
+    "IMPORTANT": 20,
+    "MUST": 10,
+    "SHOULD": 5,
+}

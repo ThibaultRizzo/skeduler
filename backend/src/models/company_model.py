@@ -17,8 +17,11 @@ class Company(PkModel):
         "CompanyTransitionRule", backref="company", cascade="all, delete, delete-orphan"
     )
 
-    # def create(**kwargs):
-    #     return super.create(**kwargs, ['id', 'working_days'])
+    def get_rules_by_id(id):
+        return {
+            "sequence": CompanySequenceRule.get_all_by_company_id(id, False),
+            "transition": CompanyTransitionRule.get_all_by_company_id(id, False),
+        }
 
     def to_dict(self):
         return {
@@ -40,6 +43,20 @@ class CompanySequenceRule(PkCompanyModel):
     soft_max = Column(Integer, nullable=False)
     penalty_max = Column(Enum(RulePenalty), nullable=False)
 
+    def to_rule(self, shifts):
+        shift_id = next(
+            (s for s, shift in enumerate(shifts) if shift.id == self.shift_id), 0
+        )
+        return (
+            shift_id,
+            self.hard_min,
+            self.soft_min,
+            self.penalty_min.to_weight(),
+            self.hard_max,
+            self.soft_max,
+            self.penalty_max.to_weight(),
+        )
+
     # @validates(
     #     "hard_min",
     #     "soft_min",
@@ -55,3 +72,12 @@ class CompanyTransitionRule(PkCompanyModel):
     from_shift_id = reference_col("shift", nullable=True)
     to_shift_id = reference_col("shift", nullable=True)
     penalty = Column(Enum(RulePenalty), nullable=False)
+
+    def to_rule(self, shifts):
+        from_shift = next(
+            (s for s, shift in enumerate(shifts) if shift.id == self.from_shift_id), 0
+        )
+        to_shift = next(
+            (s for s, shift in enumerate(shifts) if shift.id == self.to_shift_id), 0
+        )
+        return (from_shift, to_shift, self.penalty.to_weight())

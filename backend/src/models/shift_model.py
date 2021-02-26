@@ -1,7 +1,6 @@
 from sqlalchemy import Column, String, Integer, Enum
 from src.database import db, PkModel, PkCompanyModel
 from src.enums import ShiftImportance
-from .penalty import SHIFT_PENALTY_WEIGHT_DICT
 
 
 class Shift(PkCompanyModel):
@@ -20,7 +19,7 @@ class Shift(PkCompanyModel):
     shift_importance = Column(Enum(ShiftImportance), nullable=False)
 
     def get_cover_penalty(self):
-        return SHIFT_PENALTY_WEIGHT_DICT.get(self.shift_importance)
+        return self.shift_importance.to_weight()
 
     def get_cover_constraints(self):
         return (

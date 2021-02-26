@@ -42,7 +42,7 @@ class Period:
         if type(d) is date:
             return datetime.combine(d, datetime.min.time(), timezone.utc)
         elif type(d) is datetime:
-            return d
+            return datetime.combine(d.date(), d.time(), timezone.utc)
         else:
             raise Exception("to_datetime only accepts dates/datetimes")
 
@@ -57,7 +57,7 @@ class SolverPeriod(Period):
             raise TypeError("Number of weeks should be a positive integer")
         elif DayEnum.get_by_order(start_date.isoweekday()) is not DayEnum.MONDAY:
             raise TypeError("Start date should be a monday")
-        elif len(days) is not 7:
+        elif len(days) != 7:
             raise TypeError(f"7 days are needed, currently only passed {len(days)}")
         self.nb_weeks = nb_weeks
         self.days = days

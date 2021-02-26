@@ -1,6 +1,6 @@
 from ortools.sat.python import cp_model
 from src.models import REST_SHIFT
-from src.enums import ShiftSkillLevel
+from src.enums import ShiftSkillLevel, SequenceRuleType, SCHEDULE_WEIGHT_DICT
 from src.utils import chunk
 from .base import (
     add_soft_sequence_constraint,
@@ -8,14 +8,87 @@ from .base import (
     negated_bounded_span,
 )
 from .errors import ConflictingConstraintException
-from src.models.penalty import SCHEDULE_WEIGHT_DICT
+import logging
+
+# from flask import current_app
+
+_logger = logging.getLogger()
+
+
+class ScheduleCpModelFactory:
+    def __init__(self, rules, employees, base_shifts, period, config):
+        self.rules = rules
+        self.employees = employees
+        self.base_shifts = base_shifts
+        self.period = period
+        self.config = config
+
+    def solve_model(self):
+
+        model = ScheduleCpModel(
+            self.rules, self.employees, self.base_shifts, self.period, [], self.config
+        )
+        solver, status = model.solve()
+        infeasible_cts = []
+        if status == cp_model.INFEASIBLE:
+            infeasible_cts = self.find_infeasible_cts()
+            model = ScheduleCpModel(
+                self.rules,
+                self.employees,
+                self.base_shifts,
+                self.period,
+                infeasible_cts,
+                self.config,
+            )
+            solver, status = model.solve()
+        return model, solver, status, infeasible_cts
+
+    def find_infeasible_cts(self):
+        all_hard_cts = (
+            ScheduleCpModel.hard_ct_list + ScheduleCpModel.hard_and_soft_ct_list
+        )
+        infeasible_cts = []
+        for i, ct in enumerate(all_hard_cts):
+            excluded_cts = [ct for ct in all_hard_cts[i + 1 :]] + infeasible_cts
+            model = ScheduleCpModel(
+                self.rules,
+                self.employees,
+                self.base_shifts,
+                self.period,
+                excluded_cts,
+                self.config,
+            )
+            solver, status = model.solve()
+            if status == cp_model.INFEASIBLE:
+                infeasible_cts.append(ct)
+
+        return infeasible_cts
 
 
 # TODO: Use this link to set initial solution ? https://github.com/google/or-tools/issues/1152
 # TODO: Find constraints for infeasibility: https://github.com/google/or-tools/issues/973
 class ScheduleCpModel(cp_model.CpModel):
-    def __init__(self, employees, base_shifts, period, config):
+    hard_ct_list = [
+        "add_one_shift_per_day_ct",  # Maximum one shift per day.
+        "add_inactive_days_assignments",  # Inactive days
+        "add_mandatory_events_assignments",  # Mandatory events
+        "add_employee_total_contract_ct",  # Monthly contract hour per employee
+    ]
+    hard_and_soft_ct_list = [
+        "add_employee_contract_ct",  # Employee contracts
+        "add_employee_shift_mastery_ct",  # Employee Shift mastery
+        "add_shift_sequence_ct",  # Shift sequence
+        "add_weekly_sum_ct",  # Shift sequence sum
+        "add_penalized_transitions_ct",  # Penalized transitions,
+        "add_cover_ct",  # Shift cover requirements
+    ]
+    soft_ct_list = [
+        "add_employee_requests_ct",  # Employee requests
+    ]
+
+    def __init__(self, rules, employees, base_shifts, period, excluded_cts, config):
         super().__init__()
+        self.rules = rules
         self.employees = employees
         self.nb_employees = len(employees)
         self.base_shifts = base_shifts
@@ -26,8 +99,14 @@ class ScheduleCpModel(cp_model.CpModel):
         self.weeks = chunk(self.days, 7)
         self.nb_weeks = len(self.weeks)
         self.period = period
+        self.excluded_cts = excluded_cts
         self.config = config
 
+        self.init_matrice()
+        self.add_constraints()
+        self.set_objective()
+
+    def init_matrice(self):
         # Linear terms of the objective in a minimization context.
         self.obj_int_vars = []
         self.obj_int_coeffs = []
@@ -35,12 +114,6 @@ class ScheduleCpModel(cp_model.CpModel):
         self.obj_bool_coeffs = []
 
         self.conflicting_assignments = {}
-
-        self.init_matrice()
-        self.add_constraints()
-        self.set_objective()
-
-    def init_matrice(self):
         self.matrice = {}
         for e in range(self.nb_employees):
             for s in range(self.nb_shifts):
@@ -48,34 +121,18 @@ class ScheduleCpModel(cp_model.CpModel):
                     self.matrice[e, s, d] = self.NewBoolVar("work%i_%i_%i" % (e, s, d))
 
     def add_constraints(self):
+        def func_not_found(func_name):  # just in case we dont have the function
+            _logger.info("No Function " + func_name + " Found!")
+
         ## Hard constraints
-        # 1. Maximum one shift per day.
-        self.add_one_shift_per_day_ct()
-
-        # 2. Fixed assignments.
-        self.add_fixed_assignments_ct()
-
-        # 3. Monthly contract hour per employee
-        self.add_employee_total_contract_ct()
-
-        ## Soft constraints
-
-        # 4. Employee contracts
-        self.add_employee_contract_ct()
-
-        # 5. Employee requests
-        self.add_employee_requests_ct()
-
-        # 6. Shift cover requirements
-        self.add_cover_ct()
-
-        # 7. Employee Shift mastery
-        self.add_employee_shift_mastery_ct()
-
-        # 8. Shift
-        self.add_shift_sequence_ct()
-        # self.add_weekly_sum_ct()
-        # self.add_penalized_transitions_ct()
+        for ct in ScheduleCpModel.hard_ct_list:
+            if ct not in self.excluded_cts:
+                getattr(self, ct, lambda: func_not_found(ct))()
+        for ct in ScheduleCpModel.hard_and_soft_ct_list:
+            if ct not in self.excluded_cts:
+                getattr(self, ct, lambda: func_not_found(ct))()
+        for ct in ScheduleCpModel.soft_ct_list:
+            getattr(self, ct, lambda: func_not_found(ct))()
 
     def set_objective(self):
         self.Minimize(
@@ -89,6 +146,31 @@ class ScheduleCpModel(cp_model.CpModel):
             )
         )
 
+    def solve(self):
+        # Solve the model.
+        solver = cp_model.CpSolver()
+        solver.parameters.num_search_workers = 8
+        # if params:
+        #     text_format.Merge(params, solver.parameters)
+        solution_printer = cp_model.ObjectiveSolutionPrinter()
+        status = solver.SolveWithSolutionCallback(self, solution_printer)
+        _logger.info("Penalties:")
+        for i, var in enumerate(self.obj_bool_vars):
+            if solver.BooleanValue(var):
+                penalty = self.obj_bool_coeffs[i]
+                if penalty > 0:
+                    _logger.info("  %s violated, penalty=%i" % (var.Name(), penalty))
+                else:
+                    _logger.info("  %s fulfilled, gain=%i" % (var.Name(), -penalty))
+
+        for i, var in enumerate(self.obj_int_vars):
+            if solver.Value(var) > 0:
+                _logger.info(
+                    "  %s violated by %i, linear penalty=%i"
+                    % (var.Name(), solver.Value(var), self.obj_int_coeffs[i])
+                )
+        return solver, status
+
     ###############
     # Constraints #
     ###############
@@ -98,42 +180,28 @@ class ScheduleCpModel(cp_model.CpModel):
             for d in range(self.nb_days):
                 self.Add(sum(self.matrice[e, s, d] for s in range(self.nb_shifts)) == 1)
 
-    def add_fixed_assignments_ct(self):
+    def add_inactive_days_assignments(self):
+        fixed_assignments = []
+        conflicting_assignments = []
+
+        for e, employee in enumerate(self.employees):
+            # Add all inactive days as rest days for everyone
+            # 0 is the REST shift position
+            for d, day in enumerate(self.period.get_day_list()):
+                if day.active is False:
+                    self.Add(self.matrice[e, 0, d] == 1)
+
+        self.conflicting_assignments.update(
+            {"fixed_assignments": conflicting_assignments}
+        )
+
+    def add_mandatory_events_assignments(self):
         (
             fixed_assignments,
             conflicting_assignments,
-        ) = ScheduleCpModel.get_fixed_assignments(
-            self.employees, self.shifts, self.period
+        ) = ScheduleCpModel.get_mandatory_events_assignments(
+            self.period, self.employees, self.shifts
         )
-        # TODO: Find a way to avoid cases where there is not enough working hours for an employee to fulfill his contract
-        # conflicting_employee_contrats = []
-        # for e, employee in enumerate(self.employees):
-        #     available_hours = 0
-        #     for d in range(self.nb_days):
-        #         for s,shift in enumerate(self.shifts):
-        #             if (e,s,d,1) in fixed_assignments:
-        #                 available_hours += shift.duration
-        #                 break
-        #             elif
-
-        #         if (e,s,d)
-        #     available_hours = sum(
-        #         (
-        #             shift.duration
-        #             if (
-        #                 (e, s, d, 0) not in fixed_assignments
-        #                 or (e, 0, d, 1) not in fixed_assignments
-        #             )
-        #             else 0
-        #             for s, shift in enumerate(self.shifts)
-        #             for d in range(self.nb_days)
-        #         )
-        #     )
-        #     if available_hours < employee.contract * self.nb_weeks:
-        #         conflicting_employee_contrats.append(e)
-        # self.conflicting_assignments.update(
-        #     {"employee_contrats": conflicting_employee_contrats}
-        # )
         self.conflicting_assignments.update(
             {"fixed_assignments": conflicting_assignments}
         )
@@ -189,11 +257,14 @@ class ScheduleCpModel(cp_model.CpModel):
             self.obj_bool_coeffs.append(w)
 
     def add_shift_sequence_ct(self):
-        shift_constraints = ScheduleCpModel.get_shift_sequence_ct()
+        shift_constraints = ScheduleCpModel.get_shift_sequence_ct(
+            self.rules["sequence"], self.shifts
+        )
+
         for ct in shift_constraints:
             shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
             for e in range(self.nb_employees):
-                works = [work[e, shift, d] for d in range(self.nb_days)]
+                works = [self.matrice[e, shift, d] for d in range(self.nb_days)]
                 variables, coeffs = add_soft_sequence_constraint(
                     self,
                     works,
@@ -209,17 +280,20 @@ class ScheduleCpModel(cp_model.CpModel):
                 self.obj_bool_coeffs.extend(coeffs)
 
     def add_weekly_sum_ct(self):
-        weekly_sum_constraints = ScheduleCpModel.get_weekly_sum_ct()
+
+        weekly_sum_constraints = ScheduleCpModel.get_weekly_sum_ct(
+            self.rules["sequence"], self.shifts
+        )
+
         # 	TODO: Is it useful to keep this?
         # If so, we might have to complete the matrice to always work on a multiple of 7
         # Weekly sum constraints
         for ct in weekly_sum_constraints:
             shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
             for e in range(self.nb_employees):
-                for w in range(self.nb_weeks):
+                for w in range(0, self.nb_weeks):
                     works = [
-                        self.matrice[e, shift, d + w * self.nb_days]
-                        for d in range(self.nb_days)
+                        self.matrice[e, shift, d] for d in range(w * 7, (w + 1) * 7)
                     ]
                     variables, coeffs = add_soft_sum_constraint(
                         self,
@@ -237,7 +311,9 @@ class ScheduleCpModel(cp_model.CpModel):
                     self.obj_int_coeffs.extend(coeffs)
 
     def add_penalized_transitions_ct(self):
-        penalized_transitions = ScheduleCpModel.get_penalized_transitions()
+        penalized_transitions = ScheduleCpModel.get_penalized_transitions(
+            self.rules["transition"], self.shifts
+        )
         for previous_shift, next_shift, cost in penalized_transitions:
             for e in range(self.nb_employees):
                 for d in range(self.nb_days - 1):
@@ -270,13 +346,16 @@ class ScheduleCpModel(cp_model.CpModel):
                 min_demand = cover_demands[s - 1][d]
                 worked = self.NewIntVar(min_demand, self.nb_employees, "")
                 self.Add(worked == sum(works))
-                over_penalty = excess_cover_penalties[s - 1]
-                if over_penalty > 0:
-                    name = "excess_demand(shift=%i, day=%i)" % (s, d)
-                    excess = self.NewIntVar(0, self.nb_employees - min_demand, name)
-                    self.Add(excess == worked - min_demand)
-                    self.obj_int_vars.append(excess)
-                    self.obj_int_coeffs.append(over_penalty)
+                if min_demand == 0:
+                    self.Add(worked == 0)
+                else:
+                    over_penalty = excess_cover_penalties[s - 1]
+                    if over_penalty > 0:
+                        name = "excess_demand(shift=%i, day=%i)" % (s, d)
+                        excess = self.NewIntVar(0, self.nb_employees - min_demand, name)
+                        self.Add(excess == worked - min_demand)
+                        self.obj_int_vars.append(excess)
+                        self.obj_int_coeffs.append(over_penalty)
 
     def add_employee_shift_mastery_ct(self):
         employee_shift_mastery = ScheduleCpModel.get_employee_shift_mastery(
@@ -285,6 +364,7 @@ class ScheduleCpModel(cp_model.CpModel):
 
         for e in range(self.nb_employees):
             for s in range(1, self.nb_shifts):
+
                 coef_mastery = employee_shift_mastery[e][s - 1]
                 if coef_mastery < 2:
                     nb_shifts_worked = self.NewIntVar(0, self.nb_days, "")
@@ -297,16 +377,18 @@ class ScheduleCpModel(cp_model.CpModel):
                         self.Add(nb_shifts_worked == 0)
                     elif coef_mastery == 1:
                         # Employee can fulfill this role with a penalty
+                        works = [self.matrice[e, s, d] for d in range(self.nb_days)]
+
                         variables, coeffs = add_soft_sum_constraint(
                             self,
-                            nb_shifts_worked,
+                            works,
                             0,
                             0,
                             0,
                             0,
                             self.nb_days,
                             SCHEDULE_WEIGHT_DICT.get("SHOULD"),
-                            "mastery_constraints(employee %i, shift %i)" % (e, shift),
+                            "mastery_constraints(employee %i, shift %i)" % (e, s),
                         )
                         self.obj_int_vars.extend(variables)
                         self.obj_int_coeffs.extend(coeffs)
@@ -334,19 +416,12 @@ class ScheduleCpModel(cp_model.CpModel):
             return True
         return False
 
-    # Fixed assignment: (employee, shift, day).
-    def get_fixed_assignments(employee_list, shift_list, period):
+    def get_mandatory_events_assignments(period, employees, shifts):
         fixed_assignments = []
         conflicting_assignments = []
 
-        shift_dict = dict((shift.id, s) for s, shift in enumerate(shift_list))
-        for e, employee in enumerate(employee_list):
-            # Add all inactive days as rest days for everyone
-            # 0 is the REST shift position
-            for d, day in enumerate(period.get_day_list()):
-                if day.active is False:
-                    fixed_assignments.append((e, 0, d, 1))
-
+        shift_dict = dict((shift.id, s) for s, shift in enumerate(shifts))
+        for e, employee in enumerate(employees):
             # Add all mandatory events for each employee (leaves, sick days,etc...)
             for event in employee.get_mandatory_events(period):
                 for event_date in event.get_event_dates():
@@ -359,7 +434,7 @@ class ScheduleCpModel(cp_model.CpModel):
 
                         # Check if there is an existing constraint conflicting with this one
                         if ScheduleCpModel.is_ct_conflicting(
-                            assignment, fixed_assignments, len(shift_list)
+                            assignment, fixed_assignments, len(shifts)
                         ):
                             conflicting_assignments.append(assignment)
                         else:
@@ -385,35 +460,42 @@ class ScheduleCpModel(cp_model.CpModel):
     # Shift constraints on continuous sequence :
     #     (shift, hard_min, soft_min, min_penalty,
     #             soft_max, hard_max, max_penalty)
-    def get_shift_sequence_ct():
-
+    def get_shift_sequence_ct(rules, shifts):
+        # One or two consecutive days of rest, this is a hard constraint.
+        # (0, 1, 1, 0, 3, 3, 0),
+        # betweem 2 and 3 consecutive days of night shifts, 1 and 4 are
+        # possible but penalized.
+        # (3, 1, 2, 20, 3, 4, 5),
         shift_constraints = [
-            # One or two consecutive days of rest, this is a hard constraint.
-            # (0, 1, 1, 0, 3, 3, 0),
-            # betweem 2 and 3 consecutive days of night shifts, 1 and 4 are
-            # possible but penalized.
-            # (3, 1, 2, 20, 3, 4, 5),
+            r.to_rule(shifts)
+            for r in rules
+            if r.rule_type.name == SequenceRuleType.SHIFT_SEQUENCE
         ]
+
         return shift_constraints
 
-    def get_weekly_sum_ct():
+    def get_weekly_sum_ct(rules, shifts):
+        # Constraints on rests per week.
+        # (0, 1, 2, 7, 2, 3, 4),
+        # At least 1 night shift per week (penalized). At most 4 (hard).
+        # (3, 0, 1, 3, 2, 2, 0),
         ct = [
-            # Constraints on rests per week.
-            # (0, 1, 2, 7, 2, 3, 4),
-            # At least 1 night shift per week (penalized). At most 4 (hard).
-            # (3, 0, 1, 3, 2, 2, 0),
+            r.to_rule(shifts)
+            for r in rules
+            if r.rule_type.name == SequenceRuleType.SHIFT_SUM_SEQUENCE
         ]
+
         return ct
 
-    def get_penalized_transitions():
+    def get_penalized_transitions(rules, shifts):
         # Penalized transitions:
         #     (previous_shift, next_shift, penalty (0 means forbidden))
-        penalized_transitions = [
-            # Afternoon to night has a penalty of 4.
-            # (2, 3, 4),
-            # Night to morning is forbidden.
-            # (1, 3, 0),
-        ]
+        # Afternoon to night has a penalty of 4.
+        # (2, 3, 4),
+        # Night to morning is forbidden.
+        # (1, 3, 0),
+        penalized_transitions = [r.to_rule(shifts) for r in rules]
+
         return penalized_transitions
 
     # daily demands for work shifts for each shift
@@ -427,14 +509,16 @@ class ScheduleCpModel(cp_model.CpModel):
     # Employee mastery level for each shift (Manager, Bar, Restaurant)
     # 0 = No ability   1 = Training for this position    2 = Ability
     def get_employee_shift_mastery(employees, shifts):
-        find_level = lambda skills, shift: next(
-            (
-                ShiftSkillLevel[skill.level].get_value()
-                for skill in skills
-                if skill.shift_id is shift.id
-            ),
-            0,
-        )
+        def find_level(skills, shift):
+            return next(
+                (
+                    skill.level.get_value()
+                    for skill in skills
+                    if skill.shift_id == shift.id
+                ),
+                0,
+            )
+
         return list(
             list(find_level(employee.skills, shift) for shift in shifts)
             for employee in employees

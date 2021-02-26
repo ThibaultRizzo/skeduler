@@ -4,7 +4,6 @@ from datetime import timedelta
 from src.database import db, PkModel, PkCompanyModel, reference_col
 from src.enums import EventNature, EventStatus, EventType, ShiftSkillLevel
 from .dto import Period
-from .penalty import EVENT_WEIGHT_DICT
 from sqlalchemy import or_, and_
 
 employee_day_table = Table(
@@ -135,9 +134,9 @@ class EmployeeEvent(PkModel):
 
     def get_weight(self) -> int:
         if self.is_desired:
-            return -EVENT_WEIGHT_DICT.get(self.nature)
+            return -(self.nature.get_weight())
         else:
-            return EVENT_WEIGHT_DICT.get(self.nature)
+            return self.nature.get_weight()
 
     def __repr__(self):
         return "<EmployeeEvent: {} {} for {} day(s)>".format(

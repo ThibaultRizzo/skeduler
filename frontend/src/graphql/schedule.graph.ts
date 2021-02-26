@@ -15,6 +15,8 @@ const completeScheduleFragment = gql`
     }
     meta {
       createdAt
+      infeasibleConstraints
+      objective
     }
   }
 `;

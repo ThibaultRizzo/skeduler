@@ -131,9 +131,9 @@ class PkCompanyModel(PkModel):
         )
 
     @classmethod
-    def get_all_by_company_id(cls, company_id):
+    def get_all_by_company_id(cls, company_id, to_dict=True):
         return [
-            entity.to_dict()
+            entity.to_dict() if to_dict is True else entity
             for entity in cls.query.filter_by(company_id=company_id).all()
         ]
 

@@ -18,13 +18,20 @@ class Schedule(PkCompanyModel):
     )
     start_date = Column(Date, nullable=False)
     nb_days = Column(Integer, nullable=False)
+
     status = Column(Enum(SolverStatus), nullable=False)
+    objective = Column(Integer)
+    infeasible_cts = Column(String(256))
 
     def __repr__(self):
         return "<Schedule: {}>".format(self.id)
 
     def get_meta(self):
-        return {"createdAt": self.created_at}
+        return {
+            "createdAt": self.created_at,
+            "infeasibleConstraints": self.infeasible_cts,
+            "objective": self.objective,
+        }
 
     def get_schedule_per_day(self):
         [
@@ -35,27 +42,28 @@ class Schedule(PkCompanyModel):
         ] = Schedule.decode(self.encoded_schedule)
 
         # Add rest time
-        employee_nb = len(employee_list_id)
         shift_nb = len(shift_list_id)
         day_nb = len(day_list_id)
         shifts_per_employee = [
             wrap(e, day_nb) for e in wrap(binary_schedule, shift_nb * day_nb)
         ]
         sch = []
-        for d in range(day_nb):
-            day = day_list_id[d]
+        for d, day in enumerate(day_list_id):
             shifts = []
 
             # We skip first array of each set, as it refers to the implied rest time
             for s in range(1, shift_nb):
                 shift = shift_list_id[s]
-                shift_employee = None
-                for e in range(employee_nb):
-                    employee = employee_list_id[e]
-                    if shifts_per_employee[e][s][d] == "1":
-                        shift_employee = employee
-
-                shifts.append({"shift": shift, "employee": shift_employee})
+                shift_employee = next(
+                    (
+                        employee
+                        for e, employee in enumerate(employee_list_id)
+                        if shifts_per_employee[e][s][d] == "1"
+                    ),
+                    None,
+                )
+                if shift_employee is not None:
+                    shifts.append({"shift": shift, "employee": shift_employee})
 
             sch.append({"day": day, "shifts": shifts})
 
@@ -84,7 +92,17 @@ class Schedule(PkCompanyModel):
 
         return [encoded_schedule, employee_id_list, shift_id_list, day_id_list]
 
-    def to_schedule(bin_schedule, employees, base_shifts, days, period, status):
+    def to_schedule(
+        company_id,
+        bin_schedule,
+        employees,
+        base_shifts,
+        days,
+        period,
+        status,
+        objective,
+        infeasible_cts,
+    ):
         encoded_schedule = Schedule.encode(bin_schedule, employees, base_shifts, days)
         shifts = []
         for s, shift in enumerate(base_shifts):
@@ -93,14 +111,16 @@ class Schedule(PkCompanyModel):
         employees = []
         for (s, i) in enumerate(employees):
             ScheduleEmployee(order=i, employee_id=s["employee"])
-
         schedule = Schedule(
+            company_id=company_id,
             encoded_schedule=encoded_schedule,
             shifts=shifts,
             employees=employees,
             start_date=period.start_date,
             nb_days=period.nb_days,
             status=status,
+            objective=objective,
+            infeasible_cts=",".join(infeasible_cts),
         )
         return schedule
 

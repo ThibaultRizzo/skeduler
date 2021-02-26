@@ -75,6 +75,8 @@ type ScheduleDay {
 
 type ScheduleMeta {
   createdAt: Datetime!
+  infeasibleConstraints: String
+  objective: Int!
 }
 
 type CompleteSchedule {

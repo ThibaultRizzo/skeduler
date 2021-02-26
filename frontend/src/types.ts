@@ -192,6 +192,8 @@ export type ScheduleShift = {
 export type ScheduleMeta = {
   __typename?: 'ScheduleMeta';
   createdAt: Scalars['Datetime'];
+  infeasibleConstraints?: Maybe<Scalars['String']>;
+  objective: Scalars['Int'];
 };
 
 export type CompaniesPayload = {

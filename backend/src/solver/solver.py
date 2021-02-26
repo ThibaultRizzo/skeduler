@@ -5,10 +5,11 @@ import argparse
 from ortools.sat.python import cp_model
 from google.protobuf import text_format
 
-from .model import ScheduleCpModel
+from .solver_model import ScheduleCpModelFactory
 from .errors import SolverException
-from ..enums import ShiftSkillLevel, DayEnum
-from ..models import SolverPeriod, Schedule
+from src.enums import ShiftSkillLevel, DayEnum, SolverStatus
+from src.models import SolverPeriod, Schedule
+
 import logging
 
 _logger = logging.getLogger()
@@ -37,55 +38,48 @@ DEFAULT_OPTIONS = {"tolerated_delta_contract_hours": 15}
 REST_SYMBOL = "R"
 
 
-def solve_shift_scheduling(employees, base_shifts, period, opts=DEFAULT_OPTIONS):
+def solve_shift_scheduling(
+    rules, employees, base_shifts, period, company_id, opts=DEFAULT_OPTIONS
+):
     """Solves the shift scheduling problem."""
     validate_input(employees, base_shifts, period)
 
-    model = ScheduleCpModel(employees, base_shifts, period, opts)
-    work = model.matrice
+    model_factory = ScheduleCpModelFactory(rules, employees, base_shifts, period, opts)
+    model, solver, status, infeasible_cts = model_factory.solve_model()
+    # work = model.matrice
 
-    # Solve the model.
-    solver = cp_model.CpSolver()
-    solver.parameters.num_search_workers = 8
-    # if params:
-    #     text_format.Merge(params, solver.parameters)
-    solution_printer = cp_model.ObjectiveSolutionPrinter()
-    status = solver.SolveWithSolutionCallback(model, solution_printer)
+    # # Solve the model.
+    # solver = cp_model.CpSolver()
+    # solver.parameters.num_search_workers = 8
+    # # if params:
+    # #     text_format.Merge(params, solver.parameters)
+    # solution_printer = cp_model.ObjectiveSolutionPrinter()
+    # status = solver.SolveWithSolutionCallback(model, solution_printer)
+    # # print(solver.ResponseProto(), type(solver.ResponseProto()))
 
-    # print(solver.ResponseProto(), type(solver.ResponseProto()))
     # print(model.Proto().constraints)
     # print(solver.ResponseProto().solution_info)
 
-    # print('Penalties:')
-    # for i, var in enumerate(obj_bool_vars):
-    #     if solver.BooleanValue(var):
-    #         penalty = obj_bool_coeffs[i]
-    #         if penalty > 0:
-    #             print('  %s violated, penalty=%i' % (var.Name(), penalty))
-    #         else:
-    #             print('  %s fulfilled, gain=%i' % (var.Name(), -penalty))
-
-    # for i, var in enumerate(obj_int_vars):
-    #     if solver.Value(var) > 0:
-    #         print('  %s violated by %i, linear penalty=%i' %
-    #                 (var.Name(), solver.Value(var), obj_int_coeffs[i]))
-
     # Print solution.
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        _logger.info(infeasible_cts)
         encoded_schedule = "".join(
             [str(solver.Value(i[1])) for i in model.matrice.items()]
         )
 
         return Schedule.to_schedule(
+            company_id,
             encoded_schedule,
             model.employees,
             model.base_shifts,
             model.days,
             model.period,
-            status,
+            SolverStatus.by_status_code(status),
+            solver.ObjectiveValue(),
+            infeasible_cts,
         )
     else:
-        _logger.info(solver.ResponseStats())
+        # _logger.info(str(solver.ResponseStats()))
         return None
 
 

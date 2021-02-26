@@ -10,6 +10,7 @@ import { CompleteSchedule, Day, Employee, Shift } from "../../types";
 import Loader from "../Loader";
 import "../../styles/layout/pages/schedule.scss";
 import { executeFnOrOpenSnackbar } from "../../rxjs/crud.subject";
+import LabelValue from "../../components/common/LabelValue";
 
 function SchedulePage() {
   const [schedule, setSchedule] = useAsyncState<CompleteSchedule | null>(
@@ -17,9 +18,9 @@ function SchedulePage() {
     getSchedule
   );
   const [isLoading, setLoading] = useState(false);
-  const [dayDict, setDayDict] = useState<{ [key: string]: Day }>({});
-  const [shiftDict, setShiftDict] = useState<{ [key: string]: Shift }>({});
-  const [employeeDict, setEmployeeDict] = useState<{ [key: string]: Employee }>(
+  const [dayDict, setDayDict] = useState<Record<string, Day>>({});
+  const [shiftDict, setShiftDict] = useState<Record<string, Shift>>({});
+  const [employeeDict, setEmployeeDict] = useState<Record<string, Employee>>(
     {}
   );
 
@@ -65,32 +66,51 @@ function SchedulePage() {
         isLoading={isLoading || !isScheduleDisplayable}
         isEmpty={!schedule}
       >
-        <div className="schedule-grid">
-          {schedule &&
-            schedule!.schedule.map((row) => (
-              <div key={row.day} className="schedule-day">
-                <div className="schedule-day-header">
-                  {dayDict[row.day]?.name || ""}
-                </div>
-                {row.shifts.map((shift) => (
-                  <div
-                    key={row.day + shift.employee + shift.shift}
-                    className="schedule-day-shift"
-                  >
-                    <span className="shift-employee">
-                      {employeeDict[shift.employee]?.name || ""}
-                    </span>
-                    <hr />
-                    <span className="shift-title">
-                      {shiftDict[shift.shift]?.title || ""}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
-        </div>
+        {schedule && (
+          <>
+            <ScheduleGrid schedule={schedule} dayDict={dayDict} shiftDict={shiftDict} employeeDict={employeeDict} />
+            <LabelValue label="Ignored constraints" value={schedule.meta.infeasibleConstraints} />
+            <LabelValue label="Objective" value={schedule.meta.objective} />
+          </>)}
       </Loader>
     </article>
   );
+}
+
+type ScheduleGridProps = {
+  schedule: CompleteSchedule;
+  dayDict: Record<string, Day>;
+  shiftDict: Record<string, Shift>;
+  employeeDict: Record<string, Employee>;
+}
+
+const ScheduleGrid = ({ schedule, dayDict, employeeDict, shiftDict }: ScheduleGridProps) => {
+  return (
+    <div className="schedule-grid">
+      {
+        schedule.schedule.map((row) => (
+          <div key={row.day} className="schedule-day">
+            <div className="schedule-day-header">
+              {dayDict[row.day]?.name || ""}
+            </div>
+            {row.shifts.map((shift) => (
+              <div
+                key={row.day + shift.employee + shift.shift}
+                className="schedule-day-shift"
+              >
+                <span className="shift-employee">
+                  {employeeDict[shift.employee]?.name || ""}
+                </span>
+                <hr />
+                <span className="shift-title">
+                  {shiftDict[shift.shift]?.title || ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+    </div>
+
+  )
 }
 export default SchedulePage;
