@@ -10,12 +10,13 @@ const employeeFragment = gql`
     id
       name
       contract
-      workingDays {
-        id
-        name
-        order
-        active
-      }
+      availabilityMonday
+      availabilityTuesday
+      availabilityWednesday
+      availabilityThursday
+      availabilityFriday
+      availabilitySaturday
+      availabilitySunday
       skills {
         level
         shiftId

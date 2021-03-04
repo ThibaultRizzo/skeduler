@@ -45,11 +45,7 @@ def mutation(func_name, inject_company_id=True):
             except IntegrityError as e:
                 payload = getErrorPayload(e, getPostgreSQLMessage(e))
             except ValueError as e:  # date format errors
-                payload = getErrorPayload(
-                    e,
-                    f"Incorrect date format provided. Date should be in "
-                    f"the format dd-mm-yyyy",
-                )
+                payload = getErrorPayload(e, "ValueError" + str(e))
             except InvalidDateError as e:  # date format errors
                 payload = getErrorPayload(
                     e,

@@ -88,6 +88,8 @@ export function buildReadListSubject<T extends BaseCRUDRecord, R = []>(fetchAll:
     };
 
     if (fetchFirst) {
+        console.log("Fetch");
+
         fetchSubject();
     }
     return {

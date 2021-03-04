@@ -69,6 +69,9 @@ class Schedule(PkCompanyModel):
 
         return {"schedule": sch, "meta": self.get_meta()}
 
+    def get_bin_schedule(self):
+        return self.encoded_schedule.split(" ")[3]
+
     def encode(bin_schedule, employees, shifts, working_days):
         encoded_employees = "E:" + "|".join(str(e.id) for e in employees)
         encoded_shifts = "S:" + "|".join(str(s.id) for s in shifts)
@@ -125,6 +128,7 @@ class Schedule(PkCompanyModel):
         return schedule
 
     def print(self, employees, shifts, working_days):
+        _logger.info(f"Objective: {self.objective}")
         largest_title_size = len(max(shifts, key=lambda s: len(s.title)).title)
         cell_size = (
             largest_title_size

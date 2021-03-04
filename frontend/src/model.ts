@@ -1,9 +1,7 @@
-import { CreateEmployeeInput, Shift, Employee, EmployeeEvent, CreateEventInput, CreateSequenceRuleInput, CompanySequenceRule, CompanyTransitionRule, CreateTransitionRuleInput } from "./types";
+import { CreateEmployeeInput, Shift, Employee, EmployeeEvent, CreateEventInput, CreateSequenceRuleInput, CompanySequenceRule, CompanyTransitionRule, CreateTransitionRuleInput, EmployeeAvailability, DayEnum } from "./types";
 
 
 export type DraftEmployee = CreateEmployeeInput
-export type UpdatedEmployee = Omit<Employee, 'id' | 'workingDays' | 'skills'> & Pick<CreateEmployeeInput, 'workingDays' | 'skills'>;
-
 
 export type Draft<T> = Omit<T, 'id'>;
 
@@ -11,11 +9,10 @@ export type WithId<T> = T & {
     id: string;
 }
 
-export function employeetoDraft({ contract, name, skills, workingDays }: Employee): DraftEmployee {
+export function employeetoDraft({ id, skills, ...employee }: Employee): DraftEmployee {
     return {
-        contract, name,
-        skills: skills.map(({ shiftId, level }) => ({ level, shiftId: shiftId })) || [],
-        workingDays: workingDays?.map(d => d.name) || []
+        ...employee,
+        skills: skills.map(({ shiftId, level }) => ({ level, shiftId: shiftId })) || []
     }
 }
 
@@ -34,4 +31,17 @@ export function sequenceRuleToDraft({ id, ...rest }: CompanySequenceRule): Creat
 
 export function transitionRuleToDraft({ id, ...rest }: CompanyTransitionRule): CreateTransitionRuleInput {
     return rest;
+}
+
+export function getEmployeeDays(employee: Employee, availability: EmployeeAvailability): string[] {
+    const days = Object.keys(DayEnum);
+    return [
+        employee.availabilityMonday,
+        employee.availabilityTuesday,
+        employee.availabilityWednesday,
+        employee.availabilityThursday,
+        employee.availabilityFriday,
+        employee.availabilitySaturday,
+        employee.availabilitySunday
+    ].map((a, i) => a === availability ? days[i] : null).filter(Boolean) as string[];
 }

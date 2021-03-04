@@ -11,6 +11,12 @@ enum DayEnum {
   SUNDAY
 }
 
+enum EmployeeAvailability {
+    WORKING
+    AVAILABLE
+    NOT_WORKING
+}
+
 enum ShiftSkillLevel {
   NO_SKILL
   LEARNING
@@ -95,7 +101,13 @@ type Employee {
   id: String!
   name: String!
   contract: Int!
-  workingDays: [Day!]
+  availabilityMonday: EmployeeAvailability!
+  availabilityTuesday: EmployeeAvailability!
+  availabilityWednesday: EmployeeAvailability!
+  availabilityThursday: EmployeeAvailability!
+  availabilityFriday: EmployeeAvailability!
+  availabilitySaturday: EmployeeAvailability!
+  availabilitySunday: EmployeeAvailability!
   skills: [EmployeeSkill!]!
   events: [EmployeeEvent!]!
 }
@@ -257,7 +269,13 @@ input ShiftSkillInput {
 input CreateEmployeeInput {
   name: String!
   contract: Int!
-  workingDays: [DayEnum!]!
+  availabilityMonday: EmployeeAvailability!
+  availabilityTuesday: EmployeeAvailability!
+  availabilityWednesday: EmployeeAvailability!
+  availabilityThursday: EmployeeAvailability!
+  availabilityFriday: EmployeeAvailability!
+  availabilitySaturday: EmployeeAvailability!
+  availabilitySunday: EmployeeAvailability!
   skills: [ShiftSkillInput!]!
 }
 
@@ -265,7 +283,13 @@ input UpdateEmployeeInput {
   id: String!
   name: String!
   contract: Int!
-  workingDays: [DayEnum!]!
+  availabilityMonday: EmployeeAvailability!
+  availabilityTuesday: EmployeeAvailability!
+  availabilityWednesday: EmployeeAvailability!
+  availabilityThursday: EmployeeAvailability!
+  availabilityFriday: EmployeeAvailability!
+  availabilitySaturday: EmployeeAvailability!
+  availabilitySunday: EmployeeAvailability!
   skills: [ShiftSkillInput!]!
 }
 

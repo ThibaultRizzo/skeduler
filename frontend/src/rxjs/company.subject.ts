@@ -1,5 +1,5 @@
 import { BehaviorArrayLikeSubject } from './subject';
-import { getCompany, getCompanies, createSequenceRule, updateSequenceRule, deleteSequenceRule, getSequenceRules, createTransitionRule, deleteTransitionRule, getTransitionRules, updateTransitionRule } from './../api/company.api';
+import { getCompanies, createSequenceRule, updateSequenceRule, deleteSequenceRule, getSequenceRules, createTransitionRule, deleteTransitionRule, getTransitionRules, updateTransitionRule } from './../api/company.api';
 import { BehaviorSubject } from "rxjs"
 import { Company, CompanySequenceRule, CompanyTransitionRule } from "../types";
 import { tokenSubject } from "./auth.subject";
@@ -11,12 +11,16 @@ export const buildCompanySubject = function () {
     const subject = new BehaviorSubject<Company | null>(null);
 
     const fetchCompany = async (id: string) => {
-        // TODO: When auth is coded --> const company = await getCompany(id);
-        const company = await getCompanies().then(c => isApiError(c) ? (c as ApiError) : ((c as Company[])[0] as Company))
-        executeFnOrOpenSnackbar((v) => subject.next(v), company)
-        return getResultElseNull(company);
+        if (subject.value?.id !== id) {
+            const maybeCompany = await getCompanies();
+            const company = isApiError(maybeCompany) ? (maybeCompany as ApiError) : ((maybeCompany as Company[])[0] as Company);
+            executeFnOrOpenSnackbar((v) => subject.next(v), company)
+            return getResultElseNull(company);
+        }
     };
-    tokenSubject.subject.subscribe(async v => v !== null ? await fetchCompany(tokenSubject.parseToken() as string) : null)
+    tokenSubject.subject.subscribe(async v => {
+        return v !== null ? await fetchCompany(tokenSubject.parseToken() as string) : null
+    })
     subject.subscribe(s => sessionStorage.setItem('companyId', s ? s.id : ""))
     return {
         subject,

@@ -2,30 +2,55 @@ from sqlalchemy import Table, Column, String, ForeignKey, Integer, Date, Enum, B
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import timedelta
 from src.database import db, PkModel, PkCompanyModel, reference_col
-from src.enums import EventNature, EventStatus, EventType, ShiftSkillLevel
+from src.enums import (
+    EventNature,
+    EventStatus,
+    EventType,
+    ShiftSkillLevel,
+    EmployeeAvailability,
+)
 from .dto import Period
 from sqlalchemy import or_, and_
-
-employee_day_table = Table(
-    "employee_day",
-    db.Model.metadata,
-    Column("employee_id", String(36), ForeignKey("employee.id", ondelete="CASCADE")),
-    Column("day_id", String(36), ForeignKey("day.id", ondelete="CASCADE")),
-)
 
 
 class Employee(PkCompanyModel):
     name = Column(String(64), unique=True)
     contract = Column(Integer)
 
-    working_days = db.relationship(
-        "Day", secondary=employee_day_table, cascade="all, delete", passive_deletes=True
+    availability_monday = Column(Enum(EmployeeAvailability), default="NOT_WORKING")
+    availability_tuesday = Column(Enum(EmployeeAvailability), default="NOT_WORKING")
+    availability_wednesday = Column(Enum(EmployeeAvailability), default="NOT_WORKING")
+    availability_thursday = Column(
+        Enum(EmployeeAvailability), default=EmployeeAvailability.NOT_WORKING
+    )
+    availability_friday = Column(
+        Enum(EmployeeAvailability), default=EmployeeAvailability.NOT_WORKING
+    )
+    availability_saturday = Column(
+        Enum(EmployeeAvailability), default=EmployeeAvailability.NOT_WORKING
+    )
+    availability_sunday = Column(
+        Enum(EmployeeAvailability), default=EmployeeAvailability.NOT_WORKING
     )
 
     skills = db.relationship("EmployeeSkill", cascade="all, delete, delete-orphan")
     events = db.relationship(
         "EmployeeEvent", backref="employee", cascade="all, delete, delete-orphan"
     )
+
+    def is_extra(self):
+        return self.contract == 0
+
+    def get_availability(self):
+        return [
+            self.availability_monday,
+            self.availability_tuesday,
+            self.availability_wednesday,
+            self.availability_thursday,
+            self.availability_friday,
+            self.availability_saturday,
+            self.availability_sunday,
+        ]
 
     # Returns events VALIDATED, matching the period
     def get_mandatory_events(self, period):
@@ -107,14 +132,6 @@ class EmployeeEvent(PkModel):
     status = Column(Enum(EventStatus), nullable=False)
     nature = Column(Enum(EventNature), nullable=False)
     is_desired = Column(Boolean, nullable=False)
-
-    # @hybrid_property
-    # def is_desired(self):
-    #     return self.type in [EventType.REQUEST]
-
-    # @is_desired.expression
-    # def is_desired(self):
-    #     return self.type
 
     @hybrid_property
     def end_date(self):

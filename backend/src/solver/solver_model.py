@@ -1,27 +1,54 @@
 from ortools.sat.python import cp_model
 from src.models import REST_SHIFT
-from src.enums import ShiftSkillLevel, SequenceRuleType, SCHEDULE_WEIGHT_DICT
+from src.enums import (
+    ShiftSkillLevel,
+    SequenceRuleType,
+    SCHEDULE_WEIGHT_DICT,
+    EmployeeAvailability,
+    SolverStatus,
+)
 from src.utils import chunk
 from .base import (
     add_soft_sequence_constraint,
     add_soft_sum_constraint,
     negated_bounded_span,
 )
-from .errors import ConflictingConstraintException
+from .errors import ConflictingConstraintException, SolverException
+from src.models import SolverPeriod, Schedule
 import logging
 
 # from flask import current_app
 
 _logger = logging.getLogger()
 
+DEFAULT_OPTIONS = {"tolerated_delta_contract_hours": 15}
+
 
 class ScheduleCpModelFactory:
-    def __init__(self, rules, employees, base_shifts, period, config):
+    def __init__(
+        self, company_id, rules, employees, base_shifts, period, config=DEFAULT_OPTIONS
+    ):
+        self.company_id = company_id
         self.rules = rules
         self.employees = employees
         self.base_shifts = base_shifts
         self.period = period
         self.config = config
+        self.validate_input()
+
+    def validate_input(self):
+        if self.employees is None:
+            raise SolverException("No employee list was passed to the solver")
+        elif len(self.employees) == 0:
+            raise SolverException(
+                "At least one employee needs to be passed to the solver"
+            )
+        elif self.base_shifts is None:
+            raise SolverException("No shift list was passed to the solver")
+        elif len(self.base_shifts) == 0:
+            raise SolverException("At least one shift needs to be passed to the solver")
+        elif type(self.period) is not SolverPeriod:
+            raise SolverException("Period needs to be a valid SolverPeriod instance")
 
     def solve_model(self):
 
@@ -41,7 +68,7 @@ class ScheduleCpModelFactory:
                 self.config,
             )
             solver, status = model.solve()
-        return model, solver, status, infeasible_cts
+        return ScheduleSolution(self.company_id, model, solver, status, infeasible_cts)
 
     def find_infeasible_cts(self):
         all_hard_cts = (
@@ -77,6 +104,7 @@ class ScheduleCpModel(cp_model.CpModel):
     hard_and_soft_ct_list = [
         "add_employee_contract_ct",  # Employee contracts
         "add_employee_shift_mastery_ct",  # Employee Shift mastery
+        "add_employee_availability_ct",  # Employee Availabilit
         "add_shift_sequence_ct",  # Shift sequence
         "add_weekly_sum_ct",  # Shift sequence sum
         "add_penalized_transitions_ct",  # Penalized transitions,
@@ -154,21 +182,23 @@ class ScheduleCpModel(cp_model.CpModel):
         #     text_format.Merge(params, solver.parameters)
         solution_printer = cp_model.ObjectiveSolutionPrinter()
         status = solver.SolveWithSolutionCallback(self, solution_printer)
-        _logger.info("Penalties:")
-        for i, var in enumerate(self.obj_bool_vars):
-            if solver.BooleanValue(var):
-                penalty = self.obj_bool_coeffs[i]
-                if penalty > 0:
-                    _logger.info("  %s violated, penalty=%i" % (var.Name(), penalty))
-                else:
-                    _logger.info("  %s fulfilled, gain=%i" % (var.Name(), -penalty))
+        if status != cp_model.INFEASIBLE:
+            for i, var in enumerate(self.obj_bool_vars):
+                if solver.BooleanValue(var):
+                    penalty = self.obj_bool_coeffs[i]
+                    if penalty > 0:
+                        _logger.info(
+                            "  %s violated, penalty=%i" % (var.Name(), penalty)
+                        )
+                    else:
+                        _logger.info("  %s fulfilled, gain=%i" % (var.Name(), -penalty))
 
-        for i, var in enumerate(self.obj_int_vars):
-            if solver.Value(var) > 0:
-                _logger.info(
-                    "  %s violated by %i, linear penalty=%i"
-                    % (var.Name(), solver.Value(var), self.obj_int_coeffs[i])
-                )
+            for i, var in enumerate(self.obj_int_vars):
+                if solver.Value(var) > 0:
+                    _logger.info(
+                        "  %s violated by %i, linear penalty=%i"
+                        % (var.Name(), solver.Value(var), self.obj_int_coeffs[i])
+                    )
         return solver, status
 
     ###############
@@ -208,16 +238,45 @@ class ScheduleCpModel(cp_model.CpModel):
         for e, s, d, v in fixed_assignments:
             self.Add(self.matrice[e, s, d] == v)
 
+    ##
+    # Ensures employee does not work LESS than his contract over the given period
     def add_employee_total_contract_ct(self):
         for e, employee in enumerate(self.employees):
-            self.Add(
-                sum(
-                    self.matrice[e, s, d] * shift.duration
-                    for s, shift in enumerate(self.shifts)
-                    for d in range(self.nb_days)
+            if not employee.is_extra():
+                works = [
+                    sum(
+                        self.matrice[e, s, d] * shift.duration
+                        for s, shift in enumerate(self.shifts)
+                        for d in range(self.nb_days)
+                    )
+                ]
+                extra_shift_penalty = (
+                    SCHEDULE_WEIGHT_DICT.get("MUST")
+                    if employee.is_extra()
+                    else SCHEDULE_WEIGHT_DICT.get("IMPORTANT")
                 )
-                == self.nb_weeks * employee.contract
-            )
+                variables, coeffs = add_soft_sum_constraint(
+                    self,
+                    works,
+                    self.nb_weeks * employee.contract,
+                    self.nb_weeks * employee.contract,
+                    0,
+                    self.nb_weeks * employee.contract,
+                    2000000000,
+                    5,
+                    "diff_sum_hours_total_contract(employee %i)" % (e),
+                )
+                # _logger.info(variables)
+                self.obj_int_vars.extend(variables)
+                self.obj_int_coeffs.extend(coeffs)
+                # self.Add(
+                #     sum(
+                #         self.matrice[e, s, d] * shift.duration
+                #         for s, shift in enumerate(self.shifts)
+                #         for d in range(self.nb_days)
+                #     )
+                #     >= self.nb_weeks * employee.contract
+                # )
 
     def add_employee_contract_ct(self):
         tolerated_delta_contract_hours = self.config["tolerated_delta_contract_hours"]
@@ -232,17 +291,21 @@ class ScheduleCpModel(cp_model.CpModel):
                     )
                     for s, shift in enumerate(self.shifts)
                 ]
+                extra_shift_penalty = (
+                    SCHEDULE_WEIGHT_DICT.get("MUST")
+                    if employee.is_extra()
+                    else SCHEDULE_WEIGHT_DICT.get("SHOULD")
+                )
                 # TODO: Fine-tune penalty values
                 variables, coeffs = add_soft_sum_constraint(
                     self,
                     works,
                     0,  # -tolerated_delta_contract_hours + employee.contract,
                     employee.contract,
-                    SCHEDULE_WEIGHT_DICT.get("IMPORTANT"),
+                    SCHEDULE_WEIGHT_DICT.get("SHOULD"),
                     employee.contract,
-                    2
-                    * employee.contract,  # tolerated_delta_contract_hours + employee.contract,
-                    SCHEDULE_WEIGHT_DICT.get("IMPORTANT"),
+                    7 * 204,
+                    SCHEDULE_WEIGHT_DICT.get("SHOULD"),
                     "diff_sum_hours_contract(employee %i, week %i)" % (e, w),
                 )
                 self.obj_int_vars.extend(variables)
@@ -339,23 +402,44 @@ class ScheduleCpModel(cp_model.CpModel):
         excess_cover_penalties = ScheduleCpModel.get_excess_cover_penalties(
             self.base_shifts
         )
+
         for s in range(1, self.nb_shifts):
             for d in range(self.nb_days):
                 works = [self.matrice[e, s, d] for e in range(self.nb_employees)]
                 # Ignore Off shift.
                 min_demand = cover_demands[s - 1][d]
-                worked = self.NewIntVar(min_demand, self.nb_employees, "")
+                # _logger.info(min_demand)
+
+                worked = self.NewIntVar(
+                    0, self.nb_employees, f"worked(shift={s}, day={d}"
+                )
                 self.Add(worked == sum(works))
                 if min_demand == 0:
                     self.Add(worked == 0)
                 else:
                     over_penalty = excess_cover_penalties[s - 1]
                     if over_penalty > 0:
-                        name = "excess_demand(shift=%i, day=%i)" % (s, d)
-                        excess = self.NewIntVar(0, self.nb_employees - min_demand, name)
-                        self.Add(excess == worked - min_demand)
-                        self.obj_int_vars.append(excess)
-                        self.obj_int_coeffs.append(over_penalty)
+                        variables, coeffs = add_soft_sum_constraint(
+                            self,
+                            works,
+                            0,
+                            min_demand,
+                            SCHEDULE_WEIGHT_DICT.get("CRITICAL"),
+                            min_demand,
+                            self.nb_employees,
+                            SCHEDULE_WEIGHT_DICT.get("VERY_IMPORTANT"),
+                            f"excess_demand(shift={s}, day={d})",
+                        )
+                        self.obj_int_vars.extend(variables)
+                        self.obj_int_coeffs.extend(coeffs)
+
+                        # name = f"excess_demand(shift={s}, day={d})"
+                        # excess = self.NewIntVar(
+                        #     -min_demand, self.nb_employees - min_demand, name
+                        # )
+                        # self.Add(excess == worked - min_demand)
+                        # self.obj_int_vars.append(excess)
+                        # self.obj_int_coeffs.append(over_penalty)
 
     def add_employee_shift_mastery_ct(self):
         employee_shift_mastery = ScheduleCpModel.get_employee_shift_mastery(
@@ -392,6 +476,20 @@ class ScheduleCpModel(cp_model.CpModel):
                         )
                         self.obj_int_vars.extend(variables)
                         self.obj_int_coeffs.extend(coeffs)
+
+    def add_employee_availability_ct(self):
+        employees_availability = [e.get_availability() for e in self.employees]
+        for d, day in enumerate(self.days):
+            if day.active:
+                for e, availabilities in enumerate(employees_availability):
+                    av = availabilities[day.order - 1]
+                    if av is EmployeeAvailability.NOT_WORKING:
+                        self.Add(self.matrice[e, 0, d] == 1)
+                    elif av is EmployeeAvailability.AVAILABLE:
+                        self.obj_bool_vars.append(self.matrice[e, 0, d])
+                        self.obj_bool_coeffs.append(
+                            -EmployeeAvailability.get_availability_penalty()
+                        )
 
     ################
     # Static Funcs #
@@ -523,3 +621,35 @@ class ScheduleCpModel(cp_model.CpModel):
             list(find_level(employee.skills, shift) for shift in shifts)
             for employee in employees
         )
+
+
+class ScheduleSolution:
+    def __init__(self, company_id, model, solver, status, infeasible_cts):
+        self.company_id = company_id
+        self.model = model
+        self.solver = solver
+        self.infeasible_cts = infeasible_cts
+        self.status = status
+        self.schedule = self.get_schedule()
+
+    def get_schedule(self):
+        if self.status == cp_model.OPTIMAL or self.status == cp_model.FEASIBLE:
+            _logger.info(self.infeasible_cts)
+            encoded_schedule = "".join(
+                [str(self.solver.Value(i[1])) for i in self.model.matrice.items()]
+            )
+
+            return Schedule.to_schedule(
+                self.company_id,
+                encoded_schedule,
+                self.model.employees,
+                self.model.base_shifts,
+                self.model.days,
+                self.model.period,
+                SolverStatus.by_status_code(self.status),
+                self.solver.ObjectiveValue(),
+                self.infeasible_cts,
+            )
+        else:
+            # _logger.info(str(solver.ResponseStats()))
+            return None

@@ -103,10 +103,22 @@ export type Employee = {
   id: Scalars['String'];
   name: Scalars['String'];
   contract: Scalars['Int'];
-  workingDays?: Maybe<Array<Day>>;
+  availabilityMonday: EmployeeAvailability;
+  availabilityTuesday: EmployeeAvailability;
+  availabilityWednesday: EmployeeAvailability;
+  availabilityThursday: EmployeeAvailability;
+  availabilityFriday: EmployeeAvailability;
+  availabilitySaturday: EmployeeAvailability;
+  availabilitySunday: EmployeeAvailability;
   skills: Array<EmployeeSkill>;
   events: Array<EmployeeEvent>;
 };
+
+export enum EmployeeAvailability {
+  Working = 'WORKING',
+  Available = 'AVAILABLE',
+  NotWorking = 'NOT_WORKING'
+}
 
 export type EmployeeSkill = {
   __typename?: 'EmployeeSkill';
@@ -432,7 +444,13 @@ export type Payload = {
 export type CreateEmployeeInput = {
   name: Scalars['String'];
   contract: Scalars['Int'];
-  workingDays: Array<DayEnum>;
+  availabilityMonday: EmployeeAvailability;
+  availabilityTuesday: EmployeeAvailability;
+  availabilityWednesday: EmployeeAvailability;
+  availabilityThursday: EmployeeAvailability;
+  availabilityFriday: EmployeeAvailability;
+  availabilitySaturday: EmployeeAvailability;
+  availabilitySunday: EmployeeAvailability;
   skills: Array<ShiftSkillInput>;
 };
 
@@ -452,7 +470,13 @@ export type UpdateEmployeeInput = {
   id: Scalars['String'];
   name: Scalars['String'];
   contract: Scalars['Int'];
-  workingDays: Array<DayEnum>;
+  availabilityMonday: EmployeeAvailability;
+  availabilityTuesday: EmployeeAvailability;
+  availabilityWednesday: EmployeeAvailability;
+  availabilityThursday: EmployeeAvailability;
+  availabilityFriday: EmployeeAvailability;
+  availabilitySaturday: EmployeeAvailability;
+  availabilitySunday: EmployeeAvailability;
   skills: Array<ShiftSkillInput>;
 };
 

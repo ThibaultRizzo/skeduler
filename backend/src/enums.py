@@ -38,6 +38,15 @@ class DayEnum(GraphEnum):
         return DayEnum.get_by_order(date.isoweekday())
 
 
+class EmployeeAvailability(GraphEnum):
+    WORKING = "WORKING"
+    AVAILABLE = "AVAILABLE"
+    NOT_WORKING = "NOT_WORKING"
+
+    def get_availability_penalty():
+        return 5
+
+
 class ShiftSkillLevel(GraphEnum):
     NO_SKILL = "NO_SKILL"
     LEARNING = "LEARNING"
@@ -132,10 +141,12 @@ all_enums = [
     EventNature,
     EventStatus,
     EventType,
+    EmployeeAvailability,
 ]
 
 
 SCHEDULE_WEIGHT_DICT = {
+    "CRITICAL": 100,
     "VERY_IMPORTANT": 30,
     "IMPORTANT": 20,
     "MUST": 10,

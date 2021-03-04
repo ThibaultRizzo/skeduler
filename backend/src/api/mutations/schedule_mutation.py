@@ -1,6 +1,7 @@
 from . import mutation
 from src.models import Day, Shift, Employee, SolverPeriod, Company
-from src.solver.solver import solve_shift_scheduling, SolverException
+from src.solver.solver import solve_shift_scheduling
+from src.solver.errors import SolverException
 from src.database import db
 
 

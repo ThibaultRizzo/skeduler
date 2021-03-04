@@ -11,10 +11,6 @@ function EmployeePage() {
     { key: "name" },
     { key: "contract" },
     {
-      key: "workingDays",
-      formatValue: (days: Day[]) => days.map((d) => d.name).join(","),
-    },
-    {
       key: "skills",
       formatValue: (skills: EmployeeSkill[]) => {
         return skills

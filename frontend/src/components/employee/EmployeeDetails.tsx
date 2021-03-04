@@ -1,4 +1,5 @@
-import { Employee } from "../../types";
+import { getEmployeeDays } from "../../model";
+import { Employee, EmployeeAvailability } from "../../types";
 import LabelValue from "../common/LabelValue";
 import EmployeeAgenda from "./EmployeeAgenda";
 import EmployeeEventList from "./EmployeeEventList";
@@ -18,8 +19,12 @@ const EmployeeDetails = ({ employee }: EmployeeDetailsProps) => {
           <LabelValue label="ID" value={employee.id} />
           <LabelValue label="Contract" value={employee.contract} />
           <LabelValue
-            label="Contract"
-            value={employee.workingDays?.map((w) => w.name).join(",")}
+            label="Working Days"
+            value={getEmployeeDays(employee, EmployeeAvailability.Working).join(",")}
+          />
+          <LabelValue
+            label="Available Days"
+            value={getEmployeeDays(employee, EmployeeAvailability.Available).join(",")}
           />
           <LabelValue
             label="Skills"

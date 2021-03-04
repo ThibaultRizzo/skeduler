@@ -9,8 +9,7 @@ from src.utils import pop_keys
 @mutation("createEmployee")
 def resolve_create_employee(_, info, company_id, input):
     input["company_id"] = company_id
-    days, skills, rest = pop_keys(input, ["working_days", "skills"])
-    rest["working_days"] = Day.get_all_by_company_and_name(company_id, days)
+    skills, rest = pop_keys(input, ["skills"])
     rest["skills"] = [
         EmployeeSkill(level=s["level"], shift_id=s["shift_id"]) for s in skills
     ]
@@ -20,10 +19,8 @@ def resolve_create_employee(_, info, company_id, input):
 @mutation("updateEmployee")
 def resolve_update_employee(_, info, company_id, input):
     employee_id = input["id"]
-    days, skills, rest = pop_keys(input, ["working_days", "skills"])
+    skills, rest = pop_keys(input, ["skills"])
     employee = Employee.get_or_throw(employee_id)
-
-    rest["working_days"] = Day.get_all_by_company_and_name(company_id, days)
     employee.updateSkills(skills)
 
     return employee.update(**rest).to_dict()
