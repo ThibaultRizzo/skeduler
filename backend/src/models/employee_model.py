@@ -66,9 +66,7 @@ class Employee(PkCompanyModel):
         return [
             e
             for e in self.events
-            if e.belongs_to(period)
-            and e.nature is not EventNature.MANDATORY
-            and e.status is EventStatus.CONFIRMED
+            if e.belongs_to(period) and e.status is EventStatus.CONFIRMED
         ]
 
     def __repr__(self):

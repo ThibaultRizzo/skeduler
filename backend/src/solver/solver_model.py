@@ -3,14 +3,15 @@ from src.models import REST_SHIFT
 from src.enums import (
     ShiftSkillLevel,
     SequenceRuleType,
-    SCHEDULE_WEIGHT_DICT,
     EmployeeAvailability,
     SolverStatus,
+    Penalty,
 )
 from src.utils import chunk
 from .base import (
     add_soft_sequence_constraint,
     add_soft_sum_constraint,
+    add_soft_int_sum_constraint,
     negated_bounded_span,
 )
 from .errors import ConflictingConstraintException, SolverException
@@ -98,7 +99,6 @@ class ScheduleCpModel(cp_model.CpModel):
     hard_ct_list = [
         "add_one_shift_per_day_ct",  # Maximum one shift per day.
         "add_inactive_days_assignments",  # Inactive days
-        "add_mandatory_events_assignments",  # Mandatory events
         "add_employee_total_contract_ct",  # Monthly contract hour per employee
     ]
     hard_and_soft_ct_list = [
@@ -165,12 +165,12 @@ class ScheduleCpModel(cp_model.CpModel):
     def set_objective(self):
         self.Minimize(
             sum(
-                self.obj_bool_vars[i] * self.obj_bool_coeffs[i]
-                for i in range(len(self.obj_bool_vars))
+                value * self.obj_bool_coeffs[i]
+                for i, value in enumerate(self.obj_bool_vars)
             )
             + sum(
-                self.obj_int_vars[i] * self.obj_int_coeffs[i]
-                for i in range(len(self.obj_int_vars))
+                value * self.obj_int_coeffs[i]
+                for i, value in enumerate(self.obj_int_vars)
             )
         )
 
@@ -187,18 +187,15 @@ class ScheduleCpModel(cp_model.CpModel):
                 if solver.BooleanValue(var):
                     penalty = self.obj_bool_coeffs[i]
                     if penalty > 0:
-                        _logger.info(
-                            "  %s violated, penalty=%i" % (var.Name(), penalty)
-                        )
+                        _logger.info(f"  {var.Name()} violated, penalty={penalty}")
                     else:
-                        _logger.info("  %s fulfilled, gain=%i" % (var.Name(), -penalty))
-
+                        _logger.info(f"  {var.Name()} violated, penalty={-penalty}")
             for i, var in enumerate(self.obj_int_vars):
                 if solver.Value(var) > 0:
                     _logger.info(
-                        "  %s violated by %i, linear penalty=%i"
-                        % (var.Name(), solver.Value(var), self.obj_int_coeffs[i])
+                        f"  {var.Name()} violated by {solver.Value(var)}, linear penalty={self.obj_int_coeffs[i]}"
                     )
+
         return solver, status
 
     ###############
@@ -225,99 +222,82 @@ class ScheduleCpModel(cp_model.CpModel):
             {"fixed_assignments": conflicting_assignments}
         )
 
-    def add_mandatory_events_assignments(self):
-        (
-            fixed_assignments,
-            conflicting_assignments,
-        ) = ScheduleCpModel.get_mandatory_events_assignments(
-            self.period, self.employees, self.shifts
-        )
-        self.conflicting_assignments.update(
-            {"fixed_assignments": conflicting_assignments}
-        )
-        for e, s, d, v in fixed_assignments:
-            self.Add(self.matrice[e, s, d] == v)
-
     ##
     # Ensures employee does not work LESS than his contract over the given period
     def add_employee_total_contract_ct(self):
         for e, employee in enumerate(self.employees):
-            if not employee.is_extra():
-                works = [
-                    sum(
-                        self.matrice[e, s, d] * shift.duration
-                        for s, shift in enumerate(self.shifts)
-                        for d in range(self.nb_days)
-                    )
-                ]
-                extra_shift_penalty = (
-                    SCHEDULE_WEIGHT_DICT.get("MUST")
-                    if employee.is_extra()
-                    else SCHEDULE_WEIGHT_DICT.get("IMPORTANT")
+            works = [
+                sum(
+                    self.matrice[e, s, d] * shift.duration
+                    for s, shift in enumerate(self.shifts)
+                    for d in range(self.nb_days)
                 )
-                variables, coeffs = add_soft_sum_constraint(
-                    self,
-                    works,
-                    self.nb_weeks * employee.contract,
-                    self.nb_weeks * employee.contract,
-                    0,
-                    self.nb_weeks * employee.contract,
-                    2000000000,
-                    5,
-                    "diff_sum_hours_total_contract(employee %i)" % (e),
-                )
-                # _logger.info(variables)
-                self.obj_int_vars.extend(variables)
-                self.obj_int_coeffs.extend(coeffs)
-                # self.Add(
-                #     sum(
-                #         self.matrice[e, s, d] * shift.duration
-                #         for s, shift in enumerate(self.shifts)
-                #         for d in range(self.nb_days)
-                #     )
-                #     >= self.nb_weeks * employee.contract
-                # )
+            ]
+            extra_shift_penalty = (
+                Penalty.HIGH.value if employee.is_extra() else Penalty.LOW.value
+            )
+            variables, coeffs = add_soft_int_sum_constraint(
+                self,
+                works,
+                self.nb_weeks * 7 * 24,
+                0,
+                self.nb_weeks * employee.contract,
+                100,
+                self.nb_weeks * employee.contract,
+                self.nb_weeks * 7 * 24,
+                extra_shift_penalty,
+                f"diff_sum_hours_total_contract(employee {e})",
+            )
+            self.obj_int_vars.extend(variables)
+            self.obj_int_coeffs.extend(coeffs)
 
     def add_employee_contract_ct(self):
-        tolerated_delta_contract_hours = self.config["tolerated_delta_contract_hours"]
-
         # Employee hour contract constraints
         for w, week in enumerate(self.weeks):
             for e, employee in enumerate(self.employees):
-                works = [
-                    sum(
-                        self.matrice[e, s, d] * shift.duration
-                        for d in range(w * 7, (w + 1) * 7)
+                if not employee.is_extra():
+                    works = [
+                        sum(
+                            self.matrice[e, s, d] * shift.duration
+                            for d in range(w * 7, (w + 1) * 7)
+                        )
+                        for s, shift in enumerate(self.shifts)
+                    ]
+                    variables, coeffs = add_soft_int_sum_constraint(
+                        self,
+                        works,
+                        7 * 24,
+                        0,
+                        employee.contract,
+                        Penalty.LOW.value,
+                        employee.contract,
+                        7 * 24,
+                        Penalty.LOW.value,
+                        "diff_sum_hours_contract(employee %i, week %i)" % (e, w),
                     )
-                    for s, shift in enumerate(self.shifts)
-                ]
-                extra_shift_penalty = (
-                    SCHEDULE_WEIGHT_DICT.get("MUST")
-                    if employee.is_extra()
-                    else SCHEDULE_WEIGHT_DICT.get("SHOULD")
-                )
-                # TODO: Fine-tune penalty values
-                variables, coeffs = add_soft_sum_constraint(
-                    self,
-                    works,
-                    0,  # -tolerated_delta_contract_hours + employee.contract,
-                    employee.contract,
-                    SCHEDULE_WEIGHT_DICT.get("SHOULD"),
-                    employee.contract,
-                    7 * 204,
-                    SCHEDULE_WEIGHT_DICT.get("SHOULD"),
-                    "diff_sum_hours_contract(employee %i, week %i)" % (e, w),
-                )
-                self.obj_int_vars.extend(variables)
-                self.obj_int_coeffs.extend(coeffs)
+                    self.obj_int_vars.extend(variables)
+                    self.obj_int_coeffs.extend(coeffs)
 
+    # Request: (employee, shift, day, weight)
+    # A negative weight indicates that the employee desire this assignment.
     def add_employee_requests_ct(self):
-        requests = ScheduleCpModel.get_requests(
-            self.employees, self.shifts, self.period
-        )
-        for e, s, d, w in requests:
-            self.obj_bool_vars.append(self.matrice[e, s, d])
-            self.obj_bool_coeffs.append(w)
+        shift_dict = dict((shift.id, s) for s, shift in enumerate(self.shifts))
+
+        for e, employee in enumerate(self.employees):
+            for event in employee.get_requests(self.period):
+                for event_date in event.get_event_dates():
+                    day_index = self.period.dates_to_day_index_dict.get(
+                        event_date.date()
+                    )
+                    if day_index is not None:
+                        # Date is covered by schedule generation
+                        shift_index = shift_dict.get(event.shift_id, 0)
+                        request = self.NewBoolVar(
+                            f"request_{e}_{event.id}_{shift_index}_{day_index}"
+                        )
+                        self.Add(request == self.matrice[e, shift_index, day_index])
+                        self.obj_bool_vars.append(request)
+                        self.obj_bool_coeffs.append(event.get_weight())
 
     def add_shift_sequence_ct(self):
         shift_constraints = ScheduleCpModel.get_shift_sequence_ct(
@@ -403,43 +383,36 @@ class ScheduleCpModel(cp_model.CpModel):
             self.base_shifts
         )
 
-        for s in range(1, self.nb_shifts):
-            for d in range(self.nb_days):
-                works = [self.matrice[e, s, d] for e in range(self.nb_employees)]
-                # Ignore Off shift.
-                min_demand = cover_demands[s - 1][d]
-                # _logger.info(min_demand)
+        for s, shift in enumerate(self.shifts):
+            if s != 0:
+                for d in range(self.nb_days):
+                    works = [self.matrice[e, s, d] for e in range(self.nb_employees)]
+                    # Ignore Off shift.
+                    min_demand = cover_demands[s - 1][d]
 
-                worked = self.NewIntVar(
-                    0, self.nb_employees, f"worked(shift={s}, day={d}"
-                )
-                self.Add(worked == sum(works))
-                if min_demand == 0:
-                    self.Add(worked == 0)
-                else:
-                    over_penalty = excess_cover_penalties[s - 1]
-                    if over_penalty > 0:
-                        variables, coeffs = add_soft_sum_constraint(
-                            self,
-                            works,
-                            0,
-                            min_demand,
-                            SCHEDULE_WEIGHT_DICT.get("CRITICAL"),
-                            min_demand,
-                            self.nb_employees,
-                            SCHEDULE_WEIGHT_DICT.get("VERY_IMPORTANT"),
-                            f"excess_demand(shift={s}, day={d})",
-                        )
-                        self.obj_int_vars.extend(variables)
-                        self.obj_int_coeffs.extend(coeffs)
+                    worked = self.NewIntVar(
+                        0, self.nb_employees, f"worked(shift={s}, day={d}"
+                    )
+                    self.Add(worked == sum(works))
+                    if min_demand == 0:
+                        self.Add(worked == 0)
+                    else:
+                        over_penalty = excess_cover_penalties[s - 1]
+                        if over_penalty > 0:
 
-                        # name = f"excess_demand(shift={s}, day={d})"
-                        # excess = self.NewIntVar(
-                        #     -min_demand, self.nb_employees - min_demand, name
-                        # )
-                        # self.Add(excess == worked - min_demand)
-                        # self.obj_int_vars.append(excess)
-                        # self.obj_int_coeffs.append(over_penalty)
+                            variables, coeffs = add_soft_sum_constraint(
+                                self,
+                                works,
+                                0,
+                                min_demand,
+                                shift.get_cover_penalty(),
+                                min_demand,
+                                self.nb_employees,
+                                Penalty.LOW.value,
+                                f"excess_demand(shift={s}, day={d})",
+                            )
+                            self.obj_int_vars.extend(variables)
+                            self.obj_int_coeffs.extend(coeffs)
 
     def add_employee_shift_mastery_ct(self):
         employee_shift_mastery = ScheduleCpModel.get_employee_shift_mastery(
@@ -456,26 +429,27 @@ class ScheduleCpModel(cp_model.CpModel):
                         nb_shifts_worked
                         == sum(self.matrice[e, s, d] for d in range(self.nb_days))
                     )
-                    if coef_mastery == 0:
-                        # Employee cannot fulfill this role
-                        self.Add(nb_shifts_worked == 0)
-                    elif coef_mastery == 1:
-                        # Employee can fulfill this role with a penalty
-                        works = [self.matrice[e, s, d] for d in range(self.nb_days)]
+                    penalty = (
+                        Penalty.CRITICAL.value
+                        if coef_mastery == 0
+                        else Penalty.MEDIUM.value
+                    )
+                    # Employee can fulfill this role with a penalty
+                    works = [self.matrice[e, s, d] for d in range(self.nb_days)]
 
-                        variables, coeffs = add_soft_sum_constraint(
-                            self,
-                            works,
-                            0,
-                            0,
-                            0,
-                            0,
-                            self.nb_days,
-                            SCHEDULE_WEIGHT_DICT.get("SHOULD"),
-                            "mastery_constraints(employee %i, shift %i)" % (e, s),
-                        )
-                        self.obj_int_vars.extend(variables)
-                        self.obj_int_coeffs.extend(coeffs)
+                    variables, coeffs = add_soft_sum_constraint(
+                        self,
+                        works,
+                        0,
+                        0,
+                        0,
+                        0,
+                        self.nb_days,
+                        penalty,
+                        "mastery_constraints(employee %i, shift %i)" % (e, s),
+                    )
+                    self.obj_int_vars.extend(variables)
+                    self.obj_int_coeffs.extend(coeffs)
 
     def add_employee_availability_ct(self):
         employees_availability = [e.get_availability() for e in self.employees]
@@ -538,22 +512,6 @@ class ScheduleCpModel(cp_model.CpModel):
                         else:
                             fixed_assignments.append(assignment)
         return fixed_assignments, conflicting_assignments
-
-    # Request: (employee, shift, day, weight)
-    # A negative weight indicates that the employee desire this assignment.
-    def get_requests(employee_list, shift_list, period) -> (int, int, int, int):
-        requests = []
-        shift_dict = dict((shift.id, s) for s, shift in enumerate(shift_list))
-
-        for e, employee in enumerate(employee_list):
-            for event in employee.get_requests(period):
-                for event_date in event.get_event_dates():
-                    day_index = period.dates_to_day_index_dict.get(event_date.date())
-                    if day_index is not None:
-                        # Date is covered by schedule generation
-                        shift_index = shift_dict.get(event.shift_id, 0)
-                        requests.append((e, shift_index, day_index, event.get_weight()))
-        return requests
 
     # Shift constraints on continuous sequence :
     #     (shift, hard_min, soft_min, min_penalty,

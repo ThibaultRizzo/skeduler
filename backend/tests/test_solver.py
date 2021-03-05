@@ -172,7 +172,7 @@ employee_dict = {
         events=[],
     ),
     "Stephane": Employee(
-        name="Shanel",
+        name="Stephane",
         contract=40,
         availability_monday=EmployeeAvailability.WORKING,
         availability_tuesday=EmployeeAvailability.WORKING,
@@ -316,173 +316,328 @@ def days():
     return [day for day in day_dict.values()]
 
 
-def test_only_work_during_active_days(empty_rules, days):
-    employees = [
-        Employee(
-            name="Thibault",
-            contract=50,
-            availability_monday=EmployeeAvailability.WORKING,
-            availability_tuesday=EmployeeAvailability.WORKING,
-            availability_wednesday=EmployeeAvailability.WORKING,
-            availability_thursday=EmployeeAvailability.WORKING,
-            availability_friday=EmployeeAvailability.WORKING,
-            availability_saturday=EmployeeAvailability.WORKING,
-            availability_sunday=EmployeeAvailability.WORKING,
-            skills=[],
-            events=[],
-        ),
-        Employee(
-            name="Shanel",
-            contract=50,
-            availability_monday=EmployeeAvailability.WORKING,
-            availability_tuesday=EmployeeAvailability.WORKING,
-            availability_wednesday=EmployeeAvailability.WORKING,
-            availability_thursday=EmployeeAvailability.WORKING,
-            availability_friday=EmployeeAvailability.WORKING,
-            availability_saturday=EmployeeAvailability.WORKING,
-            availability_sunday=EmployeeAvailability.WORKING,
-            skills=[],
-            events=[],
-        ),
-    ]
+# def test_only_work_during_active_days(empty_rules, days):
+#     employees = [
+#         Employee(
+#             name="Thibault",
+#             contract=50,
+#             availability_monday=EmployeeAvailability.WORKING,
+#             availability_tuesday=EmployeeAvailability.WORKING,
+#             availability_wednesday=EmployeeAvailability.WORKING,
+#             availability_thursday=EmployeeAvailability.WORKING,
+#             availability_friday=EmployeeAvailability.WORKING,
+#             availability_saturday=EmployeeAvailability.WORKING,
+#             availability_sunday=EmployeeAvailability.WORKING,
+#             skills=[],
+#             events=[],
+#         ),
+#         Employee(
+#             name="Shanel",
+#             contract=50,
+#             availability_monday=EmployeeAvailability.WORKING,
+#             availability_tuesday=EmployeeAvailability.WORKING,
+#             availability_wednesday=EmployeeAvailability.WORKING,
+#             availability_thursday=EmployeeAvailability.WORKING,
+#             availability_friday=EmployeeAvailability.WORKING,
+#             availability_saturday=EmployeeAvailability.WORKING,
+#             availability_sunday=EmployeeAvailability.WORKING,
+#             skills=[],
+#             events=[],
+#         ),
+#     ]
 
-    shifts = [
-        Shift(
-            id="S1",
-            title="Waiter 1",
-            duration=10,
-            cover_monday=1,
-            cover_tuesday=1,
-            cover_wednesday=1,
-            cover_thursday=1,
-            cover_friday=1,
-            cover_saturday=0,
-            cover_sunday=0,
-            shift_importance=ShiftImportance.MAJOR,
-        ),
-        Shift(
-            id="S2",
-            title="Barman 1",
-            duration=10,
-            cover_monday=1,
-            cover_tuesday=1,
-            cover_wednesday=1,
-            cover_thursday=1,
-            cover_friday=1,
-            cover_saturday=0,
-            cover_sunday=0,
-            shift_importance=ShiftImportance.MAJOR,
-        ),
-    ]
-    start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
-    period = SolverPeriod(start_date, 2, days)
-    model_factory = ScheduleCpModelFactory(1, empty_rules, employees, shifts, period)
-    schedule_solution = model_factory.solve_model()
-    # schedule_solution.schedule.print(employees, shifts, days)
-    bin_sch = schedule_solution.schedule.get_bin_schedule()
-    assert all(
-        bit == "1" for i, bit in enumerate(bin_sch) if i in [5, 6, 12, 13]
-    ), "Weekends are rest"
-
-
-def test_cannot_request_inactive_day(empty_rules, days):
-    employees = [
-        Employee(
-            name="Thibault",
-            contract=50,
-            availability_monday=EmployeeAvailability.WORKING,
-            availability_tuesday=EmployeeAvailability.WORKING,
-            availability_wednesday=EmployeeAvailability.WORKING,
-            availability_thursday=EmployeeAvailability.WORKING,
-            availability_friday=EmployeeAvailability.WORKING,
-            availability_saturday=EmployeeAvailability.WORKING,
-            availability_sunday=EmployeeAvailability.WORKING,
-            skills=[],
-            events=[
-                EmployeeEvent(
-                    id="EE1",
-                    employee_id="E1",
-                    shift_id="S1",
-                    start_date=datetime(2021, 1, 10, tzinfo=timezone.utc),
-                    duration=1,
-                    type=EventType.REQUEST,
-                    status=EventStatus.CONFIRMED,
-                    nature=EventNature.MANDATORY,
-                    is_desired=True,
-                )
-            ],
-        )
-    ]
-
-    shifts = [
-        Shift(
-            id="S1",
-            title="Waiter 1",
-            duration=10,
-            cover_monday=1,
-            cover_tuesday=1,
-            cover_wednesday=1,
-            cover_thursday=1,
-            cover_friday=1,
-            cover_saturday=0,
-            cover_sunday=0,
-            shift_importance=ShiftImportance.MAJOR,
-        )
-    ]
-    start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
-    period = SolverPeriod(start_date, 2, days)
-    model_factory = ScheduleCpModelFactory(1, empty_rules, employees, shifts, period)
-    schedule_solution = model_factory.solve_model()
-    # schedule_solution.schedule.print(employees, shifts, days)
-    bin_sch = schedule_solution.schedule.get_bin_schedule()
-    assert all(
-        bit == "1" for i, bit in enumerate(bin_sch) if i in [5, 6, 12, 13]
-    ), "Weekends are rest"
+#     shifts = [
+#         Shift(
+#             id="S1",
+#             title="Waiter 1",
+#             duration=10,
+#             cover_monday=1,
+#             cover_tuesday=1,
+#             cover_wednesday=1,
+#             cover_thursday=1,
+#             cover_friday=1,
+#             cover_saturday=0,
+#             cover_sunday=0,
+#             shift_importance=ShiftImportance.MAJOR,
+#         ),
+#         Shift(
+#             id="S2",
+#             title="Barman 1",
+#             duration=10,
+#             cover_monday=1,
+#             cover_tuesday=1,
+#             cover_wednesday=1,
+#             cover_thursday=1,
+#             cover_friday=1,
+#             cover_saturday=0,
+#             cover_sunday=0,
+#             shift_importance=ShiftImportance.MAJOR,
+#         ),
+#     ]
+#     start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
+#     period = SolverPeriod(start_date, 2, days)
+#     model_factory = ScheduleCpModelFactory(1, empty_rules, employees, shifts, period)
+#     schedule_solution = model_factory.solve_model()
+#     # schedule_solution.schedule.print(employees, shifts, days)
+#     bin_sch = schedule_solution.schedule.get_bin_schedule()
+#     assert all(
+#         bit == "1" for i, bit in enumerate(bin_sch) if i in [5, 6, 12, 13]
+#     ), "Weekends are rest"
 
 
-def test_can_add_holiday(standard_employees, standard_shifts, empty_rules, days):
-    standard_employees[0].events = [
-        EmployeeEvent(
-            id="EE1",
-            employee_id="E3",
-            shift_id=None,
-            start_date=datetime(2021, 1, 6, tzinfo=timezone.utc),
-            duration=1,
-            type=EventType.HOLIDAY,
-            status=EventStatus.CONFIRMED,
-            nature=EventNature.MANDATORY,
-            is_desired=True,
-        ),
-        EmployeeEvent(
-            id="EE2",
-            employee_id="E3",
-            shift_id=None,
-            start_date=datetime(2021, 1, 11, tzinfo=timezone.utc),
-            duration=1,
-            type=EventType.HOLIDAY,
-            status=EventStatus.CONFIRMED,
-            nature=EventNature.MANDATORY,
-            is_desired=True,
-        ),
-    ]
-    standard_employees[0].contract = 40
+# def test_cannot_request_inactive_day(empty_rules, days):
+#     employees = [
+#         Employee(
+#             name="Thibault",
+#             contract=50,
+#             availability_monday=EmployeeAvailability.WORKING,
+#             availability_tuesday=EmployeeAvailability.WORKING,
+#             availability_wednesday=EmployeeAvailability.WORKING,
+#             availability_thursday=EmployeeAvailability.WORKING,
+#             availability_friday=EmployeeAvailability.WORKING,
+#             availability_saturday=EmployeeAvailability.WORKING,
+#             availability_sunday=EmployeeAvailability.WORKING,
+#             skills=[],
+#             events=[
+#                 EmployeeEvent(
+#                     id="EE1",
+#                     employee_id="E1",
+#                     shift_id="S1",
+#                     start_date=datetime(2021, 1, 10, tzinfo=timezone.utc),
+#                     duration=1,
+#                     type=EventType.REQUEST,
+#                     status=EventStatus.CONFIRMED,
+#                     nature=EventNature.MANDATORY,
+#                     is_desired=True,
+#                 )
+#             ],
+#         )
+#     ]
 
+#     shifts = [
+#         Shift(
+#             id="S1",
+#             title="Waiter 1",
+#             duration=10,
+#             cover_monday=1,
+#             cover_tuesday=1,
+#             cover_wednesday=1,
+#             cover_thursday=1,
+#             cover_friday=1,
+#             cover_saturday=0,
+#             cover_sunday=0,
+#             shift_importance=ShiftImportance.MAJOR,
+#         )
+#     ]
+#     start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
+#     period = SolverPeriod(start_date, 2, days)
+#     model_factory = ScheduleCpModelFactory(1, empty_rules, employees, shifts, period)
+#     schedule_solution = model_factory.solve_model()
+#     # schedule_solution.schedule.print(employees, shifts, days)
+#     bin_sch = schedule_solution.schedule.get_bin_schedule()
+#     assert all(
+#         bit == "1" for i, bit in enumerate(bin_sch) if i in [5, 6, 12, 13]
+#     ), "Weekends are rest"
+
+
+# def test_can_add_holiday(standard_employees, standard_shifts, empty_rules, days):
+#     standard_employees[0].events = [
+#         EmployeeEvent(
+#             id="EE1",
+#             employee_id="E3",
+#             shift_id=None,
+#             start_date=datetime(2021, 1, 6, tzinfo=timezone.utc),
+#             duration=1,
+#             type=EventType.HOLIDAY,
+#             status=EventStatus.CONFIRMED,
+#             nature=EventNature.MANDATORY,
+#             is_desired=True,
+#         ),
+#         EmployeeEvent(
+#             id="EE2",
+#             employee_id="E3",
+#             shift_id=None,
+#             start_date=datetime(2021, 1, 11, tzinfo=timezone.utc),
+#             duration=1,
+#             type=EventType.HOLIDAY,
+#             status=EventStatus.CONFIRMED,
+#             nature=EventNature.MANDATORY,
+#             is_desired=True,
+#         ),
+#     ]
+#     standard_employees[0].contract = 40
+
+#     start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
+#     period = SolverPeriod(start_date, 2, days)
+#     model_factory = ScheduleCpModelFactory(
+#         1, empty_rules, standard_employees, standard_shifts, period
+#     )
+#     schedule_solution = model_factory.solve_model()
+#     # schedule_solution.schedule.print(standard_employees, standard_shifts, days)
+#     bin_sch = schedule_solution.schedule.get_bin_schedule()
+#     assert all(
+#         bit == "1" for i, bit in enumerate(bin_sch) if i in [2, 7]
+#     ), "Both holidays are applied"
+
+
+# def test_can_add_mandatory_request(
+#     standard_employees, standard_shifts, empty_rules, days
+# ):
+#     standard_employees[0].events = [
+#         EmployeeEvent(
+#             id="EE1",
+#             employee_id="E3",
+#             shift_id="S3",
+#             start_date=datetime(2021, 1, 6, tzinfo=timezone.utc),
+#             duration=1,
+#             type=EventType.REQUEST,
+#             status=EventStatus.CONFIRMED,
+#             nature=EventNature.MANDATORY,
+#             is_desired=True,
+#         ),
+#         EmployeeEvent(
+#             id="EE2",
+#             employee_id="E3",
+#             shift_id="S4",
+#             start_date=datetime(2021, 1, 11, tzinfo=timezone.utc),
+#             duration=4,
+#             type=EventType.REQUEST,
+#             status=EventStatus.CONFIRMED,
+#             nature=EventNature.MANDATORY,
+#             is_desired=True,
+#         ),
+#     ]
+#     standard_employees[0].contract = 40
+
+#     start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
+#     period = SolverPeriod(start_date, 2, days)
+#     model_factory = ScheduleCpModelFactory(
+#         1, empty_rules, standard_employees, standard_shifts, period
+#     )
+#     schedule_solution = model_factory.solve_model()
+#     # schedule_solution.schedule.print(standard_employees, standard_shifts, days)
+#     bin_sch = schedule_solution.schedule.get_bin_schedule()
+#     assert all(
+#         bit == "1" for i, bit in enumerate(bin_sch) if i in [16, 35, 36, 37, 38]
+#     ), "All mandatory requests assigned"
+
+
+# def test_can_generate_with_conflictuous_mandatory_request(
+#     standard_employees, standard_shifts, empty_rules, days
+# ):
+#     standard_employees[0].events = [
+#         EmployeeEvent(
+#             id="EE1",
+#             employee_id="E3",
+#             shift_id=None,
+#             start_date=datetime(2021, 1, 6, tzinfo=timezone.utc),
+#             duration=1,
+#             type=EventType.HOLIDAY,
+#             status=EventStatus.CONFIRMED,
+#             nature=EventNature.MANDATORY,
+#             is_desired=True,
+#         ),
+#         EmployeeEvent(
+#             id="EE2",
+#             employee_id="E3",
+#             shift_id="S3",
+#             start_date=datetime(2021, 1, 4, tzinfo=timezone.utc),
+#             duration=4,
+#             type=EventType.REQUEST,
+#             status=EventStatus.CONFIRMED,
+#             nature=EventNature.MANDATORY,
+#             is_desired=True,
+#         ),
+#     ]
+#     standard_employees[0].contract = 40
+
+#     start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
+#     period = SolverPeriod(start_date, 2, days)
+#     model_factory = ScheduleCpModelFactory(
+#         1, empty_rules, standard_employees, standard_shifts, period
+#     )
+#     schedule_solution = model_factory.solve_model()
+#     # schedule_solution.schedule.print(standard_employees, standard_shifts, days)
+#     bin_sch = schedule_solution.schedule.get_bin_schedule()
+#     assert all(
+#         bit == "1" for i, bit in enumerate(bin_sch) if i in [2, 14, 15, 17]
+#     ), "All mandatory requests assigned"
+
+
+def test_respect_employee_total_contract(
+    standard_employees, standard_shifts, empty_rules, days
+):
+    standard_employees[0].contract = 30
+    standard_employees[0].events = []
+    standard_employees[1].contract = 30
+    standard_employees[1].events = []
+    standard_shifts[0].duration = 8
+    standard_shifts[1].duration = 4
     start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
     period = SolverPeriod(start_date, 2, days)
     model_factory = ScheduleCpModelFactory(
         1, empty_rules, standard_employees, standard_shifts, period
     )
     schedule_solution = model_factory.solve_model()
-    schedule_solution.schedule.print(employees, shifts, days)
+    # schedule_solution.schedule.print(standard_employees, standard_shifts, days)
+    bin_sch = schedule_solution.schedule.get_bin_schedule()
+    assert (
+        schedule_solution.solver.ObjectiveValue() < 10
+    ), "Each employee works 40 hours"
+
+
+def test_prioritize_employee_over_extra(
+    standard_employees, standard_shifts, empty_rules, days
+):
+    standard_employees[0].contract = 30
+    standard_employees[0].events = []
+    standard_employees[0].availability_monday = EmployeeAvailability.AVAILABLE
+    standard_employees[0].availability_wednesday = EmployeeAvailability.NOT_WORKING
+    standard_employees[0].availability_thursday = EmployeeAvailability.NOT_WORKING
+    standard_employees[0].availability_friday = EmployeeAvailability.NOT_WORKING
+    standard_employees[1].events = []
+    standard_employees.append(
+        Employee(
+            id="E5",
+            name="Sixtine",
+            contract=0,
+            availability_monday=EmployeeAvailability.WORKING,
+            availability_tuesday=EmployeeAvailability.WORKING,
+            availability_wednesday=EmployeeAvailability.WORKING,
+            availability_thursday=EmployeeAvailability.WORKING,
+            availability_friday=EmployeeAvailability.WORKING,
+            availability_saturday=EmployeeAvailability.WORKING,
+            availability_sunday=EmployeeAvailability.WORKING,
+            skills=[
+                EmployeeSkill(
+                    id="ES10",
+                    employee_id="E5",
+                    shift_id="S3",
+                    level=ShiftSkillLevel.MASTER,
+                ),
+                EmployeeSkill(
+                    id="ES11",
+                    employee_id="E5",
+                    shift_id="S4",
+                    level=ShiftSkillLevel.MASTER,
+                ),
+            ],
+            events=[],
+        ),
+    )
+    start_date = datetime(2021, 1, 4, tzinfo=timezone.utc)
+    period = SolverPeriod(start_date, 1, days)
+    model_factory = ScheduleCpModelFactory(
+        1, empty_rules, standard_employees, standard_shifts, period
+    )
+    schedule_solution = model_factory.solve_model()
+    # schedule_solution.schedule.print(standard_employees, standard_shifts, days)
     bin_sch = schedule_solution.schedule.get_bin_schedule()
     assert all(
-        bit == "1" for i, bit in enumerate(bin_sch) if i in [2, 7]
-    ), "Weekends are rest"
+        bit == "1" for i, bit in enumerate(bin_sch) if i in [2, 3, 4, 58, 59, 60]
+    ), "Extra is only working when no one can"
 
 
-# def test_can_add_mandatory_request
-# def test_can_generate_with_conflictuous_mandatory_request
-# def test_respect_employee_total_contract # Test for different durations
 # def test_respect_employee_minimum_total_contract
 # def test_favor_employee_mastery
 # def test_avoid_employee_with_no_mastery

@@ -44,7 +44,7 @@ class EmployeeAvailability(GraphEnum):
     NOT_WORKING = "NOT_WORKING"
 
     def get_availability_penalty():
-        return 5
+        return Penalty.LOW.value
 
 
 class ShiftSkillLevel(GraphEnum):
@@ -71,12 +71,14 @@ class EventNature(GraphEnum):
     PREFERED = "PREFERED"
 
     def get_weight(self):
-        return {
-            EventNature.MANDATORY: 0,
-            EventNature.IMPORTANT: 2,
-            EventNature.WANTED: 4,
-            EventNature.PREFERED: 10,
-        }[self]
+        if self is EventNature.MANDATORY:
+            return Penalty.CRITICAL.value
+        elif self is EventNature.IMPORTANT:
+            return Penalty.HIGH.value
+        elif self is EventNature.WANTED:
+            return Penalty.MEDIUM.value
+        elif self is EventNature.PREFERED:
+            return Penalty.LOW.value
 
 
 class EventStatus(GraphEnum):
@@ -91,12 +93,12 @@ class ShiftImportance(GraphEnum):
     MINOR = "MINOR"
 
     def to_weight(self):
-        _dict = {
-            ShiftImportance.MAJOR: 30,
-            ShiftImportance.AVERAGE: 20,
-            ShiftImportance.MINOR: 10,
-        }
-        return _dict[self]
+        if self is ShiftImportance.MAJOR:
+            return Penalty.CRITICAL.value
+        elif self is ShiftImportance.AVERAGE:
+            return Penalty.HIGH.value
+        elif self is ShiftImportance.MINOR:
+            return Penalty.MEDIUM.value
 
 
 class SolverStatus(GraphEnum):
@@ -120,15 +122,13 @@ class RulePenalty(GraphEnum):
     MEDIUM = "MEDIUM"
     SOFT = "SOFT"
 
-    def weight_dict():
-        return {
-            RulePenalty.SOFT: 5,
-            RulePenalty.MEDIUM: 10,
-            RulePenalty.HARD: 20,
-        }
-
     def to_weight(self):
-        return RulePenalty.weight_dict()[self]
+        if self is RulePenalty.HARD:
+            return Penalty.HIGH.value
+        elif self is RulePenalty.MEDIUM:
+            return Penalty.MEDIUM.value
+        elif self is RulePenalty.SOFT:
+            return Penalty.LOW.value
 
 
 all_enums = [
@@ -145,10 +145,8 @@ all_enums = [
 ]
 
 
-SCHEDULE_WEIGHT_DICT = {
-    "CRITICAL": 100,
-    "VERY_IMPORTANT": 30,
-    "IMPORTANT": 20,
-    "MUST": 10,
-    "SHOULD": 5,
-}
+class Penalty(enum.Enum):
+    CRITICAL = 1000
+    HIGH = 100
+    MEDIUM = 10
+    LOW = 1
