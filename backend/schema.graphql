@@ -69,6 +69,10 @@ scalar Datetime
 ############
 #  Types   #
 ############
+type SchedulePenalty {
+  reason: String!
+  penalty: Int!
+}
 
 type ScheduleShift {
   shift: String!
@@ -83,6 +87,7 @@ type ScheduleMeta {
   createdAt: Datetime!
   infeasibleConstraints: String
   objective: Int!
+  penalties: [SchedulePenalty!]!
 }
 
 type CompleteSchedule {

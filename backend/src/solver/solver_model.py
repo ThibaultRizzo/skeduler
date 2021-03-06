@@ -15,7 +15,7 @@ from .base import (
     negated_bounded_span,
 )
 from .errors import ConflictingConstraintException, SolverException
-from src.models import SolverPeriod, Schedule
+from src.models import SolverPeriod, Schedule, SchedulePenalty
 import logging
 
 # from flask import current_app
@@ -56,7 +56,7 @@ class ScheduleCpModelFactory:
         model = ScheduleCpModel(
             self.rules, self.employees, self.base_shifts, self.period, [], self.config
         )
-        solver, status = model.solve()
+        solver, status, penalties = model.solve()
         infeasible_cts = []
         if status == cp_model.INFEASIBLE:
             infeasible_cts = self.find_infeasible_cts()
@@ -69,7 +69,9 @@ class ScheduleCpModelFactory:
                 self.config,
             )
             solver, status = model.solve()
-        return ScheduleSolution(self.company_id, model, solver, status, infeasible_cts)
+        return ScheduleSolution(
+            self.company_id, model, solver, status, infeasible_cts, penalties
+        )
 
     def find_infeasible_cts(self):
         all_hard_cts = (
@@ -182,21 +184,31 @@ class ScheduleCpModel(cp_model.CpModel):
         #     text_format.Merge(params, solver.parameters)
         solution_printer = cp_model.ObjectiveSolutionPrinter()
         status = solver.SolveWithSolutionCallback(self, solution_printer)
+        penalties = []
         if status != cp_model.INFEASIBLE:
             for i, var in enumerate(self.obj_bool_vars):
                 if solver.BooleanValue(var):
                     penalty = self.obj_bool_coeffs[i]
+                    penalties.append(
+                        SchedulePenalty(reason=var.Name(), penalty=penalty)
+                    )
                     if penalty > 0:
                         _logger.info(f"  {var.Name()} violated, penalty={penalty}")
                     else:
                         _logger.info(f"  {var.Name()} violated, penalty={-penalty}")
             for i, var in enumerate(self.obj_int_vars):
                 if solver.Value(var) > 0:
+                    penalties.append(
+                        SchedulePenalty(
+                            reason=var.Name(),
+                            penalty=solver.Value(var) * self.obj_int_coeffs[i],
+                        )
+                    )
                     _logger.info(
                         f"  {var.Name()} violated by {solver.Value(var)}, linear penalty={self.obj_int_coeffs[i]}"
                     )
 
-        return solver, status
+        return solver, status, penalties
 
     ###############
     # Constraints #
@@ -242,7 +254,7 @@ class ScheduleCpModel(cp_model.CpModel):
                 self.nb_weeks * 7 * 24,
                 0,
                 self.nb_weeks * employee.contract,
-                100,
+                extra_shift_penalty,
                 self.nb_weeks * employee.contract,
                 self.nb_weeks * 7 * 24,
                 extra_shift_penalty,
@@ -582,11 +594,12 @@ class ScheduleCpModel(cp_model.CpModel):
 
 
 class ScheduleSolution:
-    def __init__(self, company_id, model, solver, status, infeasible_cts):
+    def __init__(self, company_id, model, solver, status, infeasible_cts, penalties):
         self.company_id = company_id
         self.model = model
         self.solver = solver
         self.infeasible_cts = infeasible_cts
+        self.penalties = penalties
         self.status = status
         self.schedule = self.get_schedule()
 
@@ -607,6 +620,7 @@ class ScheduleSolution:
                 SolverStatus.by_status_code(self.status),
                 self.solver.ObjectiveValue(),
                 self.infeasible_cts,
+                self.penalties,
             )
         else:
             # _logger.info(str(solver.ResponseStats()))

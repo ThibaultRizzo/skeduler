@@ -17,6 +17,10 @@ const completeScheduleFragment = gql`
       createdAt
       infeasibleConstraints
       objective
+      penalties {
+        reason
+        penalty
+      }
     }
   }
 `;

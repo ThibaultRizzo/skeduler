@@ -6,7 +6,7 @@ import {
   employeeSubject,
   shiftSubject,
 } from "../../rxjs/record.subject";
-import { CompleteSchedule, Day, Employee, Shift } from "../../types";
+import { CompleteSchedule, Day, Employee, ScheduleMeta, Shift } from "../../types";
 import Loader from "../Loader";
 import "../../styles/layout/pages/schedule.scss";
 import { executeFnOrOpenSnackbar } from "../../rxjs/crud.subject";
@@ -69,8 +69,7 @@ function SchedulePage() {
         {schedule && (
           <>
             <ScheduleGrid schedule={schedule} dayDict={dayDict} shiftDict={shiftDict} employeeDict={employeeDict} />
-            <LabelValue label="Ignored constraints" value={schedule.meta.infeasibleConstraints} />
-            <LabelValue label="Objective" value={schedule.meta.objective} />
+            <ScheduleScore scheduleMeta={schedule.meta} />
           </>)}
       </Loader>
     </article>
@@ -113,4 +112,25 @@ const ScheduleGrid = ({ schedule, dayDict, employeeDict, shiftDict }: ScheduleGr
 
   )
 }
+
+
+type ScheduleScoreProps = {
+  scheduleMeta: ScheduleMeta;
+}
+
+const ScheduleScore = ({ scheduleMeta }: ScheduleScoreProps) => {
+  return (
+    <div>
+      <LabelValue label="Ignored constraints" value={scheduleMeta.infeasibleConstraints} />
+      <LabelValue label="Objective" value={scheduleMeta.objective} />
+      <h3>Penalties</h3>
+      <ul>
+        {
+          scheduleMeta.penalties.map(p => <li><LabelValue label={p.reason} value={p.penalty} /></li>)
+        }
+      </ul>
+    </div>
+  )
+}
+
 export default SchedulePage;

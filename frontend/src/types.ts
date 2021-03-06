@@ -206,6 +206,13 @@ export type ScheduleMeta = {
   createdAt: Scalars['Datetime'];
   infeasibleConstraints?: Maybe<Scalars['String']>;
   objective: Scalars['Int'];
+  penalties: Array<SchedulePenalty>;
+};
+
+export type SchedulePenalty = {
+  __typename?: 'SchedulePenalty';
+  reason: Scalars['String'];
+  penalty: Scalars['Int'];
 };
 
 export type CompaniesPayload = {

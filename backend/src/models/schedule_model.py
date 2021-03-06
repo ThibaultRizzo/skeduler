@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Enum, Date, Integer, ForeignKey
 from textwrap import wrap
-from src.database import db, PkCompanyModel, created_at
+from src.database import db, PkCompanyModel, created_at, ID
 from src.utils import chunk, complete_str
 from src.enums import SolverStatus
 from .shift_model import REST_SHIFT
@@ -16,6 +16,7 @@ class Schedule(PkCompanyModel):
     employees = db.relationship(
         "ScheduleEmployee", cascade="all, delete, delete-orphan"
     )
+    penalties = db.relationship("SchedulePenalty", cascade="all, delete, delete-orphan")
     start_date = Column(Date, nullable=False)
     nb_days = Column(Integer, nullable=False)
 
@@ -28,6 +29,7 @@ class Schedule(PkCompanyModel):
 
     def get_meta(self):
         return {
+            "penalties": self.penalties,
             "createdAt": self.created_at,
             "infeasibleConstraints": self.infeasible_cts,
             "objective": self.objective,
@@ -105,6 +107,7 @@ class Schedule(PkCompanyModel):
         status,
         objective,
         infeasible_cts,
+        penalties,
     ):
         encoded_schedule = Schedule.encode(bin_schedule, employees, base_shifts, days)
         shifts = []
@@ -124,6 +127,7 @@ class Schedule(PkCompanyModel):
             status=status,
             objective=objective,
             infeasible_cts=",".join(infeasible_cts),
+            penalties=penalties,
         )
         return schedule
 
@@ -188,6 +192,17 @@ class ScheduleShift(db.Model):
         return "<ScheduleShift: {}, {}, {}>".format(
             self.schedule_id, self.shift_id, self.order
         )
+
+
+class SchedulePenalty(db.Model):
+    id = ID()
+    schedule_id = Column(
+        String(36),
+        ForeignKey("schedule.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    reason = Column(String(128), nullable=False)
+    penalty = Column(Integer, nullable=False)
 
 
 class ScheduleEmployee(db.Model):
