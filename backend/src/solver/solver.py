@@ -8,10 +8,7 @@ from google.protobuf import text_format
 from .solver_model import ScheduleCpModelFactory
 from src.enums import ShiftSkillLevel, DayEnum, SolverStatus
 from src.models import SolverPeriod, Schedule
-
-import logging
-
-_logger = logging.getLogger()
+from loguru import logger
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument(
@@ -47,7 +44,7 @@ def solve_shift_scheduling(
 
     # Print solution.
     # if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-    #     _logger.info(infeasible_cts)
+    #     logger.info(infeasible_cts)
     #     encoded_schedule = "".join(
     #         [str(solver.Value(i[1])) for i in model.matrice.items()]
     #     )
@@ -64,7 +61,7 @@ def solve_shift_scheduling(
     #         infeasible_cts,
     #     )
     # else:
-    #     # _logger.info(str(solver.ResponseStats()))
+    #     # logger.info(str(solver.ResponseStats()))
     #     return None
 
     return schedule_solution.schedule

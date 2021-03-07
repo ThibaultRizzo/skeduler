@@ -14,7 +14,6 @@ def create_app(config_object="src.settings"):
     register_extensions(app)
     register_shellcontext(app)
     register_commands(app)
-    configure_logger(app)
 
     return app
 
@@ -43,17 +42,3 @@ def register_commands(app):
     commands.init_app(app)
     app.cli.add_command(commands.test)
     app.cli.add_command(commands.lint)
-
-
-def configure_logger(app):
-    """Configure loggers."""
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(asctime)s]: {} %(levelname)s %(message)s".format(os.getpid()),
-        datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=[logging.StreamHandler()],
-    )
-    # logger = logging.getLogger()
-    # handler = logging.StreamHandler(sys.stdout)
-    # if not app.logger.handlers:
-    #     app.loggeraddHandler(handler)

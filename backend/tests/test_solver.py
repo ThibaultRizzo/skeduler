@@ -24,8 +24,7 @@ from src.enums import (
     EmployeeAvailability,
 )
 from datetime import datetime, timezone
-import logging
-
+from loguru import logger
 
 # class TestCase(TestCase):
 #     SQLALCHEMY_DATABASE_URI = "sqlite://"
@@ -56,8 +55,6 @@ import logging
 #         # available because we pushed context in setUp()
 #         print(app)
 
-
-_logger = logging.getLogger()
 
 day_dict = {
     "monday": Day(id="D1", name=DayEnum.MONDAY, active=True),

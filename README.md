@@ -14,7 +14,7 @@ An application aiming at generating randomized schedules matching given constrai
 > cd skeduler
 ```
 
-## Add .env file and custom (if needed)
+## Add .env file and customize it (if needed)
 
 ```sh
 >  cp backend/.env.dev backend/.env
@@ -32,6 +32,13 @@ An application aiming at generating randomized schedules matching given constrai
 > source bin/db-create.sh
 ```
 
+## Init backend virtual env & install deps
+
+At the source of your project:
+
+```sh
+> source bin/setup/set_venv.sh
+```
 ## Start server
 
 At the source of your project:

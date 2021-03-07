@@ -6,15 +6,14 @@ from psycopg2 import Error
 from psycopg2.errorcodes import UNIQUE_VIOLATION
 from psycopg2.errors import UniqueViolation, ForeignKeyViolation
 from sqlalchemy.exc import IntegrityError
-import logging
-
-_logger = logging.getLogger()
+from loguru import logger
 
 ariadne_mutation = MutationType()
 
 
+@logger.catch
 def getErrorPayload(e, message):
-    _logger.error(e)
+    logger.error(e)
     return {
         "success": False,
         "errors": [message],

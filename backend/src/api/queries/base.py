@@ -1,14 +1,13 @@
 from ariadne import QueryType, convert_kwargs_to_snake_case
 from ..errors import NoRecordError, InvalidInputError
-import logging
-
-_logger = logging.getLogger()
+from loguru import logger
 
 ariadne_query = QueryType()
 
 
+@logger.catch
 def getErrorPayload(e, message):
-    _logger.error(e)
+    logger.error(e)
     return {
         "success": False,
         "errors": [message],

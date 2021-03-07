@@ -4,9 +4,7 @@ from src.database import db, PkCompanyModel, created_at, ID
 from src.utils import chunk, complete_str
 from src.enums import SolverStatus
 from .shift_model import REST_SHIFT
-import logging
-
-_logger = logging.getLogger()
+from loguru import logger
 
 
 class Schedule(PkCompanyModel):
@@ -132,7 +130,7 @@ class Schedule(PkCompanyModel):
         return schedule
 
     def print(self, employees, shifts, working_days):
-        _logger.info(f"Objective: {self.objective}")
+        logger.info(f"Objective: {self.objective}")
         largest_title_size = len(max(shifts, key=lambda s: len(s.title)).title)
         cell_size = (
             largest_title_size
@@ -151,7 +149,7 @@ class Schedule(PkCompanyModel):
 
         encoded_sch = self.encoded_schedule.split()[3]
 
-        _logger.info(header)
+        logger.info(header)
         employees_chunks = chunk(encoded_sch, int(len(encoded_sch) / len(employees)))
         for e, employee_chunk in enumerate(employees_chunks):
             employee = employees[e]
@@ -169,7 +167,7 @@ class Schedule(PkCompanyModel):
             for w, week_chunk in enumerate(chunk(res, len(working_days))):
                 line_header = employee_name if w == 0 else " " * cell_size
                 line = line_header + "".join(week_chunk)
-                _logger.info(line)
+                logger.info(line)
 
 
 class ScheduleShift(db.Model):

@@ -16,11 +16,7 @@ from .base import (
 )
 from .errors import ConflictingConstraintException, SolverException
 from src.models import SolverPeriod, Schedule, SchedulePenalty
-import logging
-
-# from flask import current_app
-
-_logger = logging.getLogger()
+from loguru import logger
 
 DEFAULT_OPTIONS = {"tolerated_delta_contract_hours": 15}
 
@@ -152,7 +148,7 @@ class ScheduleCpModel(cp_model.CpModel):
 
     def add_constraints(self):
         def func_not_found(func_name):  # just in case we dont have the function
-            _logger.info("No Function " + func_name + " Found!")
+            logger.info("No Function " + func_name + " Found!")
 
         ## Hard constraints
         for ct in ScheduleCpModel.hard_ct_list:
@@ -193,9 +189,9 @@ class ScheduleCpModel(cp_model.CpModel):
                         SchedulePenalty(reason=var.Name(), penalty=penalty)
                     )
                     if penalty > 0:
-                        _logger.info(f"  {var.Name()} violated, penalty={penalty}")
+                        logger.info(f"  {var.Name()} violated, penalty={penalty}")
                     else:
-                        _logger.info(f"  {var.Name()} violated, penalty={-penalty}")
+                        logger.info(f"  {var.Name()} violated, penalty={-penalty}")
             for i, var in enumerate(self.obj_int_vars):
                 if solver.Value(var) > 0:
                     penalties.append(
@@ -204,7 +200,7 @@ class ScheduleCpModel(cp_model.CpModel):
                             penalty=solver.Value(var) * self.obj_int_coeffs[i],
                         )
                     )
-                    _logger.info(
+                    logger.info(
                         f"  {var.Name()} violated by {solver.Value(var)}, linear penalty={self.obj_int_coeffs[i]}"
                     )
 
@@ -605,7 +601,7 @@ class ScheduleSolution:
 
     def get_schedule(self):
         if self.status == cp_model.OPTIMAL or self.status == cp_model.FEASIBLE:
-            _logger.info(self.infeasible_cts)
+            logger.info(self.infeasible_cts)
             encoded_schedule = "".join(
                 [str(self.solver.Value(i[1])) for i in self.model.matrice.items()]
             )
@@ -623,5 +619,5 @@ class ScheduleSolution:
                 self.penalties,
             )
         else:
-            # _logger.info(str(solver.ResponseStats()))
+            # logger.info(str(solver.ResponseStats()))
             return None

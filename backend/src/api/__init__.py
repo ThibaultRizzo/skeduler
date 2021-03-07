@@ -9,7 +9,6 @@ from flask import request, jsonify, redirect, Blueprint
 from . import queries, mutations
 from .resolver import datetime_scalar
 from flask_cors import CORS
-
 from src.enums import all_enums
 
 type_defs = gql(load_schema_from_path("schema.graphql"))
@@ -24,6 +23,7 @@ schema = make_executable_schema(
 
 
 def init_api(app):
+
     CORS(app)
 
     @app.route("/", methods=["GET"])
@@ -43,23 +43,3 @@ def init_api(app):
         )
         status_code = 200 if success else 400
         return jsonify(result), status_code
-
-    # logging.basicConfig(
-    #     level=logging.DEBUG,
-    #     format="[%(asctime)s]: {} %(levelname)s %(message)s".format(os.getpid()),
-    #     datefmt="%Y-%m-%d %H:%M:%S",
-    #     handlers=[logging.StreamHandler()],
-    # )
-    # logger = logging.getLogger()
-
-    # def create_app(config_name=None):
-    #     logger.info(f"Starting app in {config.APP_ENV} environment")
-    #     app = Flask(__name__, instance_relative_config=True)
-    #     app.config.from_object(app_config[config_name])
-    #     # app.config.from_pyfile("config.py")
-
-    #     db.init_app(app)
-    #     migrate = Migrate(app, db)
-    #     from api import models
-
-    #     return app
