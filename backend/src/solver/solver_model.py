@@ -47,48 +47,48 @@ class ScheduleCpModelFactory:
         elif type(self.period) is not SolverPeriod:
             raise SolverException("Period needs to be a valid SolverPeriod instance")
 
-    def solve_model(self):
+    def get_best_solution(self):
+        return self.get_solutions(1)
 
+    def get_solutions(self, num_solutions):
         model = ScheduleCpModel(
-            self.rules, self.employees, self.base_shifts, self.period, [], self.config
+            self.company_id,
+            self.rules,
+            self.employees,
+            self.base_shifts,
+            self.period,
+            [],
+            self.config,
         )
-        solver, status, penalties = model.solve()
-        infeasible_cts = []
+        solver, status, solution = model.solve(num_solutions)
         if status == cp_model.INFEASIBLE:
-            infeasible_cts = self.find_infeasible_cts()
-            model = ScheduleCpModel(
-                self.rules,
-                self.employees,
-                self.base_shifts,
-                self.period,
-                infeasible_cts,
-                self.config,
+            logger.error(
+                f"Assumptions: {solver.SufficientAssumptionsForInfeasibility()}"
             )
-            solver, status = model.solve()
-        return ScheduleSolution(
-            self.company_id, model, solver, status, infeasible_cts, penalties
-        )
+            raise Exception("Could not find a feasible solution for given schedule")
+        return solution
 
-    def find_infeasible_cts(self):
-        all_hard_cts = (
-            ScheduleCpModel.hard_ct_list + ScheduleCpModel.hard_and_soft_ct_list
-        )
-        infeasible_cts = []
-        for i, ct in enumerate(all_hard_cts):
-            excluded_cts = [ct for ct in all_hard_cts[i + 1 :]] + infeasible_cts
-            model = ScheduleCpModel(
-                self.rules,
-                self.employees,
-                self.base_shifts,
-                self.period,
-                excluded_cts,
-                self.config,
-            )
-            solver, status = model.solve()
-            if status == cp_model.INFEASIBLE:
-                infeasible_cts.append(ct)
+    # def find_infeasible_cts(self):
+    #     all_hard_cts = (
+    #         ScheduleCpModel.hard_ct_list + ScheduleCpModel.hard_and_soft_ct_list
+    #     )
+    #     infeasible_cts = []
+    #     for i, ct in enumerate(all_hard_cts):
+    #         excluded_cts = [ct for ct in all_hard_cts[i + 1 :]] + infeasible_cts
+    #         model = ScheduleCpModel(
+    #             self.company_id,
+    #             self.rules,
+    #             self.employees,
+    #             self.base_shifts,
+    #             self.period,
+    #             excluded_cts,
+    #             self.config,
+    #         )
+    #         solver, status = model.solve()
+    #         if status == cp_model.INFEASIBLE:
+    #             infeasible_cts.append(ct)
 
-        return infeasible_cts
+    #     return infeasible_cts
 
 
 # TODO: Use this link to set initial solution ? https://github.com/google/or-tools/issues/1152
@@ -112,8 +112,11 @@ class ScheduleCpModel(cp_model.CpModel):
         "add_employee_requests_ct",  # Employee requests
     ]
 
-    def __init__(self, rules, employees, base_shifts, period, excluded_cts, config):
+    def __init__(
+        self, company_id, rules, employees, base_shifts, period, excluded_cts, config
+    ):
         super().__init__()
+        self.company_id = company_id
         self.rules = rules
         self.employees = employees
         self.nb_employees = len(employees)
@@ -172,39 +175,14 @@ class ScheduleCpModel(cp_model.CpModel):
             )
         )
 
-    def solve(self):
+    def solve(self, num_solutions=1):
         # Solve the model.
         solver = cp_model.CpSolver()
         solver.parameters.num_search_workers = 8
-        # if params:
-        #     text_format.Merge(params, solver.parameters)
-        solution_printer = cp_model.ObjectiveSolutionPrinter()
+        # solution_printer = cp_model.ObjectiveSolutionPrinter()
+        solution_printer = ScheduleSolutionPrinter(num_solutions, self.company_id, self)
         status = solver.SolveWithSolutionCallback(self, solution_printer)
-        penalties = []
-        if status != cp_model.INFEASIBLE:
-            for i, var in enumerate(self.obj_bool_vars):
-                if solver.BooleanValue(var):
-                    penalty = self.obj_bool_coeffs[i]
-                    penalties.append(
-                        SchedulePenalty(reason=var.Name(), penalty=penalty)
-                    )
-                    if penalty > 0:
-                        logger.info(f"  {var.Name()} violated, penalty={penalty}")
-                    else:
-                        logger.info(f"  {var.Name()} violated, penalty={-penalty}")
-            for i, var in enumerate(self.obj_int_vars):
-                if solver.Value(var) > 0:
-                    penalties.append(
-                        SchedulePenalty(
-                            reason=var.Name(),
-                            penalty=solver.Value(var) * self.obj_int_coeffs[i],
-                        )
-                    )
-                    logger.info(
-                        f"  {var.Name()} violated by {solver.Value(var)}, linear penalty={self.obj_int_coeffs[i]}"
-                    )
-
-        return solver, status, penalties
+        return solver, status, solution_printer.get_solution()
 
     ###############
     # Constraints #
@@ -590,34 +568,94 @@ class ScheduleCpModel(cp_model.CpModel):
 
 
 class ScheduleSolution:
-    def __init__(self, company_id, model, solver, status, infeasible_cts, penalties):
+    def __init__(self, company_id, model, solver, penalties):
         self.company_id = company_id
         self.model = model
         self.solver = solver
-        self.infeasible_cts = infeasible_cts
         self.penalties = penalties
-        self.status = status
         self.schedule = self.get_schedule()
 
     def get_schedule(self):
-        if self.status == cp_model.OPTIMAL or self.status == cp_model.FEASIBLE:
-            logger.info(self.infeasible_cts)
-            encoded_schedule = "".join(
-                [str(self.solver.Value(i[1])) for i in self.model.matrice.items()]
-            )
+        encoded_schedule = "".join(
+            [str(self.solver.Value(i[1])) for i in self.model.matrice.items()]
+        )
 
-            return Schedule.to_schedule(
-                self.company_id,
-                encoded_schedule,
-                self.model.employees,
-                self.model.base_shifts,
-                self.model.days,
-                self.model.period,
-                SolverStatus.by_status_code(self.status),
-                self.solver.ObjectiveValue(),
-                self.infeasible_cts,
-                self.penalties,
+        return Schedule.to_schedule(
+            self.company_id,
+            encoded_schedule,
+            self.model.employees,
+            self.model.base_shifts,
+            self.model.days,
+            self.model.period,
+            self.solver.ObjectiveValue(),
+            self.penalties,
+        )
+
+
+class ScheduleSolutionPrinter(cp_model.CpSolverSolutionCallback):
+    def __init__(self, num_sols, company_id, model):
+        super().__init__()
+        self.company_id = company_id
+        self.model = model
+        self.num_sols = num_sols
+        self.solutions = []
+        self._solution_count = 0
+
+    def on_solution_callback(self):
+        if len(self.solutions) == 0:
+            penalties = self.get_penalties()
+            self.solutions.append(
+                ScheduleSolution(
+                    self.company_id,
+                    self.model,
+                    self,
+                    penalties,
+                )
             )
-        else:
-            # logger.info(str(solver.ResponseStats()))
-            return None
+        elif (
+            len(self.solutions) < self.num_sols
+            or self.solutions[-1].schedule.objective > self.ObjectiveValue()
+        ):
+            i = next(
+                i
+                for i, s in enumerate(self.solutions)
+                if s.schedule.objective > self.ObjectiveValue()
+            )
+            penalties = self.get_penalties()
+            self.solutions.insert(
+                i,
+                ScheduleSolution(
+                    self.company_id,
+                    self.model,
+                    self,
+                    penalties,
+                ),
+            )
+            self.solutions = self.solutions[0 : self.num_sols]
+        self._solution_count += 1
+
+    def get_penalties(self):
+        penalties = []
+        for i, var in enumerate(self.model.obj_bool_vars):
+            if self.BooleanValue(var):
+                penalties.append(
+                    SchedulePenalty(
+                        reason=var.Name(), penalty=self.model.obj_bool_coeffs[i]
+                    )
+                )
+        for i, var in enumerate(self.model.obj_int_vars):
+            if self.Value(var) > 0:
+                penalties.append(
+                    SchedulePenalty(
+                        reason=var.Name(),
+                        excess=self.Value(var),
+                        penalty=self.model.obj_int_coeffs[i],
+                    )
+                )
+        return penalties
+
+    def get_solution(self):
+        return self.solutions[0] if self.num_sols == 1 else self.solutions
+
+    def solution_count(self):
+        return self._solution_count

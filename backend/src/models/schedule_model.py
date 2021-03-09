@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Enum, Date, Integer, ForeignKey
+from sqlalchemy import Column, String, Enum, Date, Integer, ForeignKey, Boolean
 from textwrap import wrap
 from src.database import db, PkCompanyModel, created_at, ID
 from src.utils import chunk, complete_str
@@ -18,9 +18,7 @@ class Schedule(PkCompanyModel):
     start_date = Column(Date, nullable=False)
     nb_days = Column(Integer, nullable=False)
 
-    status = Column(Enum(SolverStatus), nullable=False)
     objective = Column(Integer)
-    infeasible_cts = Column(String(256))
 
     def __repr__(self):
         return "<Schedule: {}>".format(self.id)
@@ -29,7 +27,6 @@ class Schedule(PkCompanyModel):
         return {
             "penalties": self.penalties,
             "createdAt": self.created_at,
-            "infeasibleConstraints": self.infeasible_cts,
             "objective": self.objective,
         }
 
@@ -102,9 +99,7 @@ class Schedule(PkCompanyModel):
         base_shifts,
         days,
         period,
-        status,
         objective,
-        infeasible_cts,
         penalties,
     ):
         encoded_schedule = Schedule.encode(bin_schedule, employees, base_shifts, days)
@@ -122,9 +117,7 @@ class Schedule(PkCompanyModel):
             employees=employees,
             start_date=period.start_date,
             nb_days=period.nb_days,
-            status=status,
             objective=objective,
-            infeasible_cts=",".join(infeasible_cts),
             penalties=penalties,
         )
         return schedule
@@ -201,6 +194,17 @@ class SchedulePenalty(db.Model):
     )
     reason = Column(String(128), nullable=False)
     penalty = Column(Integer, nullable=False)
+    excess = Column(Integer, default=1)
+
+    def is_linear(self):
+        return excess is not None
+
+    def __str__(self):
+        return (
+            f"  {self.reason} violated by {self.excess}, linear penalty={abs(self.penalty)}"
+            if self.is_linear()
+            else f"  {self.reason} violated, penalty={abs(self.penalty)}"
+        )
 
 
 class ScheduleEmployee(db.Model):

@@ -27,7 +27,7 @@ def solve_shift_scheduling(
     model_factory = ScheduleCpModelFactory(
         company_id, rules, employees, base_shifts, period, opts
     )
-    schedule_solution = model_factory.solve_model()
+    schedule_solution = model_factory.get_best_solution()
     # work = model.matrice
 
     # # Solve the model.
